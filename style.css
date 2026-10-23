@@ -266,7 +266,7 @@ body {
 .warlord-avatar.turn-thinking-enemy { animation: pulse-aura-enemy 2.0s infinite ease-in-out !important; }
 
 /* =========================================================
-   【重要・全画面共通】肖像画・家紋SVG 表示ルール
+   【全画面共通】肖像画・家紋SVG 表示保証ルール
    ========================================================= */
 .portrait-container-box {
   width: 100%; height: 100%; position: relative;
@@ -642,7 +642,7 @@ body {
 }
 
 .order-message-banner {
-  width: 100%; height: clamp(42px, 6.0vh, 48px);
+  width: 100%; height: clamp(44px, 6.2vh, 50px);
   background: linear-gradient(90deg, rgba(26, 11, 4, 0.95) 0%, rgba(45, 19, 7, 0.95) 50%, rgba(26, 11, 4, 0.95) 100%);
   display: flex; align-items: center; justify-content: flex-start; gap: 6px;
   padding: 2px 7px; flex-shrink: 0; position: relative;
@@ -726,15 +726,31 @@ body {
   line-height: 8.5px; text-align: center; white-space: nowrap; letter-spacing: 0.5px;
 }
 
+/* =========================================================
+   【思考表示・上下ガタつき防止】2行独立完全固定スロット構造
+   ========================================================= */
 .order-message-text {
-  font-size: clamp(10.5px, 1.5vh, 12px); font-weight: 800; color: #ffe699; letter-spacing: 0.2px;
-  line-height: 1.25; text-align: left; flex: 1; min-width: 0;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-  text-shadow: 0 1px 3px #000;
+  flex: 1; min-width: 0; height: 38px;
+  display: flex; flex-direction: column; justify-content: center;
+  overflow: hidden; text-shadow: 0 1px 3px #000;
+}
+
+.order-line-primary {
+  height: 19px; line-height: 19px;
+  font-size: clamp(10.5px, 1.5vh, 12px); font-weight: 800; color: #ffe699;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  display: block; margin: 0; padding: 0;
+}
+
+.order-line-sub {
+  height: 17px; line-height: 17px;
+  font-size: clamp(9.5px, 1.35vh, 10.5px); font-weight: 800; color: #fff2b2;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  display: block; margin: 0; padding: 0;
 }
 
 .order-message-banner.my-turn { animation: breathe-player-turn 3.0s infinite ease-in-out !important; }
-.order-message-banner.my-turn .order-message-text { animation: pulse-text-glow 2.0s infinite ease-in-out !important; }
+.order-message-banner.my-turn .order-line-primary { animation: pulse-text-glow 2.0s infinite ease-in-out !important; }
 
 /* アクションボタン群 */
 .alt-tactic-btn {
@@ -979,7 +995,7 @@ body {
 }
 
 /* =========================================================
-   【御前試合】肖像・家紋ビジュアル選択式デザイン ＆ 段位・Lv工芸バッジ
+   【御前試合】中央どっしり開始ボタン ＆ 黄金点滅演出
    ========================================================= */
 .exhibition-modal-box {
   width: 96vw !important; max-width: 600px !important; height: 92vh !important;
@@ -989,7 +1005,7 @@ body {
 .exhibition-guide-plaque {
   background: linear-gradient(90deg, rgba(13, 38, 71, 0.95) 0%, rgba(26, 68, 122, 0.95) 50%, rgba(13, 38, 71, 0.95) 100%);
   border: 1.3px solid #72b2ff; border-radius: 4px;
-  padding: 5px 8px; margin-bottom: 6px; font-size: 10px; font-weight: 800; color: #eaf3ff;
+  padding: 4px 8px; margin-bottom: 5px; font-size: 9.5px; font-weight: 800; color: #eaf3ff;
   box-shadow: 0 2px 6px rgba(0,0,0,0.85); display: flex; align-items: center; gap: 6px;
 }
 
@@ -997,42 +1013,63 @@ body {
   display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex: 1; min-height: 0; padding: 2px;
 }
 .exhibition-side-col {
-  display: flex; flex-direction: column; gap: 5px;
+  display: flex; flex-direction: column; gap: 4px;
   background: rgba(14, 7, 3, 0.92); border: 1.2px solid #73511f; border-radius: 5px;
   padding: 5px 6px; min-height: 0;
 }
 .exhibition-side-title {
-  font-size: 11.5px; font-weight: 900; color: #ffd700; text-align: center;
-  border-bottom: 1.2px solid rgba(255, 215, 0, 0.3); padding-bottom: 3px;
+  font-size: 11px; font-weight: 900; color: #ffd700; text-align: center;
+  border-bottom: 1.2px solid rgba(255, 215, 0, 0.3); padding-bottom: 2px;
 }
 
-/* プレビュー表示カード（現在選択中） */
+/* ① 上部：現在出陣決定カード（重厚本丸陣幕調プレート） */
 .exhibition-warlord-preview-card {
-  background: linear-gradient(135deg, #2e1104 0%, #140501 100%);
-  border: 1.5px solid #ffd700; border-radius: 4px;
-  padding: 5px; display: flex; gap: 6px; align-items: center;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.85); flex-shrink: 0;
+  background: linear-gradient(135deg, #3d1406 0%, #170701 100%);
+  border: 1.8px solid #ffd700; border-radius: 5px;
+  padding: 5px 6px; display: flex; flex-direction: column; gap: 4px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.9), inset 0 0 10px rgba(255, 215, 0, 0.15);
+  flex-shrink: 0; position: relative;
 }
+.preview-status-header {
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px dashed rgba(255, 215, 0, 0.35); padding-bottom: 2px;
+}
+.preview-title-tag { font-size: 9px; font-weight: 900; color: #ffd700; letter-spacing: 0.5px; }
+
+.preview-main-body { display: flex; gap: 6px; align-items: center; }
+
 .preview-avatar-box {
-  width: 44px; height: 50px; border-radius: 4px; border: 1.2px solid #ffd700;
+  width: 46px; height: 54px; border-radius: 4px; border: 1.5px solid #ffd700;
   overflow: hidden; flex-shrink: 0; background: #120401;
   display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.85);
 }
 .preview-avatar-box .portrait-container-box { width: 100%; height: 100%; }
-.preview-info-box { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.preview-info-box { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1.5px; }
 
-.card-top-header { display: flex; justify-content: space-between; align-items: center; }
-.card-inst-name { font-size: 11px; font-weight: 900; color: #fff8e7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.badge-inst-rank {
-  font-size: 8.5px; font-weight: 900; padding: 1px 4px; border-radius: 3px;
-  background: #0d386b; color: #9bc8ff; border: 0.8px solid #72b2ff; white-space: nowrap;
+.card-top-header { display: flex; justify-content: space-between; align-items: center; gap: 2px; }
+.card-inst-name { font-size: 11.5px; font-weight: 900; color: #fff8e7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* プレビュー詳細スペック行 */
+.preview-stat-grid {
+  display: flex; flex-direction: column; gap: 1px; margin-top: 1px;
 }
-.card-inst-desc {
-  font-size: 8.5px; color: #cfbda0; line-height: 1.2;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+.preview-stat-row {
+  display: flex; align-items: center; justify-content: space-between; font-size: 8.5px; font-weight: 800;
+}
+.preview-troops-highlight { color: #ffd700; font-weight: 900; }
+.preview-spec-highlight { color: #72b2ff; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ② リスト境界：金蒔絵セパレーターヘッダー */
+.exhibition-list-header {
+  font-size: 9.5px; font-weight: 900; color: #ebd4a0;
+  background: linear-gradient(90deg, #2e1406 0%, #4a2108 50%, #2e1406 100%);
+  border: 1px solid #8e6c31; border-radius: 3px;
+  padding: 2px 6px; text-align: center; margin-top: 2px; flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.8);
 }
 
-/* ビジュアル選択可能な武将・指南役カードリスト（全14体スクロール） */
+/* ③ 下部：武将・指南役カードスクロールリスト（全十四傑） */
 .exhibition-avatar-pick-list {
   flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;
   padding-right: 2px; min-height: 0;
@@ -1041,7 +1078,7 @@ body {
 .pick-avatar-item {
   display: flex; align-items: center; gap: 6px;
   background: rgba(22, 10, 4, 0.9); border: 1.2px solid #6b4d1b; border-radius: 4px;
-  padding: 4px 6px; cursor: pointer; transition: all 0.15s ease;
+  padding: 4px 6px; cursor: pointer; transition: all 0.15s ease; position: relative;
 }
 .pick-avatar-item:hover {
   background: linear-gradient(90deg, #3d1c07 0%, #59280a 100%);
@@ -1050,17 +1087,18 @@ body {
 .pick-avatar-item.active {
   border-color: #72b2ff !important;
   background: linear-gradient(90deg, #0e2b52 0%, #1a447a 100%) !important;
-  box-shadow: 0 0 8px rgba(114, 178, 255, 0.7);
+  box-shadow: 0 0 10px rgba(114, 178, 255, 0.8);
 }
 
 .pick-thumb-box {
-  width: 36px; height: 42px; border-radius: 3px; border: 1.2px solid #ffd700;
+  width: 40px; height: 48px; border-radius: 3px; border: 1.2px solid #ffd700;
   overflow: hidden; flex-shrink: 0; background: #0c0401;
   display: flex; align-items: center; justify-content: center;
 }
 .pick-thumb-box .portrait-container-box { width: 100%; height: 100%; }
 
-.pick-info-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.pick-info-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1.5px; }
+
 .pick-name-row { display: flex; align-items: center; justify-content: space-between; gap: 3px; }
 .pick-name-txt { font-size: 10.5px; font-weight: 900; color: #fff3c9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
@@ -1084,22 +1122,42 @@ body {
   box-shadow: 0 1px 2px rgba(0,0,0,0.8);
 }
 
+/* 選択カード内のステータスバッジ群（兵力・探索深さ） */
+.pick-stats-row {
+  display: flex; align-items: center; gap: 4px; font-size: 8px; font-weight: 800;
+}
+.badge-ai-troops {
+  background: #2b0e04; color: #ffd700; border: 0.6px solid #b88a32;
+  border-radius: 2px; padding: 0.5px 3.5px; white-space: nowrap;
+}
+.badge-ai-depth {
+  background: #06192e; color: #9bc8ff; border: 0.6px solid #72b2ff;
+  border-radius: 2px; padding: 0.5px 3.5px; white-space: nowrap;
+}
+
 .pick-desc-txt {
   font-size: 8px; color: #c4b08f; line-height: 1.15;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
+/* 選択中スタンプ */
+.badge-active-stamp {
+  font-size: 7.5px; font-weight: 900; color: #ffd700;
+  background: #173861; border: 0.8px solid #72b2ff; border-radius: 2px;
+  padding: 0.5px 3px; white-space: nowrap;
+}
+
 .exhibition-config-row {
   display: flex; justify-content: space-between; align-items: center; gap: 6px;
   background: rgba(22, 10, 4, 0.95); border: 1.2px solid #8e6c31; border-radius: 4px;
-  padding: 5px 8px; margin-top: 5px;
+  padding: 4px 8px; margin-top: 4px;
 }
 .config-group { display: flex; align-items: center; gap: 4px; }
 .config-label { font-size: 10px; font-weight: 900; color: #ffd700; white-space: nowrap; }
 
 .btn-speed-choice {
-  font-family: var(--font-ui); font-size: 9.5px; font-weight: 900;
-  padding: 3px 6px; border-radius: 3px; border: 1px solid #73511f;
+  font-family: var(--font-ui); font-size: 10px; font-weight: 900;
+  padding: 3.5px 9px; border-radius: 3px; border: 1px solid #73511f;
   background: #241105; color: #d6be89; cursor: pointer;
 }
 .btn-speed-choice.active {
@@ -1108,10 +1166,52 @@ body {
   box-shadow: 0 0 8px rgba(114, 178, 255, 0.6);
 }
 
+/* =========================================================
+   【御前試合モーダル下部】開始ボタン中央・閉じるボタン右下配置
+   ========================================================= */
+.exhibition-bottom-buttons {
+  width: 100%; display: grid !important;
+  grid-template-columns: 80px 1fr 80px !important;
+  align-items: center; gap: 8px; margin-top: 8px;
+}
+.exh-btn-spacer { width: 80px; }
+
+@keyframes pulse-start-exhibition-gold {
+  0%   {
+    box-shadow: 0 3px 0 #031024, 0 0 10px rgba(114, 178, 255, 0.5), inset 0 1px 0 rgba(255,255,255,0.45);
+    border-color: #72b2ff; transform: scale(1);
+  }
+  50%  {
+    box-shadow: 0 3px 0 #031024, 0 0 22px rgba(255, 215, 0, 0.95), 0 0 35px rgba(114, 178, 255, 0.8), inset 0 1px 0 rgba(255,255,255,0.85);
+    border-color: #ffffff; transform: scale(1.02);
+  }
+  100% {
+    box-shadow: 0 3px 0 #031024, 0 0 10px rgba(114, 178, 255, 0.5), inset 0 1px 0 rgba(255,255,255,0.45);
+    border-color: #72b2ff; transform: scale(1);
+  }
+}
+
 .btn-start-exhibition {
-  background: linear-gradient(180deg, #0e4c9e 0%, #06234d 100%) !important;
-  border: 1.8px solid #72b2ff !important; color: #ffffff !important;
-  box-shadow: 0 3px 0 #031024, 0 5px 12px rgba(114, 178, 255, 0.6), inset 0 1px 0 rgba(255,255,255,0.45) !important;
+  grid-column: 2 / 3 !important;
+  justify-self: center !important;
+  width: min(100%, 260px) !important;
+  padding: 8px 16px !important;
+  font-size: 13.5px !important; font-weight: 900 !important;
+  letter-spacing: 1px !important;
+  background: linear-gradient(180deg, #1355a8 0%, #062754 100%) !important;
+  border: 2px solid #72b2ff !important; color: #ffffff !important;
+  box-shadow: 0 3.5px 0 #031024, 0 5px 14px rgba(114, 178, 255, 0.6), inset 0 1.2px 0 rgba(255,255,255,0.5) !important;
+}
+
+.btn-start-exhibition.is-ready-pulse {
+  animation: pulse-start-exhibition-gold 2.0s infinite ease-in-out !important;
+}
+
+.exhibition-bottom-buttons .modal-close-btn {
+  grid-column: 3 / 4 !important;
+  justify-self: end !important;
+  width: 80px !important; padding: 6px 0 !important;
+  text-align: center !important;
 }
 
 /* =========================================================

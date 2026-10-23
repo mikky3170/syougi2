@@ -139,7 +139,7 @@
       <div class="warlord-hand-area" id="player-hand" title="自軍持ち駒"></div>
     </div>
 
-    <!-- 本陣直結・合戦軍令札 -->
+    <!-- 本陣直結・合戦軍令札（1行目・2行目完全固定スロット構造） -->
     <div class="order-message-banner" id="order-message-banner">
       <div class="order-banner-corner banner-c-tl"></div>
       <div class="order-banner-corner banner-c-tr"></div>
@@ -156,8 +156,11 @@
         <div class="strategist-name-tag" id="strategist-face-name-tag">昌幸</div>
       </div>
 
-      <!-- ③ メッセージ・対戦経過本文 -->
-      <div class="order-message-text" id="order-message-text">上下のパネルより「自将」と「進軍先」を選定されよ。<br>陣容が定まり次第、「対局開始」にて振り駒を執り行われよ！</div>
+      <!-- ③ メッセージ・対戦経過本文（上下ブレ防止固定構造） -->
+      <div class="order-message-text" id="order-message-text">
+        <div class="order-line-primary">上下のパネルより「自将」と「進軍先」を選定されよ。</div>
+        <div class="order-line-sub">陣容が定まり次第、「対局開始」にて振り駒を執り行われよ！</div>
+      </div>
 
       <!-- ④ アクションボタン群 -->
       <button class="alt-tactic-btn btn-3d" id="btn-alt-tactic" onclick="cycleNextTacticsHint()" style="display:none;" title="軍師に別の候補策を問う">🪭 別の策</button>
@@ -227,7 +230,7 @@
     
     <div class="exhibition-guide-plaque">
       <span>💡</span>
-      <span>武将・指南役の<b>【肖像・家紋】</b>を直接選定して御前試合を開始します。<br>※最大10秒の安全思考制限内で各AIが最大の読みを発揮いたします。</span>
+      <span>武将・指南役の<b>【肖像・家紋】</b>を直接選定して御前試合を開始します。<br>※安全装置（通常5秒以内／早送り2秒以内）によりテンポ良く合戦が進みます。</span>
     </div>
 
     <!-- 左右対陣ビジュアルセレクター（先手陣 vs 後手陣） -->
@@ -271,21 +274,22 @@
 
     </div>
 
-    <!-- 設定バー（進行テンポ） -->
+    <!-- 設定バー（進行テンポ：通常 / 早送りの2択に集約） -->
     <div class="exhibition-config-row">
       <div class="config-group" style="width:100%; justify-content:space-between;">
         <span class="config-label">観戦進行テンポ:</span>
-        <div style="display:flex; gap:4px;">
-          <button class="btn-speed-choice active" id="btn-speed-normal" onclick="setExhibitionModalSpeed('normal')">じっくり</button>
-          <button class="btn-speed-choice" id="btn-speed-fast" onclick="setExhibitionModalSpeed('fast')">早送り</button>
-          <button class="btn-speed-choice" id="btn-speed-turbo" onclick="setExhibitionModalSpeed('turbo')">電光石火</button>
+        <div style="display:flex; gap:6px;">
+          <button class="btn-speed-choice active" id="btn-speed-normal" onclick="setExhibitionModalSpeed('normal')">通常 (5s安全)</button>
+          <button class="btn-speed-choice" id="btn-speed-fast" onclick="setExhibitionModalSpeed('fast')">早送り (2s安全)</button>
         </div>
       </div>
     </div>
 
-    <div class="modal-buttons" style="justify-content:space-between;">
+    <!-- 下部ボタングループ：中央にどっしり開始ボタン、右下に閉じるボタン -->
+    <div class="modal-buttons exhibition-bottom-buttons">
+      <div class="exh-btn-spacer"></div>
+      <button class="btn-3d modal-action-btn btn-start-exhibition is-ready-pulse" id="btn-start-exhibition-main" onclick="startExhibitionFromModal()">⚔ 御前試合 開始</button>
       <button class="btn-3d modal-close-btn" onclick="closeExhibitionModal()">閉じる</button>
-      <button class="btn-3d modal-action-btn btn-start-exhibition" onclick="startExhibitionFromModal()">⚔ 御前試合 開始</button>
     </div>
   </div>
 </div>
@@ -751,5 +755,4 @@
 <script src="main.js"></script>
 </body>
 </html>
-
 

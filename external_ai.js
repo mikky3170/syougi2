@@ -1,12 +1,12 @@
 
 /* =========================================================
    将棋王 2026 〜 天下統一・戦国決戦 〜
-   外部オープンソースAIエンジン統合モジュール (10秒安全タイムリミット＆完全成果保証版)
+   外部オープンソースAIエンジン統合モジュール (完全成果保証・安全装置完全連動版)
    
    【内蔵する3つの客分指南役】
-   1. nanban : 【明朝の客分・南蛮棋士】 (アマ初段相当 / 深さ3＋静止探索 最大10秒保証)
-   2. kenshi : 【指南役・無双剣士】     (アマ二段相当 / 深さ4＋PST＋静止探索 最大10秒保証)
-   3. inja   : 【神算鬼謀の隠者】       (アマ五段相当 / 深さ5＋置換表＋キラー探索 最大10秒保証)
+   1. nanban : 【明朝の客分・南蛮棋士】 (アマ初段相当 / 深さ3＋静止探索 通常5s・早送り2s安全保証)
+   2. kenshi : 【指南役・無双剣士】     (アマ二段相当 / 深さ4＋PST＋静止探索 通常5s・早送り2s安全保証)
+   3. inja   : 【神算鬼謀の隠者】       (アマ五段相当 / 深さ5＋置換表＋キラー探索 通常5s・早送り2s安全保証)
    ========================================================= */
 
 (function(global) {
@@ -69,7 +69,7 @@
   let kingPosCache = { PLAYER: null, AI: null };
   let pastHashes = [];
   let searchStartTime = 0;
-  let searchTimeLimit = 9000; // 最大タイムリミット：9秒厳守（10秒以内に確実に返却）
+  let searchTimeLimit = 5000;
   let isSearchTimeout = false;
 
   const transpositionTable = new Map();
@@ -275,7 +275,6 @@
     return enemyLegals.length === 0;
   }
 
-  // 敵陣突入・敵陣内移動・敵陣からの進出すべてで正しく成りを判定
   function genLegalMoves(owner, capturesOnly = false, filterUchifuzume = true) {
     const pseudo = [];
     for (let r = 0; r < 9; r++) {
@@ -572,7 +571,8 @@
       engineType = 'kenshi',
       owner = 'PLAYER',
       history = [],
-      hashHistory = []
+      hashHistory = [],
+      timeLimit = 5000
     } = params;
 
     board = bD;
@@ -581,7 +581,9 @@
     nodeCount = 0;
     isSearchTimeout = false;
     searchStartTime = Date.now();
-    searchTimeLimit = 9000; // 9秒で安全脱出
+    
+    // 安全装置（通常5秒 / 早送り2秒）
+    searchTimeLimit = timeLimit || 5000;
     updateKingCache();
 
     const legals = genLegalMoves(owner, false, true);
@@ -610,6 +612,17 @@
     if (engineType === 'nanban') {
       for (let d = 1; d <= 3; d++) {
         let alpha = -Infinity, beta = Infinity;
+
+        // 反復深化の最善手を先頭に配置
+        if (d > 1 && confirmedBestMove) {
+          scoredMoves.sort((a, b) => {
+            const isA = (a.move.type === confirmedBestMove.type && a.move.to.r === confirmedBestMove.to.r && a.move.to.c === confirmedBestMove.to.c);
+            const isB = (b.move.type === confirmedBestMove.type && b.move.to.r === confirmedBestMove.to.r && b.move.to.c === confirmedBestMove.to.c);
+            if (isA) return -1; if (isB) return 1;
+            return b.score - a.score;
+          });
+        }
+
         let currentIteration = scoredMoves.map(it => ({ move: it.move, score: it.score }));
 
         for (let i = 0; i < currentIteration.length; i++) {
@@ -640,6 +653,16 @@
     } else if (engineType === 'kenshi') {
       for (let d = 1; d <= 4; d++) {
         let alpha = -Infinity, beta = Infinity;
+
+        if (d > 1 && confirmedBestMove) {
+          scoredMoves.sort((a, b) => {
+            const isA = (a.move.type === confirmedBestMove.type && a.move.to.r === confirmedBestMove.to.r && a.move.to.c === confirmedBestMove.to.c);
+            const isB = (b.move.type === confirmedBestMove.type && b.move.to.r === confirmedBestMove.to.r && b.move.to.c === confirmedBestMove.to.c);
+            if (isA) return -1; if (isB) return 1;
+            return b.score - a.score;
+          });
+        }
+
         let currentIteration = scoredMoves.map(it => ({ move: it.move, score: it.score }));
 
         for (let i = 0; i < currentIteration.length; i++) {
@@ -671,6 +694,16 @@
       killerMoves = Array.from({ length: 30 }, () => [null, null]);
       for (let d = 1; d <= 5; d++) {
         let alpha = -Infinity, beta = Infinity;
+
+        if (d > 1 && confirmedBestMove) {
+          scoredMoves.sort((a, b) => {
+            const isA = (a.move.type === confirmedBestMove.type && a.move.to.r === confirmedBestMove.to.r && a.move.to.c === confirmedBestMove.to.c);
+            const isB = (b.move.type === confirmedBestMove.type && b.move.to.r === confirmedBestMove.to.r && b.move.to.c === confirmedBestMove.to.c);
+            if (isA) return -1; if (isB) return 1;
+            return b.score - a.score;
+          });
+        }
+
         let currentIteration = scoredMoves.map(it => ({ move: it.move, score: it.score }));
 
         for (let i = 0; i < currentIteration.length; i++) {
