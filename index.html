@@ -56,25 +56,19 @@
 
   <!-- =========================================================
        戦闘主ステージ：battle-theatre-layout
-       （スマホ：戦況→敵将ゾーン→敵駒台(左上)→盤→自駒台(右下)→自将ゾーン→軍令高札）
+       （スマホ：戦況バーに敵将吸着 ── 敵駒台 ── 盤 ── 自駒台 ── 自将に軍令吸着）
        （タブレット：上段横並び・中段大盤・下段横並び布陣）
        ========================================================= -->
   <div class="battle-theatre-layout" id="battle-theatre-layout">
     
     <!-- 【上陣セクション：敵軍エリア】 -->
     <div class="battle-section-top">
-      <!-- 敵軍持ち駒台（2行構成） -->
-      <div class="board-hand-dock dock-enemy" id="dock-enemy-wrapper" title="敵軍持ち駒台（2行）">
-        <div class="dock-label">▽敵駒</div>
-        <div class="warlord-hand-box hand-box-enemy" id="ai-hand"></div>
-      </div>
-
-      <!-- 敵将パネル（肖像 ＋ [名前・肩書＋思案中表示 ＆ 進軍先ボタン] ＋ 兵力バー ＋ 1行目からの2行セリフ） -->
+      <!-- 敵将パネル（スマホ時は戦況バーに隙間なく吸着） -->
       <div class="warlord-panel panel-enemy" id="ai-panel">
         <div class="warlord-avatar" id="ai-avatar-container" onclick="toggleWarlordAvatarView('ai')" title="肖像／家紋切替"></div>
         
         <div class="warlord-info-col">
-          <!-- 上段：名前、肩書＋手番思案中+経過時間、進軍先ボタン -->
+          <!-- 上段：名前、肩書＋手番思案中+経過時間、敵将変更ボタン -->
           <div class="warlord-header-row">
             <div class="warlord-identity-block">
               <span class="warlord-name" id="ai-name-disp">木下藤吉郎</span>
@@ -84,7 +78,7 @@
               </div>
             </div>
             <div class="warlord-time-action-block">
-              <button class="panel-select-btn btn-3d btn-select-enemy" onclick="openConquestMapModal()" id="btn-enemy-change" title="進軍先（敵国）を選定">⚔ 進軍先</button>
+              <button class="panel-select-btn btn-3d btn-select-enemy" onclick="openConquestMapModal()" id="btn-enemy-change" title="対戦する敵将を選定">⚔ 敵将変更</button>
             </div>
           </div>
 
@@ -99,11 +93,17 @@
             </div>
           </div>
 
-          <!-- 下段：兵力バー直下のセリフ（1行目から純粋に書き出し） -->
+          <!-- 下段：兵力バー直下のセリフ（上詰めで端正に書き出し） -->
           <div class="warlord-quote-row">
             <div class="warlord-quote" id="ai-quote-disp">「草履取りとて天下を夢見候！ 足軽の意地、見せてくれよう！」</div>
           </div>
         </div>
+      </div>
+
+      <!-- 敵軍持ち駒台（2行構成・上下ゆったり設計） -->
+      <div class="board-hand-dock dock-enemy" id="dock-enemy-wrapper" title="敵軍持ち駒台（2行）">
+        <div class="dock-label">▽敵駒</div>
+        <div class="warlord-hand-box hand-box-enemy" id="ai-hand"></div>
       </div>
     </div>
 
@@ -159,7 +159,13 @@
 
     <!-- 【下陣セクション：自軍エリア】 -->
     <div class="battle-section-bottom">
-      <!-- 自将パネル（肖像 ＋ [名前・肩書＋思案中表示 ＆ 自将変更ボタン] ＋ 兵力バー ＋ 1行目からの2行セリフ） -->
+      <!-- 自軍持ち駒台（2行構成・上下ゆったり設計） -->
+      <div class="board-hand-dock dock-player" id="dock-player-wrapper" title="自軍持ち駒台（2行）">
+        <div class="warlord-hand-box hand-box-player" id="player-hand"></div>
+        <div class="dock-label">▲自駒</div>
+      </div>
+
+      <!-- 自将パネル（スマホ時は軍令高札へ隙間なく吸着） -->
       <div class="warlord-panel panel-player" id="player-panel">
         <div class="warlord-avatar" id="player-avatar-container" onclick="toggleWarlordAvatarView('player')" title="肖像／家紋切替"></div>
         
@@ -192,23 +198,17 @@
             </div>
           </div>
 
-          <!-- 下段：兵力バー直下のセリフ（1行目から純粋に書き出し） -->
+          <!-- 下段：兵力バー直下のセリフ（上詰めで端正に書き出し） -->
           <div class="warlord-quote-row">
             <div class="warlord-quote" id="player-quote-disp">「不惜身命！ この一手に命を懸ける！」</div>
           </div>
         </div>
       </div>
-
-      <!-- 自軍持ち駒台（2行構成） -->
-      <div class="board-hand-dock dock-player" id="dock-player-wrapper" title="自軍持ち駒台（2行）">
-        <div class="warlord-hand-box hand-box-player" id="player-hand"></div>
-        <div class="dock-label">▲自駒</div>
-      </div>
     </div>
 
   </div>
 
-  <!-- ④ 盤下：大判軍令高札（専属軍師の陣中指示 ＆ 手番ナビゲーション・軍師進言時発光） -->
+  <!-- ④ 盤下：大判軍令高札（スマホ時は自将パネルの直下に吸着） -->
   <div class="order-message-banner" id="order-message-banner">
     <div class="order-banner-corner banner-c-tl"></div>
     <div class="order-banner-corner banner-c-tr"></div>
@@ -229,7 +229,7 @@
     <div class="order-message-center" id="order-message-center">
       <!-- 1行目：主伝令 ＋ アクションボタン（別の策／宿命秘話／観戦終了） -->
       <div class="order-row-primary">
-        <div class="order-line-primary" id="order-line-primary">「自将」と「進軍先」を選び、「対局開始」を押されよ。</div>
+        <div class="order-line-primary" id="order-line-primary">「自将」と「敵将」を選び、「対局開始」を押されよ。</div>
         <div class="order-actions-slot" id="order-actions-slot">
           <button class="alt-tactic-btn btn-3d" id="btn-alt-tactic" onclick="cycleNextTacticsHint()" style="display:none;" title="軍師に別の候補策を問う">🪭 別の策</button>
           <button class="rivalry-story-btn btn-3d" id="btn-rivalry-story" onclick="openRivalryInGuide()" style="display:none;">📜 宿命秘話</button>

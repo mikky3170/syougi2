@@ -164,9 +164,10 @@ body {
 .situation-banner {
   width: 100%; min-height: 18px; max-height: 18px; height: 18px;
   background: linear-gradient(90deg, #1f0f06 0%, #44210c 50%, #1f0f06 100%);
-  border: 1.2px solid #b88a32; border-radius: 3px;
+  border: 1.2px solid #b88a32; border-radius: 3px 3px 0 0;
   display: flex; align-items: center; gap: 6px; padding: 0 8px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.85); flex-shrink: 0;
+  margin-bottom: 0px;
   transition: all 0.3s ease;
 }
 .situation-title {
@@ -192,13 +193,13 @@ body {
    ========================================================= */
 .main-wrapper {
   display: flex; flex-direction: column; align-items: center; justify-content: space-between;
-  width: 100%; max-width: min(98vw, 760px); flex: 1 1 0; min-height: 0; gap: 1px;
+  width: 100%; max-width: min(98vw, 760px); flex: 1 1 0; min-height: 0; gap: 0px;
   position: relative;
 }
 
 .battle-theatre-layout {
   width: 100%; flex: 1 1 0; min-height: 0;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  display: flex; flex-direction: column; align-items: center; justify-content: space-between;
   gap: 0px;
 }
 
@@ -234,8 +235,8 @@ body {
 .show-crest .portrait-face-img { opacity: 0 !important; pointer-events: none; }
 
 .warlord-info-col {
-  flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between;
-  gap: 1.5px; overflow: hidden; padding-top: 1px;
+  flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: flex-start;
+  gap: 2px; overflow: hidden; padding-top: 1px;
 }
 
 .warlord-header-row {
@@ -298,7 +299,7 @@ body {
 }
 
 /* 兵力ゲージ */
-.gauge-group { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex-shrink: 0; }
+.gauge-group { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex-shrink: 0; margin-bottom: 1px; }
 .gauge-label-row { display: flex; justify-content: space-between; align-items: center; font-size: 7.5px; line-height: 1.1; }
 .gauge-label-txt { color: #d6be89; font-weight: 700; }
 .troops-num-txt { color: #ffffff; font-weight: 900; font-size: clamp(7.5px, 1.1dvh, 8.5px); text-shadow: 0 1px 2px #000; }
@@ -318,14 +319,15 @@ body {
   box-shadow: 0 0 5px rgba(255, 215, 0, 0.7);
 }
 
+/* 武将セリフ：下に偏らず兵力バー直下から上詰めで端正に書き出し */
 .warlord-quote-row {
-  flex: 1; min-height: 2.1em;
-  display: flex; align-items: center; overflow: hidden;
-  border-top: 1px dashed rgba(255, 215, 0, 0.25); padding-top: 1.5px;
+  flex: 1; min-height: 0;
+  display: flex; align-items: flex-start; justify-content: flex-start; overflow: hidden;
+  border-top: 1px dashed rgba(255, 215, 0, 0.25); padding-top: 2px;
 }
 .warlord-quote {
   font-size: clamp(8px, 1.18dvh, 9.5px); color: #fff8e7; font-weight: 800;
-  line-height: 1.25; margin: 0; width: 100%;
+  line-height: 1.25; margin: 0; width: 100%; text-align: left;
   white-space: normal;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
   overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 2px #000;
@@ -374,7 +376,7 @@ body {
 }
 
 /* =========================================================
-   【持ち駒台 2行（2段）構成】
+   【持ち駒台 2行（2段）構成 ＆ 上下方向ゆったり拡大】
    ========================================================= */
 .board-hand-dock {
   display: flex; align-items: center; gap: 4px; z-index: 10;
@@ -388,23 +390,23 @@ body {
 
 .warlord-hand-box {
   background: var(--board-wood);
-  border: 1.5px solid #a67c33; border-radius: 4px; padding: 2px;
+  border: 1.5px solid #a67c33; border-radius: 4px; padding: 2.5px 3px;
   display: grid;
   grid-template-rows: repeat(2, 1fr);
   grid-auto-flow: column;
   grid-auto-columns: min-content;
   align-items: center; justify-content: flex-start;
-  gap: 2px 3px;
+  gap: 2.5px 3.5px;
   box-shadow: inset 0 1px 3px rgba(0,0,0,0.6), 0 2px 5px rgba(0,0,0,0.85);
   position: relative; overflow-x: auto; overflow-y: hidden;
 }
 
 .hand-piece {
-  width: clamp(15px, 2.1dvh, 19px); height: clamp(16px, 2.3dvh, 21px);
+  width: clamp(16px, 2.3dvh, 20px); height: clamp(17px, 2.5dvh, 22px);
   background: var(--piece-bg); border: 1px solid #5a3813;
   clip-path: polygon(50% 0%, 88% 18%, 100% 100%, 0% 100%, 12% 18%);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  font-family: var(--font-kaisho); font-size: clamp(6.5px, 0.95dvh, 7.5px); line-height: 0.95; font-weight: 900;
+  font-family: var(--font-kaisho); font-size: clamp(7px, 1.05dvh, 8px); line-height: 0.95; font-weight: 900;
   cursor: pointer; position: relative; box-shadow: 0 1.2px 2px rgba(0,0,0,0.7); flex-shrink: 0;
   text-align: center; padding-top: 1px;
 }
@@ -615,6 +617,7 @@ body {
   display: flex; align-items: center; justify-content: flex-start; gap: 5px;
   padding: 2.5px 6px; flex-shrink: 0; position: relative; transition: all 0.25s ease;
   box-shadow: 0 3px 10px rgba(0,0,0,0.95);
+  margin-top: 0px;
 }
 .order-banner-corner {
   position: absolute; width: 3.5px; height: 3.5px;
@@ -718,7 +721,6 @@ body {
   width: 100%; max-width: min(98vw, 760px);
   height: clamp(34px, 4.6dvh, 38px);
   display: grid;
-  /* 5列構成：待った / 合戦絵巻 / [特大黄金:対局開始] / 軍師進言 / 投了 */
   grid-template-columns: 1fr 1.05fr 1.45fr 1.05fr 1fr;
   gap: 4px; padding: 2px 3px; flex-shrink: 0;
   background: linear-gradient(180deg, rgba(22, 9, 3, 0.95) 0%, rgba(8, 3, 1, 0.98) 100%);
@@ -744,7 +746,6 @@ body {
   border: 1.3px solid #ffd700; color: #ffd700;
 }
 
-/* 主役・中央特大立体黄金ボタン「対局開始」 */
 .btn-start-hero {
   background: linear-gradient(135deg, #fff29e 0%, #ffd700 25%, #e69d00 65%, #ffd700 100%) !important;
   border: 2px solid #fff5a8 !important;
@@ -761,12 +762,12 @@ body {
 }
 
 /* =========================================================================
-   【レスポンシブ布陣切り替え：タブレット vs スマートフォン（dvh最適化）】
+   【レスポンシブ布陣切り替え：タブレット vs スマートフォン（吸着＆重なり完全根絶）】
    ========================================================================= */
 
 /* ---------------------------------------------------------
    A. タブレット（幅640px以上）
-   - 画面の高さ（100dvh）に応じて盤面とパネルが優雅に伸縮
+   - ブラウザ2段メニュー（タブ＋アドレスバー）でも絶対に重ならない「-325px」計算
    --------------------------------------------------------- */
 @media (min-width: 640px) {
   .battle-theatre-layout {
@@ -789,15 +790,15 @@ body {
     flex: 1; min-width: 0; height: 100%; margin: 0; align-self: stretch;
   }
 
-  /* 中陣（将棋盤）：ブラウザメニュー込みで絶対に画面を突き破らないdvh連動 */
+  /* 中陣（将棋盤）：タブレット2段メニューを考慮し「-325px」で完璧に収める */
   .battle-section-middle {
     width: 100%; flex: 0 0 auto;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     margin: 1px 0;
   }
   .shogi-board-frame {
-    width: min(calc(100vw - 20px), calc(100dvh - 240px), 640px);
-    height: min(calc(100vw - 20px), calc(100dvh - 240px), 640px);
+    width: min(calc(100vw - 20px), calc(100dvh - 325px), 560px);
+    height: min(calc(100vw - 20px), calc(100dvh - 325px), 560px);
     max-width: 100%; max-height: 100%;
   }
 
@@ -820,58 +821,68 @@ body {
 
 /* ---------------------------------------------------------
    B. スマートフォン（幅639px以下）
-   - 上下ブラウザメニューが出現して画面が極小になっても
-     盤面が自動で縮み、下部ボタンや軍令高札が100%画面内に収まる
+   - 【上】戦況バー ＝ 敵将パネル を隙間なく吸着！
+   - 【下】自将パネル ＝ 軍令高札 を隙間なく吸着！
+   - 【駒台】武将パネルから離して上下幅拡大（2段完全表示保証！）
    --------------------------------------------------------- */
 @media (max-width: 639px) {
   .battle-theatre-layout {
-    gap: 0px; justify-content: center; flex: 1 1 auto;
+    gap: 0px; justify-content: space-between; flex: 1 1 auto;
   }
 
-  /* 上陣セクション（縦積み順序制御） */
+  /* 上陣セクション */
   .battle-section-top {
-    width: 100%; display: flex; flex-direction: column; gap: 2px; flex-shrink: 0; margin-bottom: 0px;
+    width: 100%; display: flex; flex-direction: column; gap: 0px; flex-shrink: 0; margin-bottom: 0px;
   }
+  /* 1. 敵将パネル：上の戦況バー（.situation-banner）にピタリと吸着（上角丸フラット化） */
   .battle-section-top #ai-panel {
-    order: 1; width: 100%; height: clamp(62px, 8.8dvh, 74px); min-height: 60px; margin: 0;
-    border-radius: 4px;
+    order: 1; width: 100%; height: clamp(62px, 8.8dvh, 74px); min-height: 60px;
+    margin: 0; border-top: none; border-radius: 0 0 5px 5px;
   }
+  /* 2. 敵軍持ち駒台：敵将パネルから適度に離し、高さを上下に拡大（2行目も絶対隠れない！） */
   .battle-section-top #dock-enemy-wrapper {
-    order: 2; width: 100%; height: clamp(30px, 4.2dvh, 35px);
+    order: 2; width: 100%; height: clamp(44px, 6.2dvh, 52px); min-height: 44px;
     display: flex; justify-content: flex-start; align-self: flex-start;
-    margin-top: 1px; margin-bottom: 0px; padding: 0;
+    margin-top: clamp(2px, 0.6dvh, 5px); margin-bottom: 0px; padding: 0;
   }
   .battle-section-top #dock-enemy-wrapper .warlord-hand-box {
-    height: 100%; min-width: 130px; max-width: 82%;
+    height: 100%; min-width: 140px; max-width: 85%;
   }
 
-  /* 中陣（将棋盤）：100dvh - 275px でブラウザメニュー下の領域に自動吸着 */
+  /* 中陣（将棋盤）：駒台拡大分を吸収する「-305px」計算 */
   .battle-section-middle {
     width: 100%; flex: 0 0 auto;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     padding: 0; margin: 0px 0;
   }
   .shogi-board-frame {
-    width: min(calc(100vw - 8px), calc(100dvh - 275px), 520px);
-    height: min(calc(100vw - 8px), calc(100dvh - 275px), 520px);
+    width: min(calc(100vw - 8px), calc(100dvh - 305px), 520px);
+    height: min(calc(100vw - 8px), calc(100dvh - 305px), 520px);
     max-width: 100%; max-height: 100%;
   }
 
-  /* 下陣セクション（縦積み順序制御） */
+  /* 下陣セクション */
   .battle-section-bottom {
-    width: 100%; display: flex; flex-direction: column; gap: 2px; flex-shrink: 0; margin-top: 0px;
+    width: 100%; display: flex; flex-direction: column; gap: 0px; flex-shrink: 0; margin-top: 0px;
   }
+  /* 3. 自軍持ち駒台：高さを上下に拡大（2行目も絶対隠れない！） */
   .battle-section-bottom #dock-player-wrapper {
-    order: 1; width: 100%; height: clamp(30px, 4.2dvh, 35px);
+    order: 1; width: 100%; height: clamp(44px, 6.2dvh, 52px); min-height: 44px;
     display: flex; justify-content: flex-end; align-self: flex-end;
-    margin-top: 0px; margin-bottom: 1px; padding: 0;
+    margin-top: 0px; margin-bottom: clamp(2px, 0.6dvh, 5px); padding: 0;
   }
   .battle-section-bottom #dock-player-wrapper .warlord-hand-box {
-    height: 100%; min-width: 130px; max-width: 82%;
+    height: 100%; min-width: 140px; max-width: 85%;
   }
+  /* 4. 自将パネル：下の軍令高札（#order-message-banner）にピタリと吸着（下角丸フラット化） */
   .battle-section-bottom #player-panel {
-    order: 2; width: 100%; height: clamp(62px, 8.8dvh, 74px); min-height: 60px; margin: 0;
-    border-radius: 4px;
+    order: 2; width: 100%; height: clamp(62px, 8.8dvh, 74px); min-height: 60px;
+    margin: 0; border-bottom: none; border-radius: 5px 5px 0 0;
+  }
+
+  /* 5. 軍令高札：自将パネルの直下にピタリと吸着（上角丸フラット化） */
+  .order-message-banner {
+    border-top: 1px solid #73511f !important; border-radius: 0 0 5px 5px !important;
   }
 
   .piece {
@@ -1314,5 +1325,4 @@ body {
 .rivalry-story-p { margin: 0 0 4px 0; font-size: 10px; line-height: 1.55; color: #fcedcb; }
 .rivalry-dialogue-box { background: rgba(14, 5, 2, 0.9); border: 1px solid #73511f; border-left: 3px solid #ff3b30; border-radius: 4px; padding: 4px 7px; margin: 4px 0; font-size: 10px; }
 .highlight-rivalry-card { border: 2px solid #ffffff !important; background: linear-gradient(180deg, rgba(64, 25, 8, 0.98) 0%, rgba(26, 8, 2, 0.98) 100%) !important; }
-
 

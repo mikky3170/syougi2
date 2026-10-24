@@ -926,7 +926,6 @@ function updateThinkingTimerDisplay() {
   const currentStep = moveObjectsHistory.length + 1;
   const isPlayer = (currentThinkingSide === 'PLAYER');
 
-  // 武将肩書の右横に「手番思案中 ⏱ X.Xs」をリアルタイム表示！
   const pThinkDisp = document.getElementById('player-thinking-disp');
   const aiThinkDisp = document.getElementById('ai-thinking-disp');
 
@@ -949,7 +948,6 @@ function updateThinkingTimerDisplay() {
     return;
   }
 
-  // 軍令高札の全体ガイダンス表示
   if (isPlayer && !tacticsCandidates.length && !isHintThinking) {
     const pName = PLAYER_WARLORDS[currentMyWarlordId].name;
     setOrderMessage({
@@ -1791,14 +1789,12 @@ function initBoardState() {
   totalTimeSpentMs = { PLAYER: 0, AI: 0 };
   movesCountBySide = { PLAYER: 0, AI: 0 };
 
-  // 討死演出・フォーカスの完全リセット
   const aiPanelEl = document.getElementById('ai-panel');
   if (aiPanelEl) aiPanelEl.classList.remove('warlord-defeated');
   updateTurnFocus(null);
   updateStrategistUI();
   updateWarlordBGM(currentAiLevel);
 
-  // 肩書横の思案中スロットを初期化（非表示）
   const pThinkDisp = document.getElementById('player-thinking-disp');
   const aiThinkDisp = document.getElementById('ai-thinking-disp');
   if (pThinkDisp) pThinkDisp.style.display = 'none';
@@ -2456,8 +2452,6 @@ function animateAndExecuteMove(m, metric = null, onComplete = null) {
     if (animPiece && animPiece.parentElement) animPiece.remove();
 
     executeMove(m, metric);
-
-    // 戦況や王手に連動した動的セリフを即時更新！
     updateWarlordQuotes();
 
     isPieceAnimating = false;
@@ -2481,7 +2475,7 @@ function executeMove(m, metric = null) {
 
   if (m.type === 'drop') {
     hands[m.owner][m.code]--;
-    board[m.to.r][m.to.c] = { code: m.code, owner: m.owner };
+    board[m.to.r][move.to.c] = { code: m.code, owner: m.owner };
   } else {
     const fp = board[m.from.r][m.from.c], tp = board[m.to.r][m.to.c];
     if (tp) {
@@ -3847,8 +3841,9 @@ function selectConquestProvince(lvl) {
   const aiBox = document.getElementById('ai-avatar-container');
   if (aiBox) aiBox.innerHTML = getWarlordPortraitHtml(w, true, 'ai');
 
+  // 自将変更と対になるよう、常に「⚔ 敵将変更」に完全統一
   const enemyChangeBtn = document.getElementById('btn-enemy-change');
-  if (enemyChangeBtn && !isExhibitionActive) enemyChangeBtn.textContent = `⚔ ${w.province} (Lv.${lvl})`;
+  if (enemyChangeBtn && !isExhibitionActive) enemyChangeBtn.textContent = '⚔ 敵将変更';
   
   updateWarlordBGM(lvl);
   updateConquestMapUI();
@@ -4381,5 +4376,3 @@ document.addEventListener('touchstart', () => initAudio(), { once: true });
 loadProgress();
 setPlayerWarlord(currentMyWarlordId);
 initBoardState();
-
-
