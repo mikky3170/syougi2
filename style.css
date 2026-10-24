@@ -124,8 +124,8 @@ body {
   border-color: #ffd700; color: #ffefa8; 
 }
 .btn-exhibition { 
-  background: linear-gradient(180deg, #1b3d6e 0%, #091936 100%); 
-  border-color: #72b2ff; color: #eaf3ff; 
+  background: linear-gradient(180deg, #1b283d 0%, #0a1324 100%); 
+  border-color: #d4aa50; color: #fff3c4; 
 }
 .btn-history { 
   background: linear-gradient(180deg, #6e1919 0%, #330505 100%); 
@@ -262,22 +262,22 @@ body {
 .situation-banner.mode-replay .situation-text { color: #fffae6 !important; font-weight: 900 !important; }
 
 .situation-banner.mode-exhibition {
-  background: linear-gradient(90deg, #0d2847 0%, #153c69 50%, #0d2847 100%) !important;
-  border-color: #72b2ff !important;
-  box-shadow: 0 0 12px rgba(114, 178, 255, 0.5) !important;
+  background: linear-gradient(90deg, #0e192c 0%, #182845 50%, #0e192c 100%) !important;
+  border-color: #ffd700 !important;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.35) !important;
 }
 .situation-banner.mode-exhibition .situation-title {
-  border-right-color: #72b2ff !important;
-  background: linear-gradient(135deg, #ffffff 0%, #b8dcff 50%, #72b2ff 100%) !important;
+  border-right-color: #ffd700 !important;
+  background: var(--gold-rich) !important;
   -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important;
 }
-.situation-banner.mode-exhibition .situation-text { color: #f0f7ff !important; font-weight: 900 !important; }
+.situation-banner.mode-exhibition .situation-text { color: #fff9e6 !important; font-weight: 900 !important; }
 
 /* =========================================================
-   武将金蒔絵パネル ＆ 手番闘気脈動（オーラグロウ）
+   武将金蒔絵パネル ＆ スマホ全幅駒台・本陣構造
    ========================================================= */
 .warlord-panel {
-  width: 100%; min-height: clamp(62px, 8.5vh, 74px);
+  width: 100%; min-height: clamp(60px, 8.2vh, 72px);
   background: linear-gradient(180deg, rgba(38, 19, 8, 0.98) 0%, rgba(14, 6, 2, 0.98) 100%);
   border: 1.8px solid #c99832; border-radius: 5px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.95), inset 0 1px 0 rgba(255,235,150,0.4);
@@ -292,19 +292,19 @@ body {
 }
 
 @keyframes pulse-aura-enemy {
-  0%   { box-shadow: 0 3px 6px rgba(0,0,0,0.95), 0 0 10px rgba(100, 150, 255, 0.4), inset 0 0 4px rgba(0,0,0,0.8); border-color: #ffd700; }
-  50%  { box-shadow: 0 3px 10px rgba(0,0,0,0.95), 0 0 24px rgba(255, 60, 60, 0.9), 0 0 35px rgba(100, 150, 255, 0.75), inset 0 0 8px rgba(255, 100, 100, 0.5); border-color: #ff9e9e; }
-  100% { box-shadow: 0 3px 6px rgba(0,0,0,0.95), 0 0 10px rgba(100, 150, 255, 0.4), inset 0 0 4px rgba(0,0,0,0.8); border-color: #ffd700; }
+  0%   { box-shadow: 0 3px 6px rgba(0,0,0,0.95), 0 0 10px rgba(255, 120, 120, 0.4), inset 0 0 4px rgba(0,0,0,0.8); border-color: #ffd700; }
+  50%  { box-shadow: 0 3px 10px rgba(0,0,0,0.95), 0 0 24px rgba(255, 60, 60, 0.9), 0 0 30px rgba(255, 160, 50, 0.7), inset 0 0 8px rgba(255, 100, 100, 0.5); border-color: #ffb3b3; }
+  100% { box-shadow: 0 3px 6px rgba(0,0,0,0.95), 0 0 10px rgba(255, 120, 120, 0.4), inset 0 0 4px rgba(0,0,0,0.8); border-color: #ffd700; }
 }
 
 .warlord-avatar {
-  width: clamp(48px, 6.8vh, 58px) !important;
-  height: clamp(54px, 7.6vh, 64px) !important;
+  width: clamp(44px, 6.2vh, 56px) !important;
+  height: clamp(50px, 7.0vh, 62px) !important;
   border-radius: 6px !important;
   border: 2px solid #ffd700 !important;
   background: radial-gradient(circle at 35% 35%, #3d1c0c 0%, #080301 100%);
   overflow: hidden !important; position: relative; flex-shrink: 0 !important;
-  box-shadow: 0 3px 6px rgba(0,0,0,0.95), 0 0 12px rgba(255, 215, 0, 0.4), inset 0 0 4px rgba(0,0,0,0.8);
+  box-shadow: 0 3px 6px rgba(0,0,0,0.95), 0 0 10px rgba(255, 215, 0, 0.35), inset 0 0 4px rgba(0,0,0,0.8);
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; transition: transform 0.15s ease, box-shadow 0.3s ease;
 }
@@ -339,8 +339,8 @@ body {
   pointer-events: none;
 }
 
-/* 武将情報エリア：重なり・文字溢れの完全防止 */
-.warlord-info { flex: 1.25; display: flex; flex-direction: column; justify-content: center; min-width: 0; overflow: hidden; }
+/* 武将情報エリア */
+.warlord-info { flex: 1.2; display: flex; flex-direction: column; justify-content: center; min-width: 0; overflow: hidden; }
 .panel-enemy .warlord-info { text-align: right; }
 .panel-player .warlord-info { text-align: left; }
 
@@ -350,7 +350,7 @@ body {
 .panel-enemy .name-right-group { justify-content: flex-end; }
 
 .warlord-name {
-  font-size: 14px; font-weight: 900; color: #ffe699; letter-spacing: 0.8px;
+  font-size: 13.5px; font-weight: 900; color: #ffe699; letter-spacing: 0.6px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-shrink: 1;
 }
 
@@ -379,30 +379,30 @@ body {
 }
 
 .panel-select-btn.is-locked-exhibition {
-  background: linear-gradient(180deg, #1b3554 0%, #0b1a2d 100%) !important;
-  border: 1.3px solid #72b2ff !important;
-  color: #ffd700 !important;
-  box-shadow: 0 0 8px rgba(114, 178, 255, 0.4), inset 0 1px 0 rgba(255,255,255,0.3) !important;
+  background: linear-gradient(180deg, #241407 0%, #120501 100%) !important;
+  border: 1.3px solid #ffd700 !important;
+  color: #ffe699 !important;
+  box-shadow: 0 0 6px rgba(255, 215, 0, 0.35), inset 0 1px 0 rgba(255,255,255,0.3) !important;
   cursor: pointer;
 }
 
-.warlord-clan { font-size: 9px; color: #d6be89; font-weight: 700; line-height: 1.1; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.warlord-clan { font-size: 8.5px; color: #d6be89; font-weight: 700; line-height: 1.1; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .warlord-quote {
-  font-size: 10px; color: #fff8e7; font-weight: 800;
+  font-size: 9.5px; color: #fff8e7; font-weight: 800;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   text-shadow: 0 1px 2px #000; margin: 1px 0; transition: all 0.3s ease;
 }
 
-/* 兵力ゲージ（軍勢HPバー） */
+/* 兵力ゲージ */
 .gauge-group { display: flex; flex-direction: column; gap: 1px; margin-top: 1px; }
-.gauge-label-row { display: flex; justify-content: space-between; align-items: center; font-size: 8.5px; }
+.gauge-label-row { display: flex; justify-content: space-between; align-items: center; font-size: 8px; }
 
 .gauge-title-tag { color: #ffd700; font-weight: 900; letter-spacing: 0.5px; }
-.troops-num-txt { color: #ffffff; font-weight: 900; font-size: 9.5px; text-shadow: 0 1px 3px #000; letter-spacing: 0.3px; }
+.troops-num-txt { color: #ffffff; font-weight: 900; font-size: 9px; text-shadow: 0 1px 3px #000; letter-spacing: 0.3px; }
 
 .troops-bar-frame {
-  width: 100%; height: 6px; background: #000000;
+  width: 100%; height: 5.5px; background: #000000;
   border: 0.8px solid #a67c33; border-radius: 2px; overflow: hidden;
   box-shadow: inset 0 1px 2px rgba(0,0,0,0.9);
 }
@@ -416,37 +416,78 @@ body {
   box-shadow: 0 0 6px rgba(255, 215, 0, 0.7);
 }
 
-/* 駒台 */
+/* 駒台（PC・タブレット共通） */
 .warlord-hand-area {
-  flex: 1.1; height: 90%; min-width: 85px;
+  flex: 1.1; height: 88%; min-width: 90px;
   background: var(--board-wood);
-  border: 1.5px solid #a67c33; border-radius: 3px; padding: 2px 3px;
+  border: 1.5px solid #a67c33; border-radius: 4px; padding: 2px 4px;
   display: flex; align-items: center; overflow-x: auto; gap: 4px;
   box-shadow: inset 0 1px 3px rgba(0,0,0,0.5), inset 0 -1px 2px rgba(255,255,255,0.4), 0 2px 5px rgba(0,0,0,0.85);
   position: relative;
 }
 .warlord-hand-area::after {
   content: ''; position: absolute; inset: 0;
-  border: 0.8px solid rgba(80, 40, 10, 0.4); pointer-events: none; border-radius: 2px;
+  border: 0.8px solid rgba(80, 40, 10, 0.4); pointer-events: none; border-radius: 3px;
 }
 .panel-enemy .warlord-hand-area { justify-content: flex-start; }
 .panel-player .warlord-hand-area { justify-content: flex-end; }
 
-/* スマホ用レスポンシブ最適化 */
+/* =========================================================
+   【スマホ用レスポンシブ最適化：全駒ゆったり一覧・全幅駒台】
+   上段：コンパクト大将バー / 下段：全幅広々木目駒台
+   ========================================================= */
 @media (max-width: 480px) {
   .warlord-panel {
-    display: grid !important; height: auto !important; min-height: 66px !important;
-    padding: 2.5px 5px !important; gap: 2px 6px !important;
+    display: flex !important; flex-direction: column !important;
+    min-height: 66px !important; height: auto !important;
+    padding: 2.5px 5px !important; gap: 2px !important;
   }
-  .panel-enemy { grid-template-columns: 1fr auto !important; grid-template-rows: auto auto !important; }
-  .panel-enemy .warlord-hand-area { grid-column: 1 / 2 !important; grid-row: 2 / 3 !important; height: 33px !important; width: 100% !important; justify-content: flex-start !important; }
-  .panel-enemy .warlord-info { grid-column: 1 / 2 !important; grid-row: 1 / 2 !important; }
-  .panel-enemy .warlord-avatar { grid-column: 2 / 3 !important; grid-row: 1 / 3 !important; align-self: center !important; }
+  
+  /* 上段：アバター ＋ 情報 ＋ HPバー を横1行に整然と配置 */
+  .panel-enemy, .panel-player {
+    position: relative;
+  }
 
-  .panel-player { grid-template-columns: auto 1fr !important; grid-template-rows: auto auto !important; }
-  .panel-player .warlord-avatar { grid-column: 1 / 2 !important; grid-row: 1 / 3 !important; align-self: center !important; }
-  .panel-player .warlord-hand-area { grid-column: 2 / 3 !important; grid-row: 1 / 2 !important; height: 33px !important; width: 100% !important; justify-content: flex-end !important; }
-  .panel-player .warlord-info { grid-column: 2 / 3 !important; grid-row: 2 / 3 !important; }
+  .panel-enemy {
+    flex-direction: column !important;
+  }
+  .panel-player {
+    flex-direction: column !important;
+  }
+
+  .warlord-info {
+    width: 100% !important; flex: none !important;
+    display: flex !important; flex-direction: column !important; gap: 1px !important;
+  }
+
+  .warlord-avatar {
+    width: 38px !important; height: 44px !important;
+    position: absolute !important; top: 3px !important;
+  }
+  .panel-enemy .warlord-avatar { right: 5px !important; }
+  .panel-player .warlord-avatar { left: 5px !important; }
+
+  .panel-enemy .warlord-info { padding-right: 44px !important; }
+  .panel-player .warlord-info { padding-left: 44px !important; }
+
+  .warlord-name { font-size: 11.5px !important; }
+  .warlord-clan { display: none !important; }
+  .warlord-quote { font-size: 8px !important; margin: 0 !important; }
+  .gauge-group { margin-top: 0 !important; }
+  .gauge-label-row { font-size: 7.5px !important; }
+  .troops-num-txt { font-size: 8px !important; }
+  .troops-bar-frame { height: 4px !important; }
+
+  /* 下段：横幅いっぱい（全幅100%）に広がる木目駒台！ 7種全駒が余裕で並ぶ */
+  .warlord-hand-area {
+    width: 100% !important; max-width: 100% !important; min-width: 100% !important;
+    height: 35px !important; min-height: 35px !important;
+    padding: 1px 4px !important; gap: 4px !important;
+    border-radius: 3px !important; margin-top: 1px !important;
+    overflow-x: auto !important;
+  }
+  .panel-enemy .warlord-hand-area { justify-content: flex-start !important; }
+  .panel-player .warlord-hand-area { justify-content: flex-start !important; }
 }
 
 /* =========================================================
@@ -485,8 +526,8 @@ body {
   box-shadow: 0 0 25px rgba(255, 180, 0, 0.75), 0 5px 18px rgba(0,0,0,0.98), inset 0 0 12px rgba(255, 215, 0, 0.3) !important;
 }
 .mode-exhibition-active .shogi-board-frame {
-  border-color: #72b2ff !important;
-  box-shadow: 0 0 25px rgba(114, 178, 255, 0.8), 0 5px 18px rgba(0,0,0,0.98), inset 0 0 12px rgba(114, 178, 255, 0.3) !important;
+  border-color: #ffd700 !important;
+  box-shadow: 0 0 22px rgba(255, 215, 0, 0.65), 0 5px 18px rgba(0,0,0,0.98), inset 0 0 12px rgba(255, 215, 0, 0.25) !important;
 }
 
 .shogi-board-frame::after {
@@ -529,8 +570,8 @@ body {
 }
 
 .cell.target-move {
-  background: linear-gradient(135deg, rgba(46, 125, 50, 0.9) 0%, rgba(27, 94, 32, 0.96) 100%) !important;
-  box-shadow: inset 0 0 8px #76ff03;
+  background: linear-gradient(135deg, rgba(54, 115, 41, 0.9) 0%, rgba(30, 82, 22, 0.96) 100%) !important;
+  box-shadow: inset 0 0 8px #aeea00;
 }
 
 @keyframes pulse-capture-target {
@@ -615,7 +656,7 @@ body {
 
 /* 持ち駒 */
 .hand-piece {
-  width: 28px; height: 33px;
+  width: 27px; height: 32px;
   background: var(--piece-bg); border: 1.2px solid #5a3813;
   clip-path: polygon(50% 0%, 88% 18%, 100% 100%, 0% 100%, 12% 18%);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -668,9 +709,7 @@ body {
 .piece-just-landed-player { animation: piece-landing-shock-player 0.24s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important; }
 .piece-just-landed-ai { animation: piece-landing-shock-ai 0.24s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important; }
 
-/* =========================================================
-   【カットイン演出】文字をひと回り大きく拡大 ＆ 迫力強化
-   ========================================================= */
+/* カットイン */
 .cutin-slot {
   position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
   width: 95%; max-width: 480px; height: 0; min-height: 0;
@@ -742,11 +781,11 @@ body {
 
 /* 本陣直結・合戦軍令札 */
 .order-message-banner {
-  width: 100%; height: clamp(44px, 6.2vh, 50px);
+  width: 100%; min-height: clamp(44px, 6.2vh, 52px); height: auto;
   background: linear-gradient(90deg, rgba(26, 11, 4, 0.95) 0%, rgba(45, 19, 7, 0.95) 50%, rgba(26, 11, 4, 0.95) 100%);
-  display: flex; align-items: center; justify-content: flex-start; gap: 4px;
-  padding: 2px 7px; flex-shrink: 0; position: relative;
-  transition: all 0.35s ease;
+  display: flex; align-items: center; justify-content: flex-start; gap: 5px;
+  padding: 3px 7px; flex-shrink: 0; position: relative;
+  transition: all 0.25s ease;
 }
 
 .order-banner-corner {
@@ -770,8 +809,8 @@ body {
 .tag-badge-row { display: block; white-space: nowrap; }
 
 .badge-tag-player { background: linear-gradient(180deg, #6b4312 0%, #2e1804 100%); border-color: #ffd700; color: #fff6bd; text-shadow: 0 1px 2px #000; }
-.badge-tag-enemy { background: linear-gradient(180deg, #1b3254 0%, #081426 100%); border-color: #6db1ff; color: #e1f0ff; text-shadow: 0 1px 2px #000; }
-.badge-tag-hint { background: linear-gradient(180deg, #1b5e28 0%, #08240f 100%); border-color: #6ee08b; color: #e8ffe9; text-shadow: 0 1px 2px #000; }
+.badge-tag-enemy { background: linear-gradient(180deg, #16243d 0%, #08111f 100%); border-color: #d4aa50; color: #ffe6aa; text-shadow: 0 1px 2px #000; }
+.badge-tag-hint { background: linear-gradient(180deg, #1b5e28 0%, #08240f 100%); border-color: #ffd700; color: #e8ffe9; text-shadow: 0 1px 2px #000; }
 
 @keyframes pulse-awakened-badge {
   0%   { box-shadow: 0 0 6px #ff3300, inset 0 0 4px #ffd700; border-color: #ffd700; }
@@ -797,7 +836,7 @@ body {
 
 .badge-tag-settle { background: linear-gradient(180deg, #7a5015 0%, #301f05 100%); border-color: #ffd700; color: #fff3a8; text-shadow: 0 1px 2px #000; }
 .badge-tag-replay { background: linear-gradient(180deg, #59196b 0%, #200729 100%) !important; border-color: #ffd700 !important; color: #fce8ff !important; box-shadow: 0 0 10px rgba(255, 215, 0, 0.6) !important; }
-.badge-tag-exhibition { background: linear-gradient(180deg, #0d386b 0%, #05162e 100%) !important; border-color: #72b2ff !important; color: #eaf3ff !important; box-shadow: 0 0 12px rgba(114, 178, 255, 0.7) !important; }
+.badge-tag-exhibition { background: linear-gradient(180deg, #1b283d 0%, #0a1324 100%) !important; border-color: #ffd700 !important; color: #ffe6aa !important; box-shadow: 0 0 8px rgba(255, 215, 0, 0.4) !important; }
 
 /* 軍師肖像札 */
 @keyframes slide-in-strategist {
@@ -826,32 +865,32 @@ body {
   line-height: 8.5px; text-align: center; white-space: nowrap; letter-spacing: 0.5px;
 }
 
-/* 軍令札本文センター：左側絶妙マージン ＆ 2行目全角1文字字下げ */
+/* 軍令札本文センター */
 .order-message-center {
-  flex: 1; min-width: 0; height: 38px;
+  flex: 1; min-width: 0;
   display: flex; flex-direction: column; justify-content: center;
   overflow: hidden; text-shadow: 0 1px 3px #000;
-  padding-left: clamp(8px, 2.2vw, 12px);
+  padding-left: clamp(6px, 1.8vw, 10px);
 }
 
 .order-row-primary {
-  height: 20px;
+  min-height: 20px;
   display: flex; align-items: center; justify-content: space-between; gap: 4px; min-width: 0;
 }
 
 .order-line-primary {
-  line-height: 20px;
+  line-height: 1.3;
   font-size: clamp(10.5px, 1.5vh, 12px); font-weight: 800; color: #ffe699;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   flex: 1; min-width: 0;
 }
 
 .order-line-sub {
-  height: 17px; line-height: 17px;
+  min-height: 16px; line-height: 1.3;
   font-size: clamp(9.5px, 1.35vh, 10.5px); font-weight: 800; color: #fff2b2;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   display: block; margin: 0;
-  padding: 0 0 0 clamp(10px, 2.4vw, 13px);
+  padding: 1px 0 0 clamp(8px, 2.0vw, 12px);
 }
 
 .order-actions-slot {
@@ -904,8 +943,8 @@ body {
 
 /* 軍師戦術意図バッジ */
 .tactics-reason-badge {
-  font-size: 11px !important; font-weight: 900 !important;
-  padding: 1.5px 6px !important; border-radius: 4px !important;
+  font-size: 10.5px !important; font-weight: 900 !important;
+  padding: 1px 5px !important; border-radius: 3px !important;
   border: 1.2px solid #ffd700 !important; white-space: nowrap !important;
   margin-right: 4px !important; line-height: 1.15 !important;
   vertical-align: middle !important; display: inline-block !important;
@@ -913,16 +952,16 @@ body {
   text-shadow: 0 1px 2px #000 !important;
 }
 .badge-tactics-capture { background: linear-gradient(180deg, #a61717 0%, #470606 100%) !important; color: #fff6bd !important; }
-.badge-tactics-promote { background: linear-gradient(180deg, #85189c 0%, #380842 100%) !important; color: #ffd700 !important; }
-.badge-tactics-defense { background: linear-gradient(180deg, #1059b8 0%, #052147 100%) !important; color: #e1f5fe !important; border-color: #64b5f6 !important; }
-.badge-tactics-trap    { background: linear-gradient(180deg, #e65100 0%, #591e00 100%) !important; color: #ffffff !important; }
-.badge-tactics-attack  { background: linear-gradient(180deg, #c2185b 0%, #4d0521 100%) !important; color: #ffffff !important; }
+.badge-tactics-promote { background: linear-gradient(180deg, #70260c 0%, #3b1103 100%) !important; color: #ffd700 !important; }
+.badge-tactics-defense { background: linear-gradient(180deg, #1b283d 0%, #0a1324 100%) !important; color: #ffe899 !important; border-color: #ffd700 !important; }
+.badge-tactics-trap    { background: linear-gradient(180deg, #b86200 0%, #522700 100%) !important; color: #ffffff !important; }
+.badge-tactics-attack  { background: linear-gradient(180deg, #8c0d38 0%, #420217 100%) !important; color: #ffffff !important; }
 .badge-tactics-open    { background: linear-gradient(180deg, #2e7d32 0%, #0d3810 100%) !important; color: #e8f5e9 !important; border-color: #a5d6a7 !important; }
 
 .tactics-plan-tag { font-size: 10.5px; font-weight: 900; color: #ffd700; margin-right: 3px; vertical-align: middle; }
 .hl-from { color: #ffb74d; font-weight: 900; text-decoration: underline; }
 .hl-to   { color: #ffd700; font-weight: 900; }
-.hl-act  { color: #76ff03; font-weight: 900; }
+.hl-act  { color: #ffd700; font-weight: 900; }
 .hl-prom { color: #ff5252; font-weight: 900; }
 
 /* =========================================================
@@ -1038,9 +1077,9 @@ body {
   box-shadow: 0 3.5px 0 #140312, 0 5px 8px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.45);
 }
 .btn-surrender {
-  background: linear-gradient(180deg, #1b324a 0%, #081522 100%);
-  border: 1.5px solid #7cb5eb; color: #e1f0ff;
-  box-shadow: 0 3.5px 0 #04090f, 0 5px 8px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.45);
+  background: linear-gradient(180deg, #1b2638 0%, #09111c 100%);
+  border: 1.5px solid #a88438; color: #fff1c7;
+  box-shadow: 0 3.5px 0 #040810, 0 5px 8px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.45);
 }
 .btn-start {
   background: linear-gradient(180deg, #d11919 0%, #6e0808 50%, #450404 100%) !important;
@@ -1176,8 +1215,6 @@ body {
 
 /* =========================================================
    【御前試合モーダル】
-   ★タブレット・PC：左右等幅固定（枠が一切動かない設計）
-   ★スマホ（<=600px）：先手/後手 切替タブ ＋ 1列フルワイド
    ========================================================= */
 .exhibition-modal-box {
   width: 96vw !important; max-width: 640px !important; height: 92vh !important;
@@ -1185,16 +1222,16 @@ body {
 }
 
 .exhibition-guide-plaque {
-  background: linear-gradient(90deg, rgba(13, 38, 71, 0.95) 0%, rgba(26, 68, 122, 0.95) 50%, rgba(13, 38, 71, 0.95) 100%);
-  border: 1.3px solid #72b2ff; border-radius: 4px;
-  padding: 4px 8px; margin-bottom: 5px; font-size: 9.5px; font-weight: 800; color: #eaf3ff;
+  background: linear-gradient(90deg, rgba(20, 11, 4, 0.95) 0%, rgba(46, 22, 9, 0.95) 50%, rgba(20, 11, 4, 0.95) 100%);
+  border: 1.3px solid #b88a32; border-radius: 4px;
+  padding: 4px 8px; margin-bottom: 5px; font-size: 9.5px; font-weight: 800; color: #ffefa8;
   box-shadow: 0 2px 6px rgba(0,0,0,0.85); display: flex; align-items: center; gap: 6px;
   flex-shrink: 0;
 }
 
 /* スマホ用：先手／後手 切替タブバー */
 .exhibition-mobile-tab-bar {
-  display: none; /* PC・タブレットでは非表示 */
+  display: none;
   grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 5px; flex-shrink: 0;
 }
 
@@ -1206,37 +1243,38 @@ body {
   box-shadow: 0 2px 0 #0a0301, 0 2px 4px rgba(0,0,0,0.8);
 }
 .exhibition-mobile-tab-btn.active {
-  background: linear-gradient(180deg, #1355a8 0%, #062754 100%) !important;
-  border-color: #72b2ff !important; color: #ffffff !important;
-  box-shadow: 0 2px 0 #031024, 0 0 10px rgba(114, 178, 255, 0.7) !important;
+  background: linear-gradient(180deg, #1b283d 0%, #0a1324 100%) !important;
+  border-color: #ffd700 !important; color: #ffffff !important;
+  box-shadow: 0 2px 0 #040810, 0 0 10px rgba(255, 215, 0, 0.5) !important;
 }
 
-/* PC・タブレット：完全等幅固定2列グリッド（枠幅が1pxも動かない） */
+/* PC・タブレット：完全等幅固定2列グリッド */
 .exhibition-vs-container {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 8px; flex: 1; min-height: 0; width: 100%;
+  gap: 8px; flex: 1 1 0; min-height: 0; width: 100%;
 }
 
 .exhibition-side-col {
   display: flex; flex-direction: column; gap: 4px;
-  background: rgba(14, 7, 3, 0.92); border: 1.2px solid #73511f; border-radius: 5px;
+  background: rgba(14, 7, 3, 0.94); border: 1.2px solid #73511f; border-radius: 5px;
   padding: 5px 6px; min-height: 0; min-width: 0; width: 100%;
   overflow: hidden;
 }
 
-/* スマホ環境（横幅600px以下）のレイアウト適応：タブ切替＋1列フルワイド表示 */
+/* スマホ環境（幅600px以下）のレイアウト適応：上下重なりを完全根絶 */
 @media (max-width: 600px) {
   .exhibition-mobile-tab-bar { display: grid !important; }
   .exhibition-vs-container {
     display: flex !important; flex-direction: column !important;
+    flex: 1 1 0 !important; min-height: 0 !important;
   }
   .exhibition-side-col {
-    display: none !important; /* タブで制御 */
-    flex: 1 1 0 !important;
+    display: none !important;
+    flex: 1 1 0 !important; min-height: 0 !important;
   }
   .exhibition-side-col.mobile-active-col {
-    display: flex !important; width: 100% !important;
+    display: flex !important; width: 100% !important; height: 100% !important;
   }
 }
 
@@ -1246,7 +1284,6 @@ body {
   flex-shrink: 0;
 }
 
-/* 現在出陣決定カード：枠幅完全固定・中身の文字で幅が変わらない */
 .exhibition-warlord-preview-card {
   background: linear-gradient(135deg, #3d1406 0%, #170701 100%);
   border: 1.8px solid #ffd700; border-radius: 5px;
@@ -1274,7 +1311,7 @@ body {
   display: flex; align-items: center; justify-content: space-between; font-size: 8.5px; font-weight: 800; min-width: 0;
 }
 .preview-troops-highlight { color: #ffd700; font-weight: 900; white-space: nowrap; }
-.preview-spec-highlight { color: #72b2ff; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.preview-spec-highlight { color: #ffd700; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .exhibition-list-header {
   font-size: 9.5px; font-weight: 900; color: #ebd4a0;
@@ -1285,7 +1322,7 @@ body {
 }
 
 .exhibition-avatar-pick-list {
-  flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;
+  flex: 1 1 0; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;
   padding-right: 2px; min-height: 0; width: 100%; min-width: 0;
 }
 
@@ -1293,16 +1330,16 @@ body {
   display: flex; align-items: center; gap: 6px;
   background: rgba(22, 10, 4, 0.9); border: 1.2px solid #6b4d1b; border-radius: 4px;
   padding: 4px 6px; cursor: pointer; transition: all 0.15s ease; position: relative;
-  width: 100%; min-width: 0; overflow: hidden;
+  width: 100%; min-width: 0; overflow: hidden; flex-shrink: 0;
 }
 .pick-avatar-item:hover {
   background: linear-gradient(90deg, #3d1c07 0%, #59280a 100%);
   border-color: #ffd700;
 }
 .pick-avatar-item.active {
-  border-color: #72b2ff !important;
-  background: linear-gradient(90deg, #0e2b52 0%, #1a447a 100%) !important;
-  box-shadow: 0 0 10px rgba(114, 178, 255, 0.8);
+  border-color: #ffd700 !important;
+  background: linear-gradient(90deg, #1b283d 0%, #2a3c5a 100%) !important;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
 }
 
 .pick-thumb-box {
@@ -1319,8 +1356,8 @@ body {
 
 .badge-ai-dan {
   font-size: 8px; font-weight: 900; padding: 1px 5px; border-radius: 3px;
-  background: linear-gradient(180deg, #0e386b 0%, #051a33 100%);
-  color: #72b2ff; border: 0.8px solid #72b2ff; white-space: nowrap; flex-shrink: 0;
+  background: linear-gradient(180deg, #1b283d 0%, #0a1324 100%);
+  color: #ffd700; border: 0.8px solid #a88438; white-space: nowrap; flex-shrink: 0;
   box-shadow: 0 1px 2px rgba(0,0,0,0.8);
 }
 .badge-ai-level {
@@ -1344,7 +1381,7 @@ body {
   border-radius: 2px; padding: 0.5px 3.5px; white-space: nowrap; flex-shrink: 0;
 }
 .badge-ai-depth {
-  background: #06192e; color: #9bc8ff; border: 0.6px solid #72b2ff;
+  background: #101c2e; color: #ffd700; border: 0.6px solid #a88438;
   border-radius: 2px; padding: 0.5px 3.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
@@ -1355,7 +1392,7 @@ body {
 
 .badge-active-stamp {
   font-size: 7.5px; font-weight: 900; color: #ffd700;
-  background: #173861; border: 0.8px solid #72b2ff; border-radius: 2px;
+  background: #1c2e47; border: 0.8px solid #ffd700; border-radius: 2px;
   padding: 0.5px 3px; white-space: nowrap; flex-shrink: 0;
 }
 
@@ -1374,9 +1411,9 @@ body {
   background: #241105; color: #d6be89; cursor: pointer; transition: all 0.15s ease;
 }
 .btn-speed-choice.active {
-  background: linear-gradient(180deg, #1b4b8a 0%, #0d284f 100%);
-  border-color: #72b2ff; color: #ffffff;
-  box-shadow: 0 0 10px rgba(114, 178, 255, 0.7);
+  background: linear-gradient(180deg, #1b283d 0%, #0a1324 100%);
+  border-color: #ffd700; color: #ffffff;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
 }
 
 .exhibition-mode-desc-plaque {
@@ -1394,16 +1431,16 @@ body {
 
 @keyframes pulse-start-exhibition-gold {
   0%   {
-    box-shadow: 0 3px 0 #031024, 0 0 10px rgba(114, 178, 255, 0.5), inset 0 1px 0 rgba(255,255,255,0.45);
-    border-color: #72b2ff; transform: scale(1);
+    box-shadow: 0 3px 0 #080301, 0 0 10px rgba(255, 215, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.45);
+    border-color: #ffd700; transform: scale(1);
   }
   50%  {
-    box-shadow: 0 3px 0 #031024, 0 0 22px rgba(255, 215, 0, 0.95), 0 0 35px rgba(114, 178, 255, 0.8), inset 0 1px 0 rgba(255,255,255,0.85);
+    box-shadow: 0 3px 0 #080301, 0 0 24px rgba(255, 215, 0, 0.95), inset 0 1px 0 rgba(255,255,255,0.85);
     border-color: #ffffff; transform: scale(1.02);
   }
   100% {
-    box-shadow: 0 3px 0 #031024, 0 0 10px rgba(114, 178, 255, 0.5), inset 0 1px 0 rgba(255,255,255,0.45);
-    border-color: #72b2ff; transform: scale(1);
+    box-shadow: 0 3px 0 #080301, 0 0 10px rgba(255, 215, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.45);
+    border-color: #ffd700; transform: scale(1);
   }
 }
 
@@ -1414,9 +1451,9 @@ body {
   padding: 7px 16px !important;
   font-size: 13px !important; font-weight: 900 !important;
   letter-spacing: 1px !important;
-  background: linear-gradient(180deg, #1355a8 0%, #062754 100%) !important;
-  border: 2px solid #72b2ff !important; color: #ffffff !important;
-  box-shadow: 0 3.5px 0 #031024, 0 5px 14px rgba(114, 178, 255, 0.6), inset 0 1.2px 0 rgba(255,255,255,0.5) !important;
+  background: linear-gradient(180deg, #1b283d 0%, #0a1324 100%) !important;
+  border: 2px solid #ffd700 !important; color: #fff3c4 !important;
+  box-shadow: 0 3.5px 0 #040810, 0 5px 14px rgba(0, 0, 0, 0.8), inset 0 1.2px 0 rgba(255,255,255,0.5) !important;
 }
 .btn-start-exhibition.is-ready-pulse {
   animation: pulse-start-exhibition-gold 2.0s infinite ease-in-out !important;
@@ -1430,20 +1467,20 @@ body {
 }
 
 /* =========================================================
-   【天下合戦勲功録】二大絵巻タブ ＆ 消費時間完全記録
+   【天下合戦勲功録】プレイヤー視点・劇的スリム＆三段メリハリ設計
    ========================================================= */
 .battle-history-modal-box {
-  width: 96vw !important; max-width: 540px !important; height: 88vh !important;
+  width: 96vw !important; max-width: 520px !important; height: 90vh !important;
   display: flex; flex-direction: column; justify-content: space-between;
 }
-.history-header-box { display: flex; flex-direction: column; gap: 4px; margin-bottom: 4px; flex-shrink: 0; }
+.history-header-box { display: flex; flex-direction: column; gap: 3px; margin-bottom: 3px; flex-shrink: 0; }
 
 .history-tab-bar {
   display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 2px 0;
 }
 .history-tab-btn {
-  font-family: var(--font-ui); font-size: 11.5px; font-weight: 900;
-  padding: 6px 4px; border-radius: 4px; border: 1.2px solid #8e6c31;
+  font-family: var(--font-ui); font-size: 11px; font-weight: 900;
+  padding: 5px 4px; border-radius: 4px; border: 1.2px solid #8e6c31;
   background: linear-gradient(180deg, #2b1307 0%, #120501 100%);
   color: #d6be89; cursor: pointer; text-align: center;
   box-shadow: 0 2px 0 #0a0301, 0 2px 4px rgba(0,0,0,0.8);
@@ -1455,172 +1492,160 @@ body {
   box-shadow: 0 2.5px 0 #1c0202, 0 0 12px rgba(255, 215, 0, 0.6) !important;
 }
 
-.history-guide-plaque {
-  background: linear-gradient(90deg, rgba(46, 20, 8, 0.95) 0%, rgba(92, 38, 14, 0.95) 50%, rgba(46, 20, 8, 0.95) 100%);
+/* 金蒔絵1行サマリーバー（画面上部を圧迫せず格調高く凝縮） */
+.history-summary-strip {
+  background: linear-gradient(90deg, #2b1305 0%, #4a2108 50%, #2b1305 100%);
   border: 1.2px solid #ffd700; border-radius: 4px;
-  padding: 4px 8px; display: flex; align-items: center; gap: 6px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255, 235, 140, 0.4);
+  padding: 4px 8px; display: flex; align-items: center; justify-content: space-between;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.85); flex-shrink: 0;
 }
-.guide-lamp { font-size: 13px; line-height: 1; flex-shrink: 0; }
-.guide-msg { font-size: 10px; font-weight: 800; color: #fff6d6; line-height: 1.35; text-shadow: 0 1px 2px #000; }
-.guide-msg b { color: #ffd700; }
+.summary-rank-tag {
+  font-family: var(--font-kaisho); font-size: 12px; font-weight: 900; color: #ffd700;
+  background: #7a1515; border: 1px solid #ffd700; border-radius: 3px;
+  padding: 1px 6px; letter-spacing: 0.5px;
+}
+.summary-stats-txt {
+  font-size: 11px; font-weight: 900; color: #fff8e7; letter-spacing: 0.5px;
+}
+.summary-stats-txt b { color: #ffd700; }
 
-.history-rank-banner {
-  background: linear-gradient(180deg, #421c08 0%, #160601 100%);
-  border: 1.8px solid #ffd700; border-radius: 5px;
-  padding: 6px 10px; display: flex; flex-direction: column; gap: 3px;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,240,160,0.6);
+/* 2分割スリムフィルターバー */
+.history-filter-strip {
+  display: flex; gap: 6px; background: rgba(20, 9, 3, 0.9);
+  border: 1px solid #73511f; border-radius: 4px; padding: 3px 6px;
+  margin-bottom: 4px; flex-shrink: 0;
 }
-
-.rank-title-group { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.rank-badge-stamp {
-  font-family: var(--font-kaisho); font-size: 14px; font-weight: 900; color: #ffd700;
-  background: linear-gradient(180deg, #7a1515 0%, #300606 100%);
-  border: 1.2px solid #ffd700; border-radius: 4px;
-  padding: 1.5px 8px; white-space: nowrap; line-height: 1.1;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.4);
-}
-.rank-sub-desc { font-size: 10px; font-weight: 800; color: #fceec5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-.history-total-summary {
-  font-family: var(--font-kaisho);
-  font-size: clamp(12.5px, 3.4vw, 15px); font-weight: 900;
-  letter-spacing: 0.8px; line-height: 1.2; text-align: center;
-  background: linear-gradient(180deg, #ffffff 0%, #ffe066 50%, #ffb700 100%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.9));
-}
-
-.history-filter-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px;
-  background: rgba(20, 9, 3, 0.9); border: 1px solid #73511f;
-  border-radius: 4px; padding: 5px 8px; margin-bottom: 6px; flex-shrink: 0;
-}
-.filter-item-group { display: flex; align-items: center; justify-content: space-between; gap: 4px; min-width: 0; }
-.filter-label { font-size: 9.5px; font-weight: 900; color: #ffd700; white-space: nowrap; }
+.filter-cell-group { display: flex; align-items: center; gap: 4px; flex: 1; min-width: 0; }
+.filter-cell-label { font-size: 9.5px; font-weight: 900; color: #ffd700; white-space: nowrap; }
 .history-select-input {
   font-family: var(--font-ui); font-size: 9.5px; font-weight: 800;
   background: #170702; color: #ffe899; border: 1px solid #a67c33;
   border-radius: 3px; padding: 2px 4px; outline: none; flex: 1; min-width: 0;
 }
 
+/* 歴代合戦カードスクロールリスト */
 .history-records-scroll {
-  flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;
-  padding-right: 3px; margin-bottom: 6px;
+  flex: 1 1 0; overflow-y: auto; display: flex; flex-direction: column; gap: 7px;
+  padding-right: 3px; min-height: 0;
 }
 
+/* 【三段メリハリ設計】合戦カード本体 */
 .history-record-card {
-  background: linear-gradient(180deg, rgba(28, 12, 5, 0.98) 0%, rgba(12, 5, 2, 0.98) 100%);
+  background: linear-gradient(180deg, rgba(26, 11, 4, 0.98) 0%, rgba(12, 5, 2, 0.98) 100%);
   border: 1.5px solid #8e6c31; border-radius: 6px;
-  padding: 8px 10px; display: flex; flex-direction: column; gap: 6px;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,235,140,0.3);
-  transition: all 0.25s ease; position: relative;
+  padding: 6px 8px; display: flex; flex-direction: column; gap: 4px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,235,140,0.25);
+  transition: all 0.2s ease; position: relative; flex-shrink: 0;
 }
-.history-record-card:hover { border-color: #ffd700; box-shadow: 0 4px 12px rgba(255,215,0,0.3); }
+.history-record-card:hover { border-color: #ffd700; box-shadow: 0 4px 12px rgba(255,215,0,0.35); }
 
-.history-card-top-row { display: flex; justify-content: space-between; align-items: center; gap: 4px; }
-.history-date-txt { font-size: 9px; color: #d6be89; font-weight: 700; }
+/* ① 【ヘッダー行】結果と日時・手数 */
+.card-tier-header {
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px dashed rgba(255, 215, 0, 0.25); padding-bottom: 3px;
+}
+.tier-header-left { display: flex; align-items: center; gap: 5px; }
 
-/* 勝敗・方式バッジ */
 .history-res-badge {
-  font-family: var(--font-kaisho); font-size: 11px; font-weight: 900; padding: 2px 8px; border-radius: 4px;
+  font-family: var(--font-kaisho); font-size: 11px; font-weight: 900; padding: 1.5px 7px; border-radius: 3px;
   white-space: nowrap; letter-spacing: 0.5px;
-  box-shadow: 0 2px 0 #050201, 0 3px 5px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.45);
+  box-shadow: 0 1.5px 0 #050201, 0 2px 4px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.45);
 }
-.badge-win { background: linear-gradient(180deg, #c71818 0%, #6e0b0b 100%); border: 1.3px solid #ffd700; color: #fff8bd; text-shadow: 0 1px 2px #000; }
-.badge-lose { background: linear-gradient(180deg, #1b3552 0%, #091726 100%); border: 1.3px solid #6db1ff; color: #e1f0ff; text-shadow: 0 1px 2px #000; }
+.badge-win { background: linear-gradient(180deg, #c71818 0%, #6e0b0b 100%); border: 1.3px solid #ffd700; color: #fff8bd; }
+.badge-lose { background: linear-gradient(180deg, #1b2638 0%, #09111c 100%); border: 1.3px solid #a88438; color: #fff1c7; }
 .badge-draw { background: linear-gradient(180deg, #593e14 0%, #241705 100%); border: 1.3px solid #ffe57f; color: #ffeb3b; }
 .badge-exhibition-honshogi {
-  background: linear-gradient(180deg, #0d386b 0%, #051936 100%) !important;
+  background: linear-gradient(180deg, #1b283d 0%, #0a1324 100%) !important;
   border: 1.3px solid #ffd700 !important; color: #fff3a8 !important;
-  box-shadow: 0 0 8px rgba(114, 178, 255, 0.7) !important;
 }
 .badge-exhibition-hayazashi {
-  background: linear-gradient(180deg, #6a1478 0%, #2d0533 100%) !important;
-  border: 1.3px solid #ff72e5 !important; color: #ffe6fa !important;
-  box-shadow: 0 0 8px rgba(255, 114, 229, 0.7) !important;
+  background: linear-gradient(180deg, #44183d 0%, #1e081c 100%) !important;
+  border: 1.3px solid #ffd700 !important; color: #ffe6fa !important;
 }
 
-.history-matchup-row {
+.tier-header-meta { font-size: 8.5px; color: #d6be89; font-weight: 700; }
+.btn-delete-card-mini {
+  background: transparent; border: none; color: #ff9e9e; font-size: 11px;
+  cursor: pointer; padding: 0 3px; line-height: 1; opacity: 0.7;
+}
+.btn-delete-card-mini:hover { opacity: 1; color: #ff4d4d; }
+
+/* ② 【メイン対決行】勝者と敗者がひと目でわかる構図 */
+.card-tier-clash {
   display: flex; align-items: center; justify-content: space-between;
-  background: rgba(10, 4, 1, 0.6); border: 1px solid rgba(255, 215, 0, 0.25);
-  border-radius: 5px; padding: 5px 8px; gap: 6px; min-width: 0;
+  background: rgba(10, 4, 1, 0.7); border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 4px; padding: 4px 6px; gap: 4px; min-width: 0;
 }
 
-.history-combatant {
-  display: flex; align-items: center; gap: 7px; flex: 1; min-width: 0;
-  transition: all 0.3s ease; overflow: hidden;
+.clash-side {
+  display: flex; align-items: center; gap: 5px; flex: 1; min-width: 0; overflow: hidden;
 }
-.combatant-enemy { flex-direction: row-reverse; text-align: right; }
+.clash-side-enemy { flex-direction: row-reverse; text-align: right; }
 
-.history-combatant-avatar {
-  width: 38px; height: 44px; border-radius: 4px; border: 1.5px solid #ffd700;
+.clash-avatar-box {
+  width: 32px; height: 38px; border-radius: 3px; border: 1.3px solid #ffd700;
   overflow: hidden; flex-shrink: 0; background: #140502;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center;
-  position: relative;
+  box-shadow: 0 1.5px 3px rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center;
 }
-.history-combatant-avatar .portrait-container-box { width: 100%; height: 100%; }
+.clash-avatar-box .portrait-container-box { width: 100%; height: 100%; }
 
-.history-combatant.combatant-loser .history-combatant-avatar {
-  filter: grayscale(85%) contrast(0.85) brightness(0.65) !important;
+.clash-name-txt {
+  font-size: 11px; font-weight: 900; color: #fff8e7;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.clash-tag-sente {
+  font-size: 7.5px; font-weight: 800; color: #ffd700; background: rgba(0,0,0,0.6);
+  border-radius: 2px; padding: 0.5px 2px; margin-left: 2px;
+}
+
+/* 勝者・敗者のビジュアルコントラスト */
+.clash-side.is-winner .clash-avatar-box {
+  border-color: #ffd700 !important;
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.8) !important;
+}
+.clash-side.is-winner .clash-name-txt {
+  color: #ffd700 !important; font-weight: 900;
+}
+.clash-side.is-loser .clash-avatar-box {
+  filter: grayscale(80%) brightness(0.7) !important;
   border-color: #594730 !important; box-shadow: none !important;
 }
-.history-combatant.combatant-loser .history-combatant-name { color: #a39580 !important; }
-.history-combatant.combatant-loser .history-matchup-troops { color: #736756 !important; }
-
-.history-combatant.combatant-winner .history-combatant-avatar {
-  box-shadow: 0 0 10px rgba(255, 215, 0, 0.8), 0 2px 5px rgba(0,0,0,0.9) !important;
-  border-color: #ffffff !important;
-}
-.history-combatant.combatant-winner .history-combatant-name {
-  color: #ffd700 !important; font-weight: 900;
-  text-shadow: 0 0 6px rgba(255, 215, 0, 0.6);
+.clash-side.is-loser .clash-name-txt {
+  color: #a39580 !important; font-weight: 700;
 }
 
-.history-combatant-info { display: flex; flex-direction: column; min-width: 0; gap: 1px; overflow: hidden; }
-.history-combatant-name { font-size: 11px; font-weight: 800; color: #fff8e7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.history-matchup-troops { font-size: 8.5px; color: #ffd700; font-weight: 800; white-space: nowrap; }
-.matchup-vs-txt { color: #ffb74d; font-size: 10px; font-weight: 900; flex-shrink: 0; }
+.clash-vs-mark {
+  color: #ffb74d; font-size: 9.5px; font-weight: 900; flex-shrink: 0;
+}
 
-/* 両軍の消費時間・平均思考時間ストリップ */
-.history-time-strip {
+/* ③ 【フッター行】重要な武功データ ＆ 盤上再現ボタン */
+.card-tier-footer {
   display: flex; justify-content: space-between; align-items: center;
-  background: rgba(18, 7, 2, 0.85); border: 0.8px solid #5a3813;
-  border-radius: 4px; padding: 3px 6px; font-size: 8.5px; color: #ebd4a0;
-}
-.time-side-txt { font-weight: 800; }
-.time-side-txt b { color: #ffd700; }
-
-.history-details-bottom-row {
-  display: flex; justify-content: space-between; align-items: center;
-  font-size: 9px; color: #e0d0b0; border-top: 1px dashed rgba(255,215,0,0.25);
-  padding-top: 4px; margin-top: 1px;
-}
-.badge-hint-count {
-  font-size: 8.5px; font-weight: 900; padding: 1px 6px; border-radius: 3px;
-  background: #194723; color: #99ffaa; border: 0.8px solid #6ee08b;
-}
-.badge-hint-none {
-  font-size: 8.5px; font-weight: 900; padding: 1px 6px; border-radius: 3px;
-  background: #6e4c0a; color: #fff2a8; border: 0.8px solid #ffd700;
+  padding-top: 2px; gap: 6px;
 }
 
-.history-card-actions { display: flex; gap: 5px; align-items: center; }
-.history-replay-btn {
-  font-family: var(--font-ui); font-size: 9.5px; font-weight: 900;
-  padding: 3px 8px; border-radius: 3px; border: 1.2px solid #ffd700;
-  background: linear-gradient(180deg, #573210 0%, #241103 100%);
-  color: #ffe899; cursor: pointer;
-  box-shadow: 0 2px 0 #100401, 0 2px 4px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.4);
+.tier-footer-stats {
+  display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; flex-wrap: wrap;
 }
-.history-delete-single-btn {
-  font-family: var(--font-ui); font-size: 9px; font-weight: 900;
-  padding: 3px 6px; border-radius: 3px; border: 1px solid #a63b3b;
-  background: linear-gradient(180deg, #471111 0%, #1a0404 100%);
-  color: #ffb8b8; cursor: pointer;
-  box-shadow: 0 2px 0 #0d0202, 0 2px 4px rgba(0,0,0,0.8);
+.footer-stat-pill {
+  font-size: 8px; font-weight: 800; color: #ebd4a0;
+  background: rgba(18, 7, 2, 0.85); border: 0.6px solid #5a3813;
+  border-radius: 2px; padding: 1px 4px; white-space: nowrap;
 }
-.history-delete-single-btn:hover { background: #6b1414; color: #ffffff; }
+.footer-stat-pill b { color: #ffd700; }
+.footer-stat-selfwin {
+  color: #ffd700 !important; border-color: #ffd700 !important;
+  background: #4a2a05 !important;
+}
+
+.btn-replay-card-main {
+  font-family: var(--font-ui); font-size: 10px; font-weight: 900;
+  padding: 3.5px 10px; border-radius: 3px; border: 1.3px solid #ffd700;
+  background: linear-gradient(180deg, #6e4310 0%, #291402 100%);
+  color: #fff4ba; cursor: pointer; white-space: nowrap; flex-shrink: 0;
+  box-shadow: 0 2px 0 #100401, 0 2.5px 4px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.45);
+}
+.btn-replay-card-main:hover { background: linear-gradient(180deg, #8a5517 0%, #3d1e04 100%); }
 
 .btn-history-clear {
   background: #591515; border: 1.2px solid #ff7777; color: #ffdddd;
@@ -1793,14 +1818,14 @@ body {
 }
 
 .kifu-troops-confrontation-bar {
-  background: linear-gradient(90deg, #3d1405 0%, #160601 50%, #0d1e38 100%);
+  background: linear-gradient(90deg, #3d1405 0%, #160601 50%, #16243d 100%);
   border: 1.5px solid #ffd700; border-radius: 5px;
   padding: 4px 10px; display: flex; align-items: center; justify-content: space-between;
   box-shadow: 0 2px 7px rgba(0,0,0,0.85); flex-shrink: 0;
 }
 .kifu-troops-side { display: flex; align-items: center; gap: 6px; }
 .side-player { color: #ffe57f; }
-.side-enemy { color: #90caf9; }
+.side-enemy { color: #ffe6aa; }
 .side-warlord-tag { font-size: 10px; font-weight: 900; }
 .side-troops-val { font-size: 13px; font-weight: 900; color: #ffffff; text-shadow: 0 1px 3px #000; }
 .kifu-vs-core { display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -1823,7 +1848,6 @@ body {
   padding: 1px 5px; border-radius: 3px; border: 0.8px solid #ffd700; white-space: nowrap;
 }
 
-/* 陣地争奪エリアグラフ（上が敵陣、下が自軍） */
 .territory-chart-box {
   width: 100%; height: 140px; background: #080301; border: 1.5px solid #a67c33;
   border-radius: 5px; position: relative; overflow: hidden;
@@ -1842,7 +1866,7 @@ body {
   font-size: 9.5px; font-weight: 900; pointer-events: none; z-index: 5;
 }
 .chart-tag-player { color: #ffe066; text-shadow: 0 1px 3px #000; display: flex; align-items: center; gap: 3px; }
-.chart-tag-enemy { color: #90caf9; text-shadow: 0 1px 3px #000; display: flex; align-items: center; gap: 3px; }
+.chart-tag-enemy { color: #f5eedb; text-shadow: 0 1px 3px #000; display: flex; align-items: center; gap: 3px; }
 .chart-tag-mid {
   position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
   font-size: 8.5px; color: #c9a35b; text-shadow: 0 1px 3px #000; font-weight: 900;
@@ -1868,7 +1892,7 @@ body {
   font-size: 8.5px; font-weight: 900; padding: 1px 5px; border-radius: 2px; border: 0.5px solid #ffd700;
 }
 .badge-tennozan { background: #b71c1c; color: #fff; }
-.badge-shock { background: #0d47a1; color: #fff; }
+.badge-shock { background: #824707; color: #fff; }
 
 .kifu-metric-pill {
   font-size: 9px; color: #ffd700; font-weight: 800;
@@ -1971,8 +1995,8 @@ body {
 
 .kw-gold { color: #ffd700; font-weight: 900; }
 .kw-crimson { color: #ff4d4d; font-weight: 900; }
-.kw-green { color: #76ff03; font-weight: 900; }
-.kw-blue { color: #4fc3f7; font-weight: 900; }
+.kw-green { color: #aeea00; font-weight: 900; }
+.kw-blue { color: #ffe6aa; font-weight: 900; }
 
 .enemy-line-item {
   display: flex; justify-content: space-between; align-items: center;
@@ -2016,5 +2040,4 @@ body {
   border: 2px solid #ffffff !important;
   background: linear-gradient(180deg, rgba(64, 25, 8, 0.98) 0%, rgba(26, 8, 2, 0.98) 100%) !important;
 }
-
 
