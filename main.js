@@ -1,4 +1,3 @@
-
 /* =========================================================
    将棋王 2026 〜 天下統一・戦国決戦 〜
    メインスクリプト（軍略・演出・思考エンジン・御前試合統合管理）
@@ -2050,7 +2049,7 @@ function renderBoard() {
     }
   }
 
-  // 盤面上の四箇所の星（星印）を再生成して常に確実配置！
+  // 盤面上の四箇所の星（星印）を再生成して常に確実配置
   for (let s = 1; s <= 4; s++) {
     const starEl = document.createElement('div');
     starEl.className = 'board-star';
@@ -2094,7 +2093,7 @@ function onHandClick(code) {
     return;
   }
   initAudio();
-  playUiClickSound(); // 手駒選択時はUI操作音
+  playUiClickSound();
 
   hintSourceCell = null; hintTargetCell = null; tacticsCandidates = [];
   document.getElementById('btn-alt-tactic').style.display = 'none';
@@ -2176,7 +2175,62 @@ document.getElementById('btn-promote-no').onclick = () => {
 };
 
 /* =========================================================
-   【駒移動＆持ち駒打ち飛来・拡大アニメーション（敵軍反転保持・情緒速度調整版）】
+   【駒捕獲演出：討ち取った駒が駒台へと弧を描いて吸い込まれる】
+   ========================================================= */
+function animateCaptureToHand(capturedCode, fromRect, owner, onComplete) {
+  if (!capturedCode || !fromRect) {
+    if (onComplete) onComplete();
+    return;
+  }
+
+  const rawCode = UNPROMOTE_MAP[capturedCode] || capturedCode;
+  const targetHandBoxId = (owner === 'PLAYER') ? 'player-hand' : 'ai-hand';
+  const handBoxEl = document.getElementById(targetHandBoxId);
+  const handRect = handBoxEl ? handBoxEl.getBoundingClientRect() : null;
+
+  // 目標座標（駒台の中央付近）
+  const toX = handRect ? (handRect.left + handRect.width * 0.5 - fromRect.width * 0.4) : (fromRect.left + (owner === 'PLAYER' ? 100 : -100));
+  const toY = handRect ? (handRect.top + handRect.height * 0.5 - fromRect.height * 0.4) : (fromRect.top + 200);
+
+  const capturePiece = document.createElement('div');
+  const isAiCapture = (owner === 'AI'); // AIが捕獲した場合
+  capturePiece.className = `piece anim-capture-piece ${isAiCapture ? 'ai' : 'player'}`;
+  const name2 = PIECES[rawCode] || '歩兵';
+  capturePiece.innerHTML = `<span class="piece-char-top">${name2[0]}</span><span class="piece-char-bottom">${name2[1]}</span>`;
+
+  capturePiece.style.position = 'fixed';
+  capturePiece.style.left = `${fromRect.left}px`;
+  capturePiece.style.top = `${fromRect.top}px`;
+  capturePiece.style.width = `${fromRect.width}px`;
+  capturePiece.style.height = `${fromRect.height}px`;
+  capturePiece.style.transform = isAiCapture ? 'rotate(180deg) scale(0.95)' : 'scale(0.95)';
+  capturePiece.style.opacity = '0.9';
+  capturePiece.style.transition = 'none';
+
+  document.body.appendChild(capturePiece);
+  void capturePiece.offsetWidth; // 強制リフロー
+
+  const duration = (isAutoReplaying && replaySpeedIndex >= 1) ? 220 : 420;
+  capturePiece.style.transition = `left ${duration}ms cubic-bezier(0.25, 0.8, 0.25, 1), top ${duration}ms cubic-bezier(0.4, 0, 0.2, 1), transform ${duration}ms ease-in, opacity ${duration}ms ease-in`;
+
+  // 駒台へ向かって弧を描きながら縮小して吸い込まれる
+  capturePiece.style.left = `${toX}px`;
+  capturePiece.style.top = `${toY}px`;
+  capturePiece.style.opacity = '0.4';
+  capturePiece.style.transform = isAiCapture ? 'rotate(180deg) scale(0.6)' : 'scale(0.6)';
+
+  setTimeout(() => {
+    if (capturePiece && capturePiece.parentElement) capturePiece.remove();
+    if (handBoxEl) {
+      handBoxEl.classList.add('hand-just-captured');
+      setTimeout(() => handBoxEl.classList.remove('hand-just-captured'), 350);
+    }
+    if (onComplete) onComplete();
+  }, duration);
+}
+
+/* =========================================================
+   【駒移動＆持ち駒打ち飛来・拡大アニメーション（大弧・タメ・急降下打突版）】
    ========================================================= */
 function animateAndExecuteMove(m, metric = null, onComplete = null) {
   isPieceAnimating = true;
@@ -2190,6 +2244,9 @@ function animateAndExecuteMove(m, metric = null, onComplete = null) {
     return;
   }
   const toRect = targetCellEl.getBoundingClientRect();
+
+  // 捕獲対象の敵駒があるかチェック
+  const targetCapturedPiece = (m.type === 'move') ? board[m.to.r][m.to.c] : null;
 
   // 2. 移動元要素（盤上セル または 駒台の手駒）の座標を取得
   let fromRect = null;
@@ -2216,7 +2273,20 @@ function animateAndExecuteMove(m, metric = null, onComplete = null) {
     return;
   }
 
-  // 3. 浮遊する駒エレメント（animPiece）の生成
+  // 3. 移動距離・大駒判定（長距離移動かどうかの判定）
+  let isLongDistance = false;
+  let moveDistance = 1;
+  if (m.type === 'move') {
+    const dr = Math.abs(m.to.r - m.from.r);
+    const dc = Math.abs(m.to.c - m.from.c);
+    moveDistance = Math.max(dr, dc);
+    const isMajorPiece = ['HI', 'KA', 'RY', 'UM', 'KY'].includes(animPieceCode);
+    isLongDistance = (moveDistance >= 2) || (isMajorPiece && moveDistance >= 1);
+  } else {
+    isLongDistance = true; // 持ち駒打ちも大弧の対象
+  }
+
+  // 4. 浮遊する駒エレメント（animPiece）の生成
   const animPiece = document.createElement('div');
   const isPromotedAtArrival = m.promote || PROMOTED_PIECES.includes(animPieceCode);
   const displayCode = m.promote ? (PROMOTE_MAP[animPieceCode] || animPieceCode) : animPieceCode;
@@ -2239,59 +2309,72 @@ function animateAndExecuteMove(m, metric = null, onComplete = null) {
   animPiece.style.transformOrigin = 'center center';
   animPiece.style.transition = 'none';
 
-  // 敵軍（AI側）は絶対に180度反転（rotate(180deg)）を保持！
+  // 初期サイズ・向きの設定（AIは厳格に180度反転）
   if (m.type === 'drop') {
-    animPiece.style.transform = isAiPiece ? 'rotate(180deg) scale(0.75)' : 'scale(0.75)';
+    animPiece.style.transform = isAiPiece ? 'rotate(180deg) scale(0.8)' : 'scale(0.8)';
   } else {
-    animPiece.style.transform = isAiPiece ? 'rotate(180deg) scale(1.03)' : 'scale(1.03)';
+    animPiece.style.transform = isAiPiece ? 'rotate(180deg) scale(1.0)' : 'scale(1.0)';
   }
 
   document.body.appendChild(animPiece);
+  void animPiece.offsetWidth; // 強制リフロー
 
-  // 強制リフロー（初期位置の確定）
-  void animPiece.offsetWidth;
+  // 5. 【大弧放物線とタメの二段階アニメーション】
+  // Phase 1: 手元で一度ふわっと上空へ浮き上がる（武将のタメ演出）
+  const isFastMode = isAutoReplaying && (replaySpeedIndex >= 1);
+  const liftTime = isFastMode ? 80 : (m.type === 'drop' ? 240 : (isLongDistance ? 160 : 60));
+  const flyTime  = isFastMode ? 140 : (m.type === 'drop' ? 440 : (isLongDistance ? 360 : 180));
 
-  // 4. アニメーション速度の設定（持ち駒打ち=約480msでゆったり拡大飛来、盤上移動=約300ms）
-  let duration = 300;
-  if (m.type === 'drop') {
-    duration = (isAutoReplaying && replaySpeedIndex >= 1) ? 220 : 480;
-  } else {
-    duration = (isAutoReplaying && replaySpeedIndex >= 1) ? 140 : 300;
-  }
+  // 浮上アニメーション
+  animPiece.style.transition = `transform ${liftTime}ms cubic-bezier(0.2, 0.8, 0.4, 1), top ${liftTime}ms ease-out`;
+  
+  // 浮き上がりの高さと拡大率（持ち駒打ちや大駒なら高く持ち上げる）
+  const liftOffsetY = (m.type === 'drop') ? (isAiPiece ? 28 : -35) : (isLongDistance ? (isAiPiece ? 18 : -22) : (isAiPiece ? 8 : -10));
+  const liftScale = (m.type === 'drop') ? 1.25 : (isLongDistance ? 1.18 : 1.05);
 
-  // イージング：飛び上がって滑空し、目標マスへ吸い込まれるように着地
-  animPiece.style.transition = `transform ${duration}ms cubic-bezier(0.22, 0.9, 0.35, 1), left ${duration}ms cubic-bezier(0.22, 0.9, 0.35, 1), top ${duration}ms cubic-bezier(0.22, 0.9, 0.35, 1), width ${duration}ms ease, height ${duration}ms ease`;
+  animPiece.style.top = `${fromRect.top + liftOffsetY}px`;
+  animPiece.style.transform = isAiPiece ? `rotate(180deg) scale(${liftScale})` : `scale(${liftScale})`;
 
-  // 目標座標へ移動＆実寸大（1.0倍）へ拡大！
-  animPiece.style.left = `${toRect.left}px`;
-  animPiece.style.top = `${toRect.top}px`;
-  animPiece.style.width = `${toRect.width}px`;
-  animPiece.style.height = `${toRect.height}px`;
-  animPiece.style.transform = isAiPiece ? 'rotate(180deg) scale(1.0)' : 'scale(1.0)';
-
-  // 5. 着地瞬間の同期処理
+  // Phase 2: 頂点から放物線（大弧）を描いて目標マスへと急降下・打突！
   setTimeout(() => {
-    // 駒が着地した瞬間に実着手音を発火！
-    playPieceSound();
+    // 飛行時間と緩急（Ease-Inで加速してバシッと突入）
+    animPiece.style.transition = `left ${flyTime}ms cubic-bezier(0.25, 0.9, 0.35, 1), top ${flyTime}ms cubic-bezier(0.38, 0.05, 0.25, 1), transform ${flyTime}ms cubic-bezier(0.3, 0.1, 0.3, 1), width ${flyTime}ms ease, height ${flyTime}ms ease`;
 
-    if (animPiece && animPiece.parentElement) {
-      animPiece.remove();
-    }
+    // 着地目標へ
+    animPiece.style.left = `${toRect.left}px`;
+    animPiece.style.top = `${toRect.top}px`;
+    animPiece.style.width = `${toRect.width}px`;
+    animPiece.style.height = `${toRect.height}px`;
+    animPiece.style.transform = isAiPiece ? 'rotate(180deg) scale(1.0)' : 'scale(1.0)';
 
-    // 盤面データ更新と描画
-    executeMove(m, metric);
+    // Phase 3: 着地瞬間の打着音・盤面衝撃波・討ち取り駒の駒台吸い込み演出同期
+    setTimeout(() => {
+      // 駒が着地した瞬間に実着手音を発火！
+      playPieceSound();
 
-    // 着地マスへの着地エフェクト（敵軍は絶対に正面に戻さず180度反転したまま衝撃を受ける！）
-    const justLandedPiece = document.querySelector(`#board .cell[data-r="${m.to.r}"][data-c="${m.to.c}"] .piece`);
-    if (justLandedPiece) {
-      const shockClass = isAiPiece ? 'piece-just-landed-ai' : 'piece-just-landed-player';
-      justLandedPiece.classList.add(shockClass);
-      setTimeout(() => justLandedPiece.classList.remove(shockClass), 240);
-    }
+      if (animPiece && animPiece.parentElement) animPiece.remove();
 
-    isPieceAnimating = false;
-    if (onComplete) onComplete();
-  }, duration);
+      // 敵駒を討ち取っていた場合、駒台飛来アニメーションを発火
+      if (targetCapturedPiece && targetCapturedPiece.owner !== m.owner) {
+        animateCaptureToHand(targetCapturedPiece.code, toRect, m.owner, null);
+      }
+
+      // 盤面データ更新と描画
+      executeMove(m, metric);
+
+      // 着地マスへの着地エフェクト（敵軍は絶対に180度反転したまま衝撃を受ける！）
+      const justLandedPiece = document.querySelector(`#board .cell[data-r="${m.to.r}"][data-c="${m.to.c}"] .piece`);
+      if (justLandedPiece) {
+        const shockClass = isAiPiece ? 'piece-just-landed-ai' : 'piece-just-landed-player';
+        justLandedPiece.classList.add(shockClass);
+        setTimeout(() => justLandedPiece.classList.remove(shockClass), 250);
+      }
+
+      isPieceAnimating = false;
+      if (onComplete) onComplete();
+    }, flyTime);
+
+  }, liftTime);
 }
 
 function executeMove(m, metric = null) {

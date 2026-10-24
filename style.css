@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Klee+One:wght@600;900&family=Shippori+Mincho:wght@700;900&family=Yuji+Boku&display=swap');
 
 :root {
@@ -595,7 +594,7 @@ body {
 }
 
 /* =========================================================
-   【駒移動＆持ち駒打ち飛来・拡大アニメーション用】
+   【駒移動＆持ち駒打ち・長距離大駒飛翔＆捕獲駒台収納アニメーション】
    ========================================================= */
 .anim-flying-piece {
   position: fixed !important;
@@ -603,29 +602,49 @@ body {
   pointer-events: none !important;
   margin: 0 !important;
   will-change: transform, left, top, width, height;
-  filter: drop-shadow(0 10px 18px rgba(0,0,0,0.85)) drop-shadow(0 0 8px rgba(255, 215, 0, 0.6)) !important;
+  filter: drop-shadow(0 12px 20px rgba(0,0,0,0.85)) drop-shadow(0 0 10px rgba(255, 215, 0, 0.65)) !important;
+}
+
+/* 捕獲された駒が駒台へ吸い込まれるエフェクト */
+.anim-capture-piece {
+  position: fixed !important;
+  z-index: 2850 !important;
+  pointer-events: none !important;
+  margin: 0 !important;
+  will-change: transform, left, top, opacity;
+  filter: drop-shadow(0 8px 14px rgba(0,0,0,0.8)) drop-shadow(0 0 8px rgba(255, 180, 0, 0.5)) !important;
+}
+
+/* 駒台へ収容された瞬間の駒台フラッシュエフェクト */
+@keyframes hand-flash-pulse {
+  0%   { box-shadow: inset 0 0 16px #ffd700, 0 0 12px #ff9100; border-color: #ffd700; }
+  50%  { box-shadow: inset 0 0 24px #ffffff, 0 0 18px #ffd700; border-color: #ffffff; }
+  100% { box-shadow: inset 0 1px 3px rgba(0,0,0,0.5), 0 2px 5px rgba(0,0,0,0.85); border-color: #a67c33; }
+}
+.hand-just-captured {
+  animation: hand-flash-pulse 0.4s ease-out !important;
 }
 
 /* 自軍駒の着地衝撃（正面向き） */
 @keyframes piece-landing-shock-player {
-  0%   { transform: scale(1.08); filter: brightness(1.25); }
-  50%  { transform: scale(0.96); filter: brightness(1.1); }
+  0%   { transform: scale(1.12); filter: brightness(1.3) contrast(1.1); }
+  50%  { transform: scale(0.95); filter: brightness(1.1); }
   100% { transform: scale(1.0);  filter: brightness(1.0); }
 }
 
 /* 敵軍駒の着地衝撃（180度反転を厳密に保持して一瞬も正面に戻さない！） */
 @keyframes piece-landing-shock-ai {
-  0%   { transform: rotate(180deg) scale(1.08); filter: brightness(1.25); }
-  50%  { transform: rotate(180deg) scale(0.96); filter: brightness(1.1); }
+  0%   { transform: rotate(180deg) scale(1.12); filter: brightness(1.3) contrast(1.1); }
+  50%  { transform: rotate(180deg) scale(0.95); filter: brightness(1.1); }
   100% { transform: rotate(180deg) scale(1.0);  filter: brightness(1.0); }
 }
 
 .piece-just-landed-player {
-  animation: piece-landing-shock-player 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
+  animation: piece-landing-shock-player 0.24s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
 }
 
 .piece-just-landed-ai {
-  animation: piece-landing-shock-ai 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
+  animation: piece-landing-shock-ai 0.24s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
 }
 
 /* カットイン演出 */
