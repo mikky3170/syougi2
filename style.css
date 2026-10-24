@@ -193,7 +193,7 @@ body {
     0 1px 0 rgba(255, 255, 255, 0.5),
     0 -0.5px 0 rgba(0, 0, 0, 0.8),
     0 0 2px rgba(12, 5, 2, 0.4);
-  filter: drop-shadow(0 1px 1.5px rgba(255, 240, 150, 0.8));
+  filter: drop-shadow(0 1px 1.5px rgba(255, 240, 150, 0.85));
 }
 
 .title-sub-txt {
@@ -274,7 +274,7 @@ body {
 .situation-banner.mode-exhibition .situation-text { color: #fff9e6 !important; font-weight: 900 !important; }
 
 /* =========================================================
-   武将金蒔絵パネル ＆ スマホ全幅駒台・本陣構造
+   武将金蒔絵パネル ＆ 駒台・本陣構造
    ========================================================= */
 .warlord-panel {
   width: 100%; min-height: clamp(60px, 8.2vh, 72px);
@@ -433,61 +433,85 @@ body {
 .panel-player .warlord-hand-area { justify-content: flex-end; }
 
 /* =========================================================
-   【スマホ用レスポンシブ最適化：全駒ゆったり一覧・全幅駒台】
-   上段：コンパクト大将バー / 下段：全幅広々木目駒台
+   【スマホ用レスポンシブ最適化：本将棋伝統・斜め対峙駒台配置】
+   将棋の正規配置に則り、
+   ・敵軍駒台：将棋盤の【すぐ左上】（幅50〜55%、高さ36px）
+   ・自軍駒台：将棋盤の【すぐ右下】（幅50〜55%、高さ36px）
+   に配置し、臨場感あふれる対局空間を実現。
    ========================================================= */
 @media (max-width: 480px) {
-  .warlord-panel {
+  /* 敵将パネル：将棋盤の直上 */
+  .panel-enemy {
     display: flex !important; flex-direction: column !important;
-    min-height: 66px !important; height: auto !important;
+    min-height: 70px !important; height: auto !important;
     padding: 2.5px 5px !important; gap: 2px !important;
+    position: relative !important;
   }
   
-  /* 上段：アバター ＋ 情報 ＋ HPバー を横1行に整然と配置 */
-  .panel-enemy, .panel-player {
-    position: relative;
+  /* 敵将パネル上段：大将バー（アバター右上、情報左側） */
+  .panel-enemy .warlord-avatar {
+    position: absolute !important; top: 3px !important; right: 5px !important;
+    width: 36px !important; height: 42px !important;
   }
-
-  .panel-enemy {
-    flex-direction: column !important;
-  }
-  .panel-player {
-    flex-direction: column !important;
-  }
-
-  .warlord-info {
+  .panel-enemy .warlord-info {
     width: 100% !important; flex: none !important;
+    padding-right: 42px !important;
     display: flex !important; flex-direction: column !important; gap: 1px !important;
+    text-align: right !important;
+  }
+  
+  /* 敵将パネル下段：将棋盤の【すぐ左上】に配置される敵軍駒台 */
+  .panel-enemy .warlord-hand-area {
+    align-self: flex-start !important;
+    width: clamp(170px, 54vw, 210px) !important;
+    max-width: 58% !important; min-width: 160px !important;
+    height: 35px !important; min-height: 35px !important;
+    padding: 1px 4px !important; gap: 3.5px !important;
+    border-radius: 4px !important; margin-top: 1px !important;
+    overflow-x: auto !important; justify-content: flex-start !important;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.6), 0 2px 6px rgba(0,0,0,0.9) !important;
   }
 
-  .warlord-avatar {
-    width: 38px !important; height: 44px !important;
-    position: absolute !important; top: 3px !important;
+  /* 自将本陣ゾーン：将棋盤の直下 */
+  .player-headquarters-zone .warlord-panel {
+    display: flex !important; flex-direction: column !important;
+    min-height: 70px !important; height: auto !important;
+    padding: 2.5px 5px !important; gap: 2px !important;
+    position: relative !important;
   }
-  .panel-enemy .warlord-avatar { right: 5px !important; }
-  .panel-player .warlord-avatar { left: 5px !important; }
 
-  .panel-enemy .warlord-info { padding-right: 44px !important; }
-  .panel-player .warlord-info { padding-left: 44px !important; }
+  /* 自将パネル上段（盤のすぐ直下）：将棋盤の【すぐ右下】に配置される自軍駒台 */
+  .panel-player .warlord-hand-area {
+    order: -1 !important; /* 盤直下に持ち上げる */
+    align-self: flex-end !important; /* 将棋盤の右下にピタッと配置 */
+    width: clamp(170px, 54vw, 210px) !important;
+    max-width: 58% !important; min-width: 160px !important;
+    height: 35px !important; min-height: 35px !important;
+    padding: 1px 4px !important; gap: 3.5px !important;
+    border-radius: 4px !important; margin-bottom: 2px !important;
+    overflow-x: auto !important; justify-content: flex-end !important;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.6), 0 2px 6px rgba(0,0,0,0.9) !important;
+  }
 
-  .warlord-name { font-size: 11.5px !important; }
+  /* 自将パネル下段：アバター左下、情報右側 */
+  .panel-player .warlord-avatar {
+    position: absolute !important; bottom: 3px !important; left: 5px !important;
+    width: 36px !important; height: 42px !important;
+  }
+  .panel-player .warlord-info {
+    width: 100% !important; flex: none !important;
+    padding-left: 42px !important;
+    display: flex !important; flex-direction: column !important; gap: 1px !important;
+    text-align: left !important;
+  }
+
+  .warlord-name { font-size: 11px !important; }
   .warlord-clan { display: none !important; }
   .warlord-quote { font-size: 8px !important; margin: 0 !important; }
   .gauge-group { margin-top: 0 !important; }
   .gauge-label-row { font-size: 7.5px !important; }
   .troops-num-txt { font-size: 8px !important; }
   .troops-bar-frame { height: 4px !important; }
-
-  /* 下段：横幅いっぱい（全幅100%）に広がる木目駒台！ 7種全駒が余裕で並ぶ */
-  .warlord-hand-area {
-    width: 100% !important; max-width: 100% !important; min-width: 100% !important;
-    height: 35px !important; min-height: 35px !important;
-    padding: 1px 4px !important; gap: 4px !important;
-    border-radius: 3px !important; margin-top: 1px !important;
-    overflow-x: auto !important;
-  }
-  .panel-enemy .warlord-hand-area { justify-content: flex-start !important; }
-  .panel-player .warlord-hand-area { justify-content: flex-start !important; }
 }
 
 /* =========================================================
@@ -1136,7 +1160,7 @@ body {
   background: linear-gradient(135deg, #fff7b8 0%, #ffd700 22%, #e6a800 48%, #fff099 72%, #cca114 100%) !important;
   border: 1.8px solid #ffe885 !important;
   border-radius: 5px !important;
-  padding: 5px 10px !important;
+  padding: 4px 10px !important;
   margin-bottom: 6px !important;
   box-shadow: 
     0 3px 0 #593c04,
@@ -1167,9 +1191,9 @@ body {
 .modal-title-shikkoku {
   font-family: var(--font-gyosho);
   margin: 0;
-  font-size: clamp(13.5px, 2.2vh, 17px);
+  font-size: clamp(13px, 2.1vh, 16px);
   font-weight: 900;
-  letter-spacing: 1.5px;
+  letter-spacing: 1.2px;
   color: #0c0502;
   text-shadow: 
     0 1px 0 rgba(255, 255, 255, 0.6),
@@ -1179,6 +1203,7 @@ body {
   position: relative;
   z-index: 2;
   text-align: center;
+  line-height: 1.2;
 }
 
 .modal-buttons { margin-top: 8px; display: flex; gap: 8px; justify-content: center; flex-shrink: 0; }
@@ -1467,7 +1492,7 @@ body {
 }
 
 /* =========================================================
-   【天下合戦勲功録】プレイヤー視点・劇的スリム＆三段メリハリ設計
+   【天下合戦勲功録】洗練された金蒔絵デザイン ＆ 絞り込み最適化
    ========================================================= */
 .battle-history-modal-box {
   width: 96vw !important; max-width: 520px !important; height: 90vh !important;
@@ -1492,7 +1517,7 @@ body {
   box-shadow: 0 2.5px 0 #1c0202, 0 0 12px rgba(255, 215, 0, 0.6) !important;
 }
 
-/* 金蒔絵1行サマリーバー（画面上部を圧迫せず格調高く凝縮） */
+/* 金蒔絵1行サマリーバー */
 .history-summary-strip {
   background: linear-gradient(90deg, #2b1305 0%, #4a2108 50%, #2b1305 100%);
   border: 1.2px solid #ffd700; border-radius: 4px;
@@ -1500,28 +1525,37 @@ body {
   box-shadow: 0 2px 5px rgba(0,0,0,0.85); flex-shrink: 0;
 }
 .summary-rank-tag {
-  font-family: var(--font-kaisho); font-size: 12px; font-weight: 900; color: #ffd700;
+  font-family: var(--font-kaisho); font-size: 11.5px; font-weight: 900; color: #ffd700;
   background: #7a1515; border: 1px solid #ffd700; border-radius: 3px;
   padding: 1px 6px; letter-spacing: 0.5px;
 }
 .summary-stats-txt {
-  font-size: 11px; font-weight: 900; color: #fff8e7; letter-spacing: 0.5px;
+  font-size: 10.5px; font-weight: 900; color: #fff8e7; letter-spacing: 0.3px;
 }
 .summary-stats-txt b { color: #ffd700; }
 
-/* 2分割スリムフィルターバー */
-.history-filter-strip {
-  display: flex; gap: 6px; background: rgba(20, 9, 3, 0.9);
-  border: 1px solid #73511f; border-radius: 4px; padding: 3px 6px;
+/* 【見直し版】絞り込みフィルターバー：文字サイズと余白を引き締めた工芸デザイン */
+.history-filter-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 4px; background: rgba(20, 9, 3, 0.95);
+  border: 1.2px solid #73511f; border-radius: 4px; padding: 3px 5px;
   margin-bottom: 4px; flex-shrink: 0;
 }
-.filter-cell-group { display: flex; align-items: center; gap: 4px; flex: 1; min-width: 0; }
-.filter-cell-label { font-size: 9.5px; font-weight: 900; color: #ffd700; white-space: nowrap; }
-.history-select-input {
-  font-family: var(--font-ui); font-size: 9.5px; font-weight: 800;
-  background: #170702; color: #ffe899; border: 1px solid #a67c33;
-  border-radius: 3px; padding: 2px 4px; outline: none; flex: 1; min-width: 0;
+@media (max-width: 480px) {
+  .history-filter-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 3px 5px !important; }
 }
+
+.filter-item-group { display: flex; align-items: center; gap: 3px; min-width: 0; }
+.filter-label {
+  font-size: 8.5px; font-weight: 900; color: #ffd700; white-space: nowrap; letter-spacing: 0.2px; flex-shrink: 0;
+}
+.history-select-input {
+  font-family: var(--font-ui); font-size: 9px; font-weight: 800;
+  background: #170702; color: #ffe899; border: 1px solid #a67c33;
+  border-radius: 3px; padding: 1.5px 3px; outline: none; flex: 1; min-width: 0;
+  height: 22px; cursor: pointer;
+}
+.history-select-input:focus { border-color: #ffd700; }
 
 /* 歴代合戦カードスクロールリスト */
 .history-records-scroll {
@@ -1806,11 +1840,17 @@ body {
 }
 
 /* =========================================================
-   【当局・合戦絵巻】直感的「天下陣地・前線進撃マップ」グラフ
+   【当局・合戦絵巻】直感的「天下陣地・前線進撃マップ」グラフ ＆ カッコ改行調整
    ========================================================= */
 .modal-kifu-panorama {
   width: 96vw; max-width: 540px; height: 88vh; display: flex; flex-direction: column; gap: 5px;
 }
+.kifu-title-sub {
+  font-size: clamp(10.5px, 1.7vh, 12px) !important;
+  display: block; margin-top: 1px; letter-spacing: 0.8px;
+  color: #3b1704; text-shadow: 0 0.8px 0 rgba(255, 255, 255, 0.7);
+}
+
 .kifu-status-badge {
   font-family: var(--font-kaisho); font-size: 11px; font-weight: 900; color: #ffeb3b;
   border: 1.2px solid #ffd700; padding: 2px 8px; border-radius: 4px;
@@ -2040,4 +2080,5 @@ body {
   border: 2px solid #ffffff !important;
   background: linear-gradient(180deg, rgba(64, 25, 8, 0.98) 0%, rgba(26, 8, 2, 0.98) 100%) !important;
 }
+
 
