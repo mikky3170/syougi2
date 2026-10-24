@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Klee+One:wght@600;900&family=Shippori+Mincho:wght@700;900&family=Yuji+Boku&display=swap');
 
 :root {
@@ -284,12 +283,12 @@ body {
   z-index: 2; transition: opacity 0.35s ease-in-out;
 }
 
-/* 全アバター枠（メイン画面、御前試合、戦歴帳、天下絵巻等）で画像があれば確実に表示！ */
+/* 画像が読み込まれたら最優先で表示 */
 .portrait-has-image .portrait-face-img {
   display: block !important;
   opacity: 1 !important;
 }
-/* 手動で家紋表示に切り替えた場合のみ画像を透過 */
+/* 家紋表示切替時のみ透過 */
 .show-crest .portrait-face-img {
   opacity: 0 !important;
   pointer-events: none;
@@ -528,9 +527,21 @@ body {
   border: 2px dashed #ffd700 !important; background: rgba(255, 215, 0, 0.45) !important;
 }
 
+/* =========================================================
+   【本格本将棋盤・四箇所の星（星印）】
+   三段目・六段目と3筋・7筋の交差点に漆黒金覆輪で常時配置
+   ========================================================= */
 .board-star {
-  position: absolute; width: 4px; height: 4px; background: #261103;
-  border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; z-index: 5;
+  position: absolute;
+  width: clamp(5px, 1.2vw, 7.5px);
+  height: clamp(5px, 1.2vw, 7.5px);
+  background: radial-gradient(circle at 35% 35%, #3d1a04 0%, #100501 70%, #000000 100%);
+  border: 0.6px solid rgba(255, 215, 0, 0.85);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 15;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.95), 0 0 4px rgba(255, 215, 0, 0.35);
 }
 #star-1 { top: calc(100% * 3 / 9); left: calc(100% * 3 / 9); }
 #star-2 { top: calc(100% * 3 / 9); left: calc(100% * 6 / 9); }
@@ -582,6 +593,30 @@ body {
   color: #fff; font-weight: 900; background: #960d0d;
   border-radius: 50%; padding: 0 3px; line-height: 1.1;
   border: 0.5px solid #ffd700; box-shadow: 0 1px 3px rgba(0,0,0,0.8);
+}
+
+/* =========================================================
+   【駒移動＆持ち駒打ち飛来・拡大アニメーション用】
+   ========================================================= */
+.animating-flying-piece {
+  position: fixed;
+  z-index: 2600;
+  pointer-events: none;
+  margin: 0;
+  transition-property: transform, opacity;
+  transition-timing-function: cubic-bezier(0.2, 0.8, 0.25, 1);
+  will-change: transform, opacity;
+  filter: drop-shadow(0 8px 16px rgba(0,0,0,0.75)) drop-shadow(0 0 6px rgba(255, 215, 0, 0.45));
+}
+
+@keyframes piece-landing-shock {
+  0%   { transform: scale(1.08); filter: brightness(1.25); }
+  50%  { transform: scale(0.96); filter: brightness(1.1); }
+  100% { transform: scale(1.0);  filter: brightness(1.0); }
+}
+
+.piece-just-landed {
+  animation: piece-landing-shock 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
 /* カットイン演出 */
@@ -995,7 +1030,7 @@ body {
 }
 
 /* =========================================================
-   【御前試合】中央どっしり開始ボタン ＆ 黄金点滅演出
+   【御前試合】対局方式（通常／早指し）＆ ビジュアル選択
    ========================================================= */
 .exhibition-modal-box {
   width: 96vw !important; max-width: 600px !important; height: 92vh !important;
@@ -1022,7 +1057,7 @@ body {
   border-bottom: 1.2px solid rgba(255, 215, 0, 0.3); padding-bottom: 2px;
 }
 
-/* ① 上部：現在出陣決定カード（重厚本丸陣幕調プレート） */
+/* 現在出陣決定カード */
 .exhibition-warlord-preview-card {
   background: linear-gradient(135deg, #3d1406 0%, #170701 100%);
   border: 1.8px solid #ffd700; border-radius: 5px;
@@ -1030,14 +1065,6 @@ body {
   box-shadow: 0 3px 8px rgba(0,0,0,0.9), inset 0 0 10px rgba(255, 215, 0, 0.15);
   flex-shrink: 0; position: relative;
 }
-.preview-status-header {
-  display: flex; justify-content: space-between; align-items: center;
-  border-bottom: 1px dashed rgba(255, 215, 0, 0.35); padding-bottom: 2px;
-}
-.preview-title-tag { font-size: 9px; font-weight: 900; color: #ffd700; letter-spacing: 0.5px; }
-
-.preview-main-body { display: flex; gap: 6px; align-items: center; }
-
 .preview-avatar-box {
   width: 46px; height: 54px; border-radius: 4px; border: 1.5px solid #ffd700;
   overflow: hidden; flex-shrink: 0; background: #120401;
@@ -1060,7 +1087,6 @@ body {
 .preview-troops-highlight { color: #ffd700; font-weight: 900; }
 .preview-spec-highlight { color: #72b2ff; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* ② リスト境界：金蒔絵セパレーターヘッダー */
 .exhibition-list-header {
   font-size: 9.5px; font-weight: 900; color: #ebd4a0;
   background: linear-gradient(90deg, #2e1406 0%, #4a2108 50%, #2e1406 100%);
@@ -1069,7 +1095,6 @@ body {
   box-shadow: 0 1px 3px rgba(0,0,0,0.8);
 }
 
-/* ③ 下部：武将・指南役カードスクロールリスト（全十四傑） */
 .exhibition-avatar-pick-list {
   flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;
   padding-right: 2px; min-height: 0;
@@ -1102,7 +1127,6 @@ body {
 .pick-name-row { display: flex; align-items: center; justify-content: space-between; gap: 3px; }
 .pick-name-txt { font-size: 10.5px; font-weight: 900; color: #fff3c9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* 【立体工芸バッジ】アマ段位・Lv・軍師 */
 .badge-ai-dan {
   font-size: 8px; font-weight: 900; padding: 1px 5px; border-radius: 3px;
   background: linear-gradient(180deg, #0e386b 0%, #051a33 100%);
@@ -1122,7 +1146,6 @@ body {
   box-shadow: 0 1px 2px rgba(0,0,0,0.8);
 }
 
-/* 選択カード内のステータスバッジ群（兵力・探索深さ） */
 .pick-stats-row {
   display: flex; align-items: center; gap: 4px; font-size: 8px; font-weight: 800;
 }
@@ -1140,35 +1163,39 @@ body {
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
-/* 選択中スタンプ */
 .badge-active-stamp {
   font-size: 7.5px; font-weight: 900; color: #ffd700;
   background: #173861; border: 0.8px solid #72b2ff; border-radius: 2px;
   padding: 0.5px 3px; white-space: nowrap;
 }
 
+/* 対局方式選択バー ＆ 解説プレート */
 .exhibition-config-row {
-  display: flex; justify-content: space-between; align-items: center; gap: 6px;
+  display: flex; flex-direction: column; gap: 4px;
   background: rgba(22, 10, 4, 0.95); border: 1.2px solid #8e6c31; border-radius: 4px;
-  padding: 4px 8px; margin-top: 4px;
+  padding: 5px 8px; margin-top: 4px;
 }
-.config-group { display: flex; align-items: center; gap: 4px; }
-.config-label { font-size: 10px; font-weight: 900; color: #ffd700; white-space: nowrap; }
+.config-group { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+.config-label { font-size: 10.5px; font-weight: 900; color: #ffd700; white-space: nowrap; }
 
 .btn-speed-choice {
-  font-family: var(--font-ui); font-size: 10px; font-weight: 900;
-  padding: 3.5px 9px; border-radius: 3px; border: 1px solid #73511f;
-  background: #241105; color: #d6be89; cursor: pointer;
+  font-family: var(--font-ui); font-size: 10.5px; font-weight: 900;
+  padding: 4px 10px; border-radius: 3px; border: 1.2px solid #73511f;
+  background: #241105; color: #d6be89; cursor: pointer; transition: all 0.15s ease;
 }
 .btn-speed-choice.active {
   background: linear-gradient(180deg, #1b4b8a 0%, #0d284f 100%);
   border-color: #72b2ff; color: #ffffff;
-  box-shadow: 0 0 8px rgba(114, 178, 255, 0.6);
+  box-shadow: 0 0 10px rgba(114, 178, 255, 0.7);
 }
 
-/* =========================================================
-   【御前試合モーダル下部】開始ボタン中央・閉じるボタン右下配置
-   ========================================================= */
+.exhibition-mode-desc-plaque {
+  font-size: 8.5px; color: #f5eedb; line-height: 1.35;
+  background: rgba(10, 4, 1, 0.75); border: 0.8px dashed rgba(255, 215, 0, 0.35);
+  border-radius: 3px; padding: 3px 6px; margin-top: 2px;
+}
+
+/* 【御前試合モーダル下部】開始ボタン中央・閉じるボタン右下配置 */
 .exhibition-bottom-buttons {
   width: 100%; display: grid !important;
   grid-template-columns: 80px 1fr 80px !important;
@@ -1215,7 +1242,7 @@ body {
 }
 
 /* =========================================================
-   【天下合戦勲功録】戦績カードの勝敗演出（勝者光彩 / 敗者セピア・グレーアウト）
+   【天下合戦勲功録】
    ========================================================= */
 .battle-history-modal-box {
   width: 96vw !important; max-width: 540px !important; height: 88vh !important;
@@ -1303,7 +1330,6 @@ body {
   box-shadow: 0 0 8px rgba(114, 178, 255, 0.6) !important;
 }
 
-/* 対陣カード：肖像サムネイル付き ＆ 勝敗グレーアウト演出 */
 .history-matchup-row {
   display: flex; align-items: center; justify-content: space-between;
   background: rgba(10, 4, 1, 0.6); border: 1px solid rgba(255, 215, 0, 0.25);
@@ -1324,7 +1350,6 @@ body {
 }
 .history-combatant-avatar .portrait-container-box { width: 100%; height: 100%; }
 
-/* 敗者のセピア・グレーアウト演出 */
 .history-combatant.combatant-loser .history-combatant-avatar {
   filter: grayscale(85%) contrast(0.85) brightness(0.65) !important;
   border-color: #594730 !important;
@@ -1333,7 +1358,6 @@ body {
 .history-combatant.combatant-loser .history-combatant-name { color: #a39580 !important; }
 .history-combatant.combatant-loser .history-matchup-troops { color: #736756 !important; }
 
-/* 勝者の輝き演出 */
 .history-combatant.combatant-winner .history-combatant-avatar {
   box-shadow: 0 0 10px rgba(255, 215, 0, 0.8), 0 2px 5px rgba(0,0,0,0.9) !important;
   border-color: #ffffff !important;
@@ -1594,7 +1618,6 @@ body {
 }
 .chart-eval-troops-txt { font-size: 10px; font-weight: 900; text-shadow: 0 1px 3px #000; }
 
-/* 棋譜木札リスト：左に指し手、右に状況バッジ、一番右端に探索時間・深さを整列配置 */
 .modal-kifu-content {
   flex: 1; overflow-y: auto; border: 1.2px solid #73511f; background: rgba(10,5,2,0.92);
   padding: 4px; font-size: 11px; line-height: 1.6; border-radius: 4px;
@@ -1762,4 +1785,5 @@ body {
   border: 2px solid #ffffff !important;
   background: linear-gradient(180deg, rgba(64, 25, 8, 0.98) 0%, rgba(26, 8, 2, 0.98) 100%) !important;
 }
+
 

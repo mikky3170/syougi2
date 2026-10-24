@@ -230,7 +230,7 @@
     
     <div class="exhibition-guide-plaque">
       <span>💡</span>
-      <span>武将・指南役の<b>【肖像・家紋】</b>を直接選定して御前試合を開始します。<br>※安全装置（通常5秒以内／早送り2秒以内）によりテンポ良く合戦が進みます。</span>
+      <span>武将・指南役の<b>【肖像・家紋】</b>を直接選定して御前試合を開始します。<br>※両軍の読み筋と着手テンポを間近で鑑賞できます。</span>
     </div>
 
     <!-- 左右対陣ビジュアルセレクター（先手陣 vs 後手陣） -->
@@ -274,14 +274,18 @@
 
     </div>
 
-    <!-- 設定バー（進行テンポ：通常 / 早送りの2択に集約） -->
+    <!-- 設定バー（対局方式：通常 / 早指しの2択） -->
     <div class="exhibition-config-row">
-      <div class="config-group" style="width:100%; justify-content:space-between;">
-        <span class="config-label">観戦進行テンポ:</span>
+      <div class="config-group">
+        <span class="config-label">対局方式（思考時間とテンポ）:</span>
         <div style="display:flex; gap:6px;">
-          <button class="btn-speed-choice active" id="btn-speed-normal" onclick="setExhibitionModalSpeed('normal')">通常 (5s安全)</button>
-          <button class="btn-speed-choice" id="btn-speed-fast" onclick="setExhibitionModalSpeed('fast')">早送り (2s安全)</button>
+          <button class="btn-speed-choice active" id="btn-speed-normal" onclick="setExhibitionModalSpeed('normal')">通常（じっくり・深慮）</button>
+          <button class="btn-speed-choice" id="btn-speed-fast" onclick="setExhibitionModalSpeed('fast')">早指し（即断・切れ味）</button>
         </div>
+      </div>
+      <div class="exhibition-mode-desc-plaque" id="exhibition-mode-desc-plaque">
+        ※<b>通常</b>＝最大5秒考慮（深さ5到達）。高段位・軍師AIが本来の最強棋力を発揮します。<br>
+        ※<b>早指し</b>＝最大2.5秒考慮。即断即決の乱戦となり、AIの読みが浅くなり番狂わせが生まれます。
       </div>
     </div>
 
@@ -562,6 +566,17 @@
           4. <b class="kw-gold">成り（昇格）</b>：敵陣へ突入、敵陣内での移動、または敵陣から出る際、駒がひっくり返り流麗な<span class="kw-crimson">行書体の成駒（龍王・龍馬など）</span>へと覚醒します。<br>
           5. <b class="kw-gold">敵玉撃破（兵力壊滅）</b>：敵将の玉将を討ち取る（詰ます）ことで敵兵力を壊滅させ、天下平定へ一歩前進します！
         </div>
+
+        <div class="guide-card-box" id="guide-card-step-exhibition">
+          <div class="guide-card-header-row">
+            <h4>⚔ 四、御前試合の対局規定（通常本将棋と早指し戦の妙味）</h4>
+            <button class="card-speech-btn btn-3d" onclick="toggleCardSpeech('guide-card-step-exhibition')">🔊 朗読</button>
+          </div>
+          客分指南役や戦国武将たちの武芸観戦「御前試合」では、二つの対局方式を選べます：<br><br>
+          ・<b class="kw-gold">通常（じっくり・深慮）</b>：思考時間の上限は<span class="kw-gold">5.0秒</span>。最強AIが「深さ5」まで確実に読み切るため、軍師AIや隠者が本来の神算鬼謀を遺憾なく発揮します。着手間隔も約1.5秒を確保し、重厚な本将棋を鑑賞できます。<br>
+          ・<b class="kw-crimson">早指し（即断・切れ味）</b>：思考時間の上限は<span class="kw-crimson">2.5秒</span>。即断即決のスピード戦となり、難所で読みが浅くなるため番狂わせや意外な逆転劇が発生します。着手間隔約0.8秒で小気味よく合戦が進みます。
+        </div>
+
         <div class="guide-card-box" id="guide-card-step-2">
           <div class="guide-card-header-row">
             <h4>🪭 二、采配ボタンの解説</h4>
@@ -755,4 +770,5 @@
 <script src="main.js"></script>
 </body>
 </html>
+
 
