@@ -886,20 +886,23 @@ function formatTimeMinutesSeconds(totalSec) {
 function updateTurnFocus(activeTurn) {
   const pPanel = document.getElementById('player-panel');
   const aiPanel = document.getElementById('ai-panel');
-  const pBadge = document.getElementById('player-time-badge');
-  const aiBadge = document.getElementById('ai-time-badge');
+  const pThinkDisp = document.getElementById('player-thinking-disp');
+  const aiThinkDisp = document.getElementById('ai-thinking-disp');
 
   if (pPanel) pPanel.classList.remove('turn-focus-player');
   if (aiPanel) aiPanel.classList.remove('turn-focus-enemy');
-  if (pBadge) pBadge.classList.remove('timer-active');
-  if (aiBadge) aiBadge.classList.remove('timer-active');
 
   if (activeTurn === 'PLAYER') {
     if (pPanel) pPanel.classList.add('turn-focus-player');
-    if (pBadge) pBadge.classList.add('timer-active');
+    if (pThinkDisp) pThinkDisp.style.display = 'inline-flex';
+    if (aiThinkDisp) aiThinkDisp.style.display = 'none';
   } else if (activeTurn === 'AI') {
     if (aiPanel) aiPanel.classList.add('turn-focus-enemy');
-    if (aiBadge) aiBadge.classList.add('timer-active');
+    if (aiThinkDisp) aiThinkDisp.style.display = 'inline-flex';
+    if (pThinkDisp) pThinkDisp.style.display = 'none';
+  } else {
+    if (pThinkDisp) pThinkDisp.style.display = 'none';
+    if (aiThinkDisp) aiThinkDisp.style.display = 'none';
   }
 }
 
@@ -923,13 +926,22 @@ function updateThinkingTimerDisplay() {
   const currentStep = moveObjectsHistory.length + 1;
   const isPlayer = (currentThinkingSide === 'PLAYER');
 
-  // 新設：パネル内上段右側の専用思考時間スロットにリアルタイム反映！
-  const pTimeSecEl = document.getElementById('player-time-sec');
-  const aiTimeSecEl = document.getElementById('ai-time-sec');
-  if (isPlayer && pTimeSecEl) {
-    pTimeSecEl.textContent = `${elapsedSec}s`;
-  } else if (!isPlayer && aiTimeSecEl) {
-    aiTimeSecEl.textContent = `${elapsedSec}s`;
+  // 武将肩書の右横に「手番思案中 ⏱ X.Xs」をリアルタイム表示！
+  const pThinkDisp = document.getElementById('player-thinking-disp');
+  const aiThinkDisp = document.getElementById('ai-thinking-disp');
+
+  if (isPlayer) {
+    if (pThinkDisp) {
+      pThinkDisp.style.display = 'inline-flex';
+      pThinkDisp.innerHTML = `手番思案中 ⏱ <b>${elapsedSec}s</b>`;
+    }
+    if (aiThinkDisp) aiThinkDisp.style.display = 'none';
+  } else {
+    if (aiThinkDisp) {
+      aiThinkDisp.style.display = 'inline-flex';
+      aiThinkDisp.innerHTML = `手番思案中 ⏱ <b>${elapsedSec}s</b>`;
+    }
+    if (pThinkDisp) pThinkDisp.style.display = 'none';
   }
 
   if (isExhibitionActive) {
@@ -937,21 +949,7 @@ function updateThinkingTimerDisplay() {
     return;
   }
 
-  // 武将パネル下段のセリフ領域にも思考中ステータスを即時反映！
-  if (isPlayer) {
-    const pQuoteEl = document.getElementById('player-quote-disp');
-    if (pQuoteEl) {
-      pQuoteEl.innerHTML = `🪭 <span style="color:#ffd700;">手番思案中… ⏱ <b>${elapsedSec}s</b></span>`;
-    }
-  } else {
-    const aiQuoteEl = document.getElementById('ai-quote-disp');
-    const depthStr = exhibitionAchievedDepth > 0 ? ` (深さ${exhibitionAchievedDepth})` : '';
-    if (aiQuoteEl) {
-      aiQuoteEl.innerHTML = `🧠 <span style="color:#ffb3b3;">思案中… ⏱ <b>${elapsedSec}s</b>${depthStr}</span>`;
-    }
-  }
-
-  // 軍令高札は全体ガイダンスとして落ち着いた佇まいを保つ
+  // 軍令高札の全体ガイダンス表示
   if (isPlayer && !tacticsCandidates.length && !isHintThinking) {
     const pName = PLAYER_WARLORDS[currentMyWarlordId].name;
     setOrderMessage({
@@ -972,10 +970,10 @@ function stopTurnTimer() {
     clearInterval(turnTimerInterval);
     turnTimerInterval = null;
   }
-  const pBadge = document.getElementById('player-time-badge');
-  const aiBadge = document.getElementById('ai-time-badge');
-  if (pBadge) pBadge.classList.remove('timer-active');
-  if (aiBadge) aiBadge.classList.remove('timer-active');
+  const pThinkDisp = document.getElementById('player-thinking-disp');
+  const aiThinkDisp = document.getElementById('ai-thinking-disp');
+  if (pThinkDisp) pThinkDisp.style.display = 'none';
+  if (aiThinkDisp) aiThinkDisp.style.display = 'none';
 }
 
 function resumeTurnTimer() {
@@ -993,16 +991,6 @@ function recordTurnTime(side) {
   totalTimeSpentMs[side] = (totalTimeSpentMs[side] || 0) + spentMs;
   movesCountBySide[side] = (movesCountBySide[side] || 0) + 1;
   const secStr = (spentMs / 1000).toFixed(1);
-
-  // 確定した着手時間をバッジに固定反映
-  if (side === 'PLAYER') {
-    const el = document.getElementById('player-time-sec');
-    if (el) el.textContent = `${secStr}s`;
-  } else {
-    const el = document.getElementById('ai-time-sec');
-    if (el) el.textContent = `${secStr}s`;
-  }
-
   return secStr;
 }
 
@@ -1321,20 +1309,16 @@ function updateExhibitionThinkingDisplay(isThinking = true) {
   const modeTitle = (exhibitionSpeed === 'fast') ? '早指し戦' : '通常本将棋';
   
   const isPlayerSide = (currentThinkingSide === 'PLAYER');
-  const targetQuoteEl = isPlayerSide
-    ? document.getElementById('player-quote-disp')
-    : document.getElementById('ai-quote-disp');
-  const timeSecEl = isPlayerSide
-    ? document.getElementById('player-time-sec')
-    : document.getElementById('ai-time-sec');
+  const targetThinkingDisp = isPlayerSide
+    ? document.getElementById('player-thinking-disp')
+    : document.getElementById('ai-thinking-disp');
 
-  if (timeSecEl && isThinking) {
-    timeSecEl.textContent = `${elapsedSec}s`;
-  }
-
-  if (targetQuoteEl) {
+  if (targetThinkingDisp) {
     if (isThinking) {
-      targetQuoteEl.innerHTML = `🧠 <span style="color:#ffd700;">思案中… ⏱ <b>${elapsedSec}s</b> (深さ${exhibitionAchievedDepth})</span>`;
+      targetThinkingDisp.style.display = 'inline-flex';
+      targetThinkingDisp.innerHTML = `手番思案中 ⏱ <b>${elapsedSec}s</b> (深さ${exhibitionAchievedDepth})`;
+    } else {
+      targetThinkingDisp.style.display = 'none';
     }
   }
 
@@ -1478,6 +1462,71 @@ function calculateTroopsPercentages(bd, hd) {
   let aiPct = Math.max(25, Math.min(100, Math.round(100 - (aiLostPoints / TOTAL_FORCE_POINTS) * 75)));
 
   return { pPct, aiPct };
+}
+
+/* =========================================================
+   【戦況連動型・動的セリフ切り替えシステム】
+   ========================================================= */
+function updateWarlordQuotes() {
+  if (isReviewingPast()) return;
+
+  const pQuoteEl = document.getElementById('player-quote-disp');
+  const aiQuoteEl = document.getElementById('ai-quote-disp');
+  if (!pQuoteEl || !aiQuoteEl) return;
+
+  const curBoard = (reviewingIndex >= 0 && historyStates[reviewingIndex]) ? historyStates[reviewingIndex].board : board;
+  const curHands = (reviewingIndex >= 0 && historyStates[reviewingIndex]) ? historyStates[reviewingIndex].hands : hands;
+  const { pPct, aiPct } = calculateTroopsPercentages(curBoard, curHands);
+
+  const playerInCheck = isCheckState('PLAYER', curBoard);
+  const aiInCheck = isCheckState('AI', curBoard);
+
+  if (isExhibitionActive) {
+    const sData = getTargetAIData(exhibitionSenteTarget);
+    const gData = getTargetAIData(exhibitionGoteTarget);
+    const sQuotes = sData.quotes || {};
+    const gQuotes = gData.quotes || {};
+
+    if (aiInCheck) {
+      pQuoteEl.textContent = sQuotes.check || sQuotes.default || '「先手の一撃、王手に候！」';
+      aiQuoteEl.textContent = gQuotes.pinch || gQuotes.default || '「後手陣、この窮地を凌ぎ切る！」';
+    } else if (playerInCheck) {
+      aiQuoteEl.textContent = gQuotes.check || gQuotes.default || '「後手陣より王手！ 覚悟めされよ！」';
+      pQuoteEl.textContent = sQuotes.pinch || sQuotes.default || '「先手陣、ここからが正念場ぞ！」';
+    } else if (pPct >= 70 && aiPct <= 45) {
+      pQuoteEl.textContent = sQuotes.adv || sQuotes.default || '「我が軍の優勢は盤石なり！」';
+      aiQuoteEl.textContent = gQuotes.pinch || gQuotes.default || '「この劣勢、覆してみせる！」';
+    } else if (aiPct >= 70 && pPct <= 45) {
+      aiQuoteEl.textContent = gQuotes.adv || gQuotes.default || '「後手陣の勝機、ここに極まれり！」';
+      pQuoteEl.textContent = sQuotes.pinch || sQuotes.default || '「焦るな、陣形を立て直すのだ！」';
+    } else {
+      pQuoteEl.textContent = sQuotes.default || '「先手陣、堂々たる進撃を見せてくれよう！」';
+      aiQuoteEl.textContent = gQuotes.default || '「後手陣、一歩も退かぬ鉄壁の陣を敷く！」';
+    }
+    return;
+  }
+
+  const pData = PLAYER_WARLORDS[currentMyWarlordId] || PLAYER_WARLORDS['sanada'];
+  const wData = WARLORDS_DATA[currentAiLevel] || WARLORDS_DATA[1];
+  const pQuotes = pData.quotes || {};
+  const wQuotes = wData.quotes || {};
+
+  if (aiInCheck) {
+    pQuoteEl.textContent = pQuotes.check || pQuotes.default;
+    aiQuoteEl.textContent = wQuotes.pinch || wQuotes.default;
+  } else if (playerInCheck) {
+    aiQuoteEl.textContent = wQuotes.check || wQuotes.default;
+    pQuoteEl.textContent = pQuotes.pinch || pQuotes.default;
+  } else if (pPct >= 70 && aiPct <= 45) {
+    pQuoteEl.textContent = pQuotes.adv || pQuotes.default;
+    aiQuoteEl.textContent = wQuotes.pinch || wQuotes.default;
+  } else if (aiPct >= 70 && pPct <= 45) {
+    aiQuoteEl.textContent = wQuotes.adv || wQuotes.default;
+    pQuoteEl.textContent = pQuotes.pinch || pQuotes.default;
+  } else {
+    pQuoteEl.textContent = pQuotes.default;
+    aiQuoteEl.textContent = wQuotes.default;
+  }
 }
 
 /* 将棋ルール判定関数群 */
@@ -1749,11 +1798,11 @@ function initBoardState() {
   updateStrategistUI();
   updateWarlordBGM(currentAiLevel);
 
-  // 思考時間バッジの初期化（0.0s）
-  const pTimeEl = document.getElementById('player-time-sec');
-  const aiTimeEl = document.getElementById('ai-time-sec');
-  if (pTimeEl) pTimeEl.textContent = '0.0s';
-  if (aiTimeEl) aiTimeEl.textContent = '0.0s';
+  // 肩書横の思案中スロットを初期化（非表示）
+  const pThinkDisp = document.getElementById('player-thinking-disp');
+  const aiThinkDisp = document.getElementById('ai-thinking-disp');
+  if (pThinkDisp) pThinkDisp.style.display = 'none';
+  if (aiThinkDisp) aiThinkDisp.style.display = 'none';
 
   if (!isExhibitionActive) {
     const p = PLAYER_WARLORDS[currentMyWarlordId] || PLAYER_WARLORDS['sanada'];
@@ -1911,6 +1960,7 @@ function exitReplayMode() {
       updateTurnFocus(turn);
       renderBoard();
       updateTroopsAndSituation();
+      updateWarlordQuotes();
       updateReviewModeUI();
 
       savedActiveBattle = null;
@@ -1947,6 +1997,7 @@ function exitReplayMode() {
       updateTurnFocus(turn);
       renderBoard();
       updateTroopsAndSituation();
+      updateWarlordQuotes();
       updateReviewModeUI();
 
       triggerCutin('真剣勝負へ復帰！', true);
@@ -1970,6 +2021,7 @@ function exitReplayMode() {
     renderBoard();
     updateTurnFocus(isGameOver ? null : turn);
     updateTroopsAndSituation();
+    updateWarlordQuotes();
     updateReviewModeUI();
 
     if (!isGameOver) {
@@ -2073,19 +2125,34 @@ function openRivalryInGuide(targetKey = null) {
   }, 100);
 }
 
+/* =========================================================
+   【振り駒の儀：5枚一斉連続3D回転＆決着アニメーション】
+   ========================================================= */
 function openFurigomaModal() {
   initAudio(); playUiClickSound(); stopAutoReplay(); stopTurnTimer();
   savedActiveBattle = null;
   isPastReplayActive = false;
   isExhibitionActive = false;
-  const m = document.getElementById('furigoma-modal'), r = document.getElementById('furigoma-pieces-row'), t = document.getElementById('furigoma-result-text');
-  m.style.display = 'flex'; r.innerHTML = ''; t.textContent = '天運を見届けております…';
+
+  const m = document.getElementById('furigoma-modal');
+  const r = document.getElementById('furigoma-pieces-row');
+  const t = document.getElementById('furigoma-result-text');
+
+  m.style.display = 'flex';
+  r.innerHTML = '';
+  t.innerHTML = '天運を見届けております…（五枚一斉回転中）';
+
+  const pieceResults = [];
   let toCount = 0;
   for (let i = 0; i < 5; i++) {
-    const isTo = Math.random() < 0.5; if (isTo) toCount++;
-    const b = document.createElement('div'); b.className = 'furigoma-piece-box';
+    const isTo = Math.random() < 0.5;
+    if (isTo) toCount++;
+    pieceResults.push(isTo);
+
+    const b = document.createElement('div');
+    b.className = 'furigoma-piece-box';
     b.innerHTML = `
-      <div class="furigoma-card" id="fg-${i}">
+      <div class="furigoma-card spinning" id="fg-${i}">
         <div class="furigoma-face furigoma-front">
           <span class="piece-char-top">歩</span><span class="piece-char-bottom">兵</span>
         </div>
@@ -2094,15 +2161,34 @@ function openFurigomaModal() {
         </div>
       </div>`;
     r.appendChild(b);
-    setTimeout(() => { if (isTo) document.getElementById(`fg-${i}`).classList.add('flipped'); playUiClickSound(); }, 150 + i * 160);
   }
+
+  pieceResults.forEach((isTo, i) => {
+    setTimeout(() => {
+      const card = document.getElementById(`fg-${i}`);
+      if (card) {
+        card.classList.remove('spinning');
+        card.classList.add(isTo ? 'settled-to' : 'settled-fu');
+        playPieceSound();
+      }
+    }, 1000 + i * 160);
+  });
+
   setTimeout(() => {
     const isPlayerSente = (5 - toCount) >= 3;
     turn = isPlayerSente ? 'PLAYER' : 'AI';
     battleStartTurn = turn;
-    t.innerHTML = isPlayerSente ? `<span style="color:#ff5252;">歩が${5 - toCount}枚！ 我が軍の先手！</span>` : `<span style="color:#ffd700;">と金が${toCount}枚！ 敵軍の先手！</span>`;
-    setTimeout(() => { m.style.display = 'none'; startBattle(); }, 1200);
-  }, 1300);
+    t.innerHTML = isPlayerSente 
+      ? `<span style="color:#ff5252;">歩が${5 - toCount}枚！ 我が軍の先手！</span>` 
+      : `<span style="color:#ffd700;">と金が${toCount}枚！ 敵軍の先手！</span>`;
+    
+    playVictorySound();
+
+    setTimeout(() => {
+      m.style.display = 'none';
+      startBattle();
+    }, 1300);
+  }, 1000 + 5 * 160 + 200);
 }
 
 function startBattle() {
@@ -2371,23 +2457,8 @@ function animateAndExecuteMove(m, metric = null, onComplete = null) {
 
     executeMove(m, metric);
 
-    // 武将パネル下段に着手内容と武将の威風堂々たる台詞を反映！
-    const rawCode = m.code || 'FU';
-    const pPiece = m.type === 'drop' ? PIECES[m.code] : (m.promote ? (PIECES[PROMOTE_MAP[rawCode]] || PIECES[rawCode]) : PIECES[rawCode]);
-    const moveTxt = `${9 - m.to.c}${KANJI_NUMS[m.to.r]}${pPiece}${m.promote ? '成' : ''}`;
-    const timeStr = metric?.timeSec ? ` ⏱${metric.timeSec}s` : '';
-
-    if (m.owner === 'PLAYER') {
-      const pQuoteEl = document.getElementById('player-quote-disp');
-      if (pQuoteEl) {
-        pQuoteEl.innerHTML = `▲<b>${moveTxt}！</b>${timeStr} ｜ 「${PLAYER_WARLORDS[currentMyWarlordId].quotes.default}」`;
-      }
-    } else {
-      const aiQuoteEl = document.getElementById('ai-quote-disp');
-      if (aiQuoteEl) {
-        aiQuoteEl.innerHTML = `▽<b>${moveTxt}！</b>${timeStr} ｜ 「${WARLORDS_DATA[currentAiLevel].quotes.default}」`;
-      }
-    }
+    // 戦況や王手に連動した動的セリフを即時更新！
+    updateWarlordQuotes();
 
     isPieceAnimating = false;
     if (onComplete) onComplete();
@@ -2434,6 +2505,7 @@ function executeMove(m, metric = null) {
   reviewingIndex = historyStates.length - 1;
   renderBoard();
   updateTroopsAndSituation();
+  updateWarlordQuotes();
   updateReviewModeUI();
 
   if (isKingCaptured && capturedKingOwner) {
@@ -2763,6 +2835,7 @@ function undoMove() {
   updateTurnFocus('PLAYER');
   renderBoard();
   updateTroopsAndSituation();
+  updateWarlordQuotes();
   updateReviewModeUI();
   startTurnTimer('PLAYER', PLAYER_WARLORDS[currentMyWarlordId].name);
 }
@@ -2802,6 +2875,17 @@ function checkGameOver(nextOwner) {
       const sData = getTargetAIData(exhibitionSenteTarget);
       const gData = getTargetAIData(exhibitionGoteTarget);
       const winnerName = (nextOwner === 'AI') ? sData.name : gData.name;
+      const pQuoteEl = document.getElementById('player-quote-disp');
+      const aiQuoteEl = document.getElementById('ai-quote-disp');
+
+      if (nextOwner === 'AI') {
+        if (pQuoteEl) pQuoteEl.textContent = sData.victoryQuote || sData.quotes?.victory || '「先手陣の大勝利！ 見事に本陣を討ち破れり！」';
+        if (aiQuoteEl) aiQuoteEl.textContent = gData.defeatQuote || gData.quotes?.defeat || '「参り申した… 先手の妙技、見事なり！」';
+      } else {
+        if (aiQuoteEl) aiQuoteEl.textContent = gData.victoryQuote || gData.quotes?.victory || '「後手陣の大勝利！ 鉄壁の陣にて制したり！」';
+        if (pQuoteEl) pQuoteEl.textContent = sData.defeatQuote || sData.quotes?.defeat || '「無念… 後手陣の堅守に屈し申した！」';
+      }
+
       triggerCutin(`【御前試合 決着】${winnerName}の勝利！`, true);
       setOrderMessage({
         line1: `御前試合が結びとなりました！ <b>${winnerName}</b>が見事合戦を制しました！`,
@@ -2817,7 +2901,6 @@ function checkGameOver(nextOwner) {
     const p = PLAYER_WARLORDS[currentMyWarlordId];
 
     if (nextOwner === 'AI') {
-      // 敵将討死！ 赤黒い炎の壊滅演出を点火
       const aiPanelEl = document.getElementById('ai-panel');
       if (aiPanelEl) aiPanelEl.classList.add('warlord-defeated');
 
@@ -2932,20 +3015,6 @@ function stepReview(dir, isAuto = false) {
   renderBoard();
   updateTroopsAndSituation();
   updateReviewModeUI();
-
-  if (lastMove) {
-    const rawCode = lastMove.code || 'FU';
-    const pPiece = lastMove.type === 'drop' ? PIECES[lastMove.code] : (lastMove.promote ? (PIECES[PROMOTE_MAP[rawCode]] || PIECES[rawCode]) : PIECES[rawCode]);
-    const moveTxt = `${9 - lastMove.to.c}${KANJI_NUMS[lastMove.to.r]}${pPiece}${lastMove.promote ? '成' : ''}`;
-    const metric = moveMetricsHistory[reviewingIndex - 1];
-    const timeStr = metric?.timeSec ? ` ⏱${metric.timeSec}s` : '';
-
-    if (lastMove.owner === 'PLAYER') {
-      document.getElementById('player-quote-disp').innerHTML = `▲<b>${moveTxt}</b>${timeStr}`;
-    } else {
-      document.getElementById('ai-quote-disp').innerHTML = `▽<b>${moveTxt}</b>${timeStr}`;
-    }
-  }
 
   setOrderMessage(`【合戦絵巻鑑賞中】第 ${reviewingIndex} 手目の布陣を再現しております。`, false, 'player');
 }
@@ -4284,7 +4353,9 @@ function replayFromHistory(recordId, storageKey) {
 
   updateTurnFocus(null);
   renderBoard();
-  updateTroopsAndSituation(); updateReviewModeUI();
+  updateTroopsAndSituation();
+  updateWarlordQuotes();
+  updateReviewModeUI();
   
   const pauseNotice = savedActiveBattle ? '（※進行中の対戦は一時中断中。［⚔ 対局へ戻る］でいつでも再開できます）' : '';
   setOrderMessage({

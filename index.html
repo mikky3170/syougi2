@@ -48,7 +48,8 @@
 
   <!-- =========================================================
        戦闘主ステージ：battle-theatre-layout
-       （スマホ：縦積み布陣 / タブレット：上段横並び・中段大盤・下段横並び布陣）
+       （スマホ：戦況→敵将ゾーン→敵駒台(左上)→盤→自駒台(右下)→自将ゾーン→軍令高札）
+       （タブレット：上段横並び・中段大盤・下段横並び布陣）
        ========================================================= -->
   <div class="battle-theatre-layout" id="battle-theatre-layout">
     
@@ -60,21 +61,21 @@
         <div class="warlord-hand-box hand-box-enemy" id="ai-hand"></div>
       </div>
 
-      <!-- 敵将パネル（肖像 ＋ [名前・説明 ＆ 思考時間] ＋ 兵力バー ＋ セリフ） -->
+      <!-- 敵将パネル（肖像 ＋ [名前・肩書＋思案中表示 ＆ 進軍先ボタン] ＋ 兵力バー ＋ 1行目からの2行セリフ） -->
       <div class="warlord-panel panel-enemy" id="ai-panel">
         <div class="warlord-avatar" id="ai-avatar-container" onclick="toggleWarlordAvatarView('ai')" title="肖像／家紋切替"></div>
         
         <div class="warlord-info-col">
-          <!-- 上段：左に[名前＋説明]、右に[思考時間＋進軍先ボタン] -->
+          <!-- 上段：名前、肩書＋手番思案中+経過時間、進軍先ボタン -->
           <div class="warlord-header-row">
             <div class="warlord-identity-block">
               <span class="warlord-name" id="ai-name-disp">木下藤吉郎</span>
-              <span class="warlord-desc" id="ai-clan-disp">尾張国｜織田足軽隊</span>
+              <div class="warlord-desc-line">
+                <span class="warlord-desc" id="ai-clan-disp">尾張国｜織田足軽隊</span>
+                <span class="warlord-thinking-inline time-enemy" id="ai-thinking-disp" style="display:none;"></span>
+              </div>
             </div>
             <div class="warlord-time-action-block">
-              <div class="warlord-time-badge time-enemy" id="ai-time-badge" title="敵将の思考時間">
-                ⏱ <span id="ai-time-sec">0.0s</span>
-              </div>
               <button class="panel-select-btn btn-3d btn-select-enemy" onclick="openConquestMapModal()" id="btn-enemy-change" title="進軍先（敵国）を選定">⚔ 進軍先</button>
             </div>
           </div>
@@ -90,7 +91,7 @@
             </div>
           </div>
 
-          <!-- 下段：兵力バー直下のセリフ（2行枠） -->
+          <!-- 下段：兵力バー直下のセリフ（1行目から純粋に書き出し） -->
           <div class="warlord-quote-row">
             <div class="warlord-quote" id="ai-quote-disp">「草履取りとて天下を夢見候！ 足軽の意地、見せてくれよう！」</div>
           </div>
@@ -150,24 +151,24 @@
 
     <!-- 【下陣セクション：自軍エリア】 -->
     <div class="battle-section-bottom">
-      <!-- 自将パネル（肖像 ＋ [名前・説明 ＆ 思考時間] ＋ 兵力バー ＋ セリフ） -->
+      <!-- 自将パネル（肖像 ＋ [名前・肩書＋思案中表示 ＆ 自将変更ボタン] ＋ 兵力バー ＋ 1行目からの2行セリフ） -->
       <div class="warlord-panel panel-player" id="player-panel">
         <div class="warlord-avatar" id="player-avatar-container" onclick="toggleWarlordAvatarView('player')" title="肖像／家紋切替"></div>
         
         <div class="warlord-info-col">
-          <!-- 上段：左に[名前＋説明]、右に[思考時間＋自将変更ボタン] -->
+          <!-- 上段：名前、肩書＋手番思案中+経過時間、自将変更ボタン -->
           <div class="warlord-header-row">
             <div class="warlord-identity-block">
               <div class="warlord-name-group">
                 <span class="warlord-name" id="player-name-disp">真田幸村</span>
                 <span class="warlord-strategist-badge" id="player-strategist-badge">軍師:昌幸</span>
               </div>
-              <span class="warlord-desc" id="player-clan-disp">信濃国 ｜ 真田赤備隊</span>
+              <div class="warlord-desc-line">
+                <span class="warlord-desc" id="player-clan-disp">信濃国 ｜ 真田赤備隊</span>
+                <span class="warlord-thinking-inline time-player" id="player-thinking-disp" style="display:none;"></span>
+              </div>
             </div>
             <div class="warlord-time-action-block">
-              <div class="warlord-time-badge time-player" id="player-time-badge" title="自将の思考時間">
-                ⏱ <span id="player-time-sec">0.0s</span>
-              </div>
               <button class="panel-select-btn btn-3d btn-select-player" onclick="openPlayerWarlordModal()" id="btn-player-change" title="自将を変更">🪭 自将変更</button>
             </div>
           </div>
@@ -183,7 +184,7 @@
             </div>
           </div>
 
-          <!-- 下段：兵力バー直下のセリフ（2行枠） -->
+          <!-- 下段：兵力バー直下のセリフ（1行目から純粋に書き出し） -->
           <div class="warlord-quote-row">
             <div class="warlord-quote" id="player-quote-disp">「不惜身命！ この一手に命を懸ける！」</div>
           </div>
@@ -614,7 +615,7 @@
             <button class="card-speech-btn btn-3d" onclick="toggleCardSpeech('guide-card-step-1')">🔊 朗読</button>
           </div>
           1. <b class="kw-gold">陣容の選定</b>：上下のパネルより「自将」と進軍先の「敵国」を決定します。敵将を討ち取るごとに兵力を吸収し、最大動員力が増強されます！<br>
-          2. <b class="kw-gold">振り駒の儀</b>：「⚜ 対局開始」を押すと、五枚の歩が舞い散り天運により<span class="kw-green">先手・後手</span>を定めます。<br>
+          2. <b class="kw-gold">振り駒の儀</b>：「⚜ 対局開始」を押すと、五枚の歩が一斉に舞い散り天運により<span class="kw-green">先手・後手</span>を定めます。<br>
           3. <b class="kw-gold">布陣と進撃</b>：盤上または手駒をタップすると、進めるマスが鮮やかな<span class="kw-green">若草色</span>、敵駒を取れるマスが<span class="kw-crimson">真金色</span>に輝きます。<br>
           4. <b class="kw-gold">成り（昇格）</b>：敵陣へ突入、敵陣内での移動、または敵陣から出る際、駒がひっくり返り流麗な<span class="kw-crimson">行書体の成駒（龍王・龍馬など）</span>へと覚醒します。<br>
           5. <b class="kw-gold">敵玉撃破（兵力壊滅）</b>：敵将の玉将を討ち取る（詰ます）ことで敵兵力を壊滅させ、天下平定へ一歩前進します！
