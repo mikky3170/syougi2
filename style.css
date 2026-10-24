@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Klee+One:wght@600;900&family=Shippori+Mincho:wght@700;900&family=Yuji+Boku&display=swap');
 
 :root {
@@ -58,17 +59,17 @@ body {
 .btn-3d {
   position: relative; outline: none; border-style: solid; cursor: pointer; transform: translateY(0);
   box-shadow: 
-    0 3.5px 0 rgba(10, 3, 1, 0.95),
-    0 5px 8px rgba(0, 0, 0, 0.8),
-    inset 0 1.2px 0.5px rgba(255, 255, 255, 0.45),
-    inset 0 -1.5px 1px rgba(0, 0, 0, 0.6);
+    0 3px 0 rgba(10, 3, 1, 0.95),
+    0 4px 6px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0.5px rgba(255, 255, 255, 0.45),
+    inset 0 -1.2px 1px rgba(0, 0, 0, 0.6);
   transition: transform 0.06s cubic-bezier(0.2, 0, 0.1, 1), 
               box-shadow 0.06s cubic-bezier(0.2, 0, 0.1, 1), 
               filter 0.12s ease;
 }
 .btn-3d:hover { filter: brightness(1.1) contrast(1.05); }
 .btn-3d:active {
-  transform: translateY(3px) !important;
+  transform: translateY(2.5px) !important;
   box-shadow: 
     0 0.5px 0 rgba(10, 3, 1, 0.95),
     0 1.5px 3px rgba(0, 0, 0, 0.85),
@@ -81,14 +82,13 @@ body {
    最上部：本丸大扁額ヘッダー（左右縦2段スタック ＆ 純金プレート）
    ========================================================= */
 .top-header {
-  width: 100%; max-width: 520px;
-  height: clamp(46px, 6.4vh, 56px);
+  width: 100%; max-width: min(98vw, 680px);
+  height: clamp(42px, 5.6vh, 48px);
   display: flex; justify-content: space-between; align-items: stretch;
   border: 1.8px solid #997223; border-radius: 6px;
   background: linear-gradient(180deg, #2b1206 0%, #0d0401 50%, #1f0b03 100%);
   box-shadow: 0 3px 0 #050100, 0 6px 16px rgba(0,0,0,0.98), inset 0 1.5px 0 rgba(255, 235, 140, 0.5), inset 0 0 12px rgba(0, 0, 0, 0.8);
   padding: 3px 5px; flex-shrink: 0; position: relative; gap: 6px;
-  transition: all 0.3s ease;
 }
 
 .header-actions-col {
@@ -98,13 +98,12 @@ body {
 }
 
 .header-btn {
-  font-family: var(--font-ui); font-size: clamp(9px, 1.3vh, 10.5px); font-weight: 900;
+  font-family: var(--font-ui); font-size: clamp(8.5px, 1.25vh, 10px); font-weight: 900;
   padding: 0 4px; border-radius: 3px; border-width: 1.2px;
   color: #fff8d6; cursor: pointer; white-space: nowrap; line-height: 1;
   text-shadow: 0 1px 2px rgba(0,0,0,0.9);
   height: calc(50% - 1.5px);
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 2px 0 rgba(10,3,1,0.9), 0 2.5px 4px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.45);
 }
 .btn-guide { background: linear-gradient(180deg, #6b430e 0%, #301a04 100%); border-color: #ffd700; color: #ffefa8; }
 .btn-exhibition { background: linear-gradient(180deg, #1b283d 0%, #0a1324 100%); border-color: #d4aa50; color: #fff3c4; }
@@ -136,104 +135,83 @@ body {
   display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2; position: relative;
 }
 .title-main-txt {
-  font-size: clamp(14px, 2.3vh, 17.5px); font-weight: 900; letter-spacing: 2px; white-space: nowrap; color: #0c0502;
+  font-size: clamp(13px, 2.1vh, 16.5px); font-weight: 900; letter-spacing: 2px; white-space: nowrap; color: #0c0502;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5), 0 -0.5px 0 rgba(0, 0, 0, 0.8);
   filter: drop-shadow(0 1px 1.5px rgba(255, 240, 150, 0.85));
 }
 .title-sub-txt {
-  font-family: var(--font-kaisho); font-size: clamp(8px, 1.2vh, 9.5px); font-weight: 900; letter-spacing: 1px; white-space: nowrap; color: #2b1204;
+  font-family: var(--font-kaisho); font-size: clamp(7.5px, 1.15vh, 9px); font-weight: 900; letter-spacing: 1px; white-space: nowrap; color: #2b1204;
   margin-top: 0px; text-shadow: 0 0.8px 0 rgba(255, 255, 255, 0.6);
 }
 
 /* =========================================================
-   【戦況評定スリムバー】
+   【① 戦況評定スリムバー（全体の大局観）】
    ========================================================= */
 .situation-banner {
-  width: 100%; min-height: 22px; max-height: 22px; height: 22px;
+  width: 100%; min-height: 19px; max-height: 19px; height: 19px;
   background: linear-gradient(90deg, #1f0f06 0%, #44210c 50%, #1f0f06 100%);
   border: 1.2px solid #b88a32; border-radius: 3px;
-  display: flex; align-items: center; gap: 8px; padding: 0 8px;
+  display: flex; align-items: center; gap: 6px; padding: 0 8px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.85); flex-shrink: 0;
-  transition: background 0.3s ease, border-color 0.3s ease;
+  transition: all 0.3s ease;
 }
 .situation-title {
-  font-size: 11px; font-weight: 900; white-space: nowrap;
+  font-size: 10px; font-weight: 900; white-space: nowrap;
   border-right: 1.5px solid #8c671a; padding-right: 6px; line-height: 1; letter-spacing: 1px;
   background: var(--gold-rich); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
 }
 .situation-text {
-  font-size: 9px; font-weight: 800; color: #fff8e7; line-height: 1.2;
+  font-size: 8.5px; font-weight: 800; color: #fff8e7; line-height: 1.2;
   flex: 1; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.situation-banner.mode-replay {
-  background: linear-gradient(90deg, #3d1447 0%, #200829 50%, #3d1447 100%) !important;
-  border-color: #ffd700 !important;
+.situation-banner.flash-pulse {
+  animation: sit-flash 1.2s ease-out;
 }
-.situation-banner.mode-exhibition {
-  background: linear-gradient(90deg, #0e192c 0%, #182845 50%, #0e192c 100%) !important;
-  border-color: #ffd700 !important;
+@keyframes sit-flash {
+  0%   { border-color: #ffffff; box-shadow: 0 0 14px #ffd700; background: #612f0a; }
+  100% { border-color: #b88a32; box-shadow: 0 2px 5px rgba(0,0,0,0.85); background: linear-gradient(90deg, #1f0f06 0%, #44210c 50%, #1f0f06 100%); }
 }
 
 /* =========================================================
-   【基本構造：スマートフォン（天守閣・中央縦スタック）】
+   【主ステージレイアウト（全幅武将パネル ＆ 密着駒台付き大盤）】
    ========================================================= */
 .main-wrapper {
   display: flex; flex-direction: column; align-items: center; justify-content: space-between;
-  width: 100%; max-width: 520px; flex: 1 1 0; min-height: 0; gap: 2px;
+  width: 100%; max-width: min(98vw, 680px); flex: 1 1 0; min-height: 0; gap: 2px;
   position: relative;
 }
 
-/* 戦闘主ステージ（スマホ：縦に並ぶ / タブレット：横3列グリッドに変化） */
 .battle-theatre-layout {
   width: 100%; flex: 1 1 0; min-height: 0;
   display: flex; flex-direction: column; align-items: center; justify-content: space-between;
   gap: 2px;
 }
 
-.wing-enemy-zone { width: 100%; flex-shrink: 0; }
-.wing-center-zone {
-  width: 100%; flex: 1 1 0; min-height: 0;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  position: relative;
-}
-.wing-player-zone { width: 100%; flex-shrink: 0; }
-
 /* =========================================================
-   【武将パネル（主将の座）：動的演出と兵力管理に特化】
+   【全幅・堂々たる武将パネル（肖像全高 ＆ 兵力バー下2行メッセージ）】
    ========================================================= */
 .warlord-panel {
-  width: 100%; min-height: clamp(48px, 6.8vh, 58px);
+  width: 100%; height: clamp(62px, 8.8vh, 76px); flex-shrink: 0;
   background: linear-gradient(180deg, rgba(38, 19, 8, 0.98) 0%, rgba(14, 6, 2, 0.98) 100%);
   border: 1.8px solid #c99832; border-radius: 5px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.95), inset 0 1px 0 rgba(255,235,150,0.4);
-  display: flex; align-items: center; padding: 2px 6px; gap: 6px; flex-shrink: 0;
-  transition: all 0.3s ease; position: relative;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.95), inset 0 1px 0 rgba(255,235,150,0.4);
+  display: flex; flex-direction: row; align-items: stretch; gap: 6px;
+  padding: 3px 6px; position: relative; transition: all 0.3s ease;
 }
 
-@keyframes pulse-aura-player {
-  0%   { box-shadow: 0 3px 6px rgba(0,0,0,0.95), 0 0 10px rgba(255, 215, 0, 0.4); border-color: #ffd700; }
-  50%  { box-shadow: 0 3px 10px rgba(0,0,0,0.95), 0 0 24px rgba(255, 215, 0, 0.95), 0 0 30px rgba(255, 145, 0, 0.7); border-color: #ffffff; }
-  100% { box-shadow: 0 3px 6px rgba(0,0,0,0.95), 0 0 10px rgba(255, 215, 0, 0.4); border-color: #ffd700; }
-}
-@keyframes pulse-aura-enemy {
-  0%   { box-shadow: 0 3px 6px rgba(0,0,0,0.95), 0 0 10px rgba(255, 120, 120, 0.4); border-color: #ffd700; }
-  50%  { box-shadow: 0 3px 10px rgba(0,0,0,0.95), 0 0 24px rgba(255, 60, 60, 0.9), 0 0 30px rgba(255, 160, 50, 0.7); border-color: #ffb3b3; }
-  100% { box-shadow: 0 3px 6px rgba(0,0,0,0.95), 0 0 10px rgba(255, 120, 120, 0.4); border-color: #ffd700; }
-}
-
+/* パネル上下高さいっぱいに大きく表示されるアバター */
 .warlord-avatar {
-  width: clamp(40px, 5.8vh, 50px) !important;
-  height: clamp(44px, 6.4vh, 54px) !important;
-  border-radius: 6px !important; border: 2px solid #ffd700 !important;
+  height: 100% !important;
+  aspect-ratio: 4 / 5 !important;
+  width: auto !important;
+  border-radius: 4px !important; border: 1.8px solid #ffd700 !important;
   background: radial-gradient(circle at 35% 35%, #3d1c0c 0%, #080301 100%);
   overflow: hidden !important; position: relative; flex-shrink: 0 !important;
-  box-shadow: 0 3px 6px rgba(0,0,0,0.95), 0 0 10px rgba(255, 215, 0, 0.35);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.95), 0 0 8px rgba(255, 215, 0, 0.35);
   display: flex; align-items: center; justify-content: center; cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.3s ease;
 }
-.warlord-avatar:hover { transform: scale(1.04); }
-.warlord-avatar.turn-thinking-player { animation: pulse-aura-player 2.0s infinite ease-in-out !important; }
-.warlord-avatar.turn-thinking-enemy { animation: pulse-aura-enemy 2.0s infinite ease-in-out !important; }
+.warlord-avatar:hover { transform: scale(1.03); }
 
 .portrait-container-box { width: 100%; height: 100%; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
 .portrait-crest-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 1; }
@@ -242,153 +220,169 @@ body {
 .portrait-has-image .portrait-face-img { display: block !important; opacity: 1 !important; }
 .show-crest .portrait-face-img { opacity: 0 !important; pointer-events: none; }
 
-.warlord-info { flex: 1; display: flex; flex-direction: column; justify-content: center; min-width: 0; overflow: hidden; }
-.panel-enemy .warlord-info { text-align: right; }
-.panel-player .warlord-info { text-align: left; }
+/* 右側情報列：上段名前 ── 中段兵力バー ── 下段2行メッセージ */
+.warlord-info-col {
+  flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between;
+  gap: 1.5px; overflow: hidden; padding-top: 1px;
+}
 
-.warlord-name-row { display: flex; align-items: center; justify-content: space-between; gap: 4px; min-width: 0; }
-.name-left-group, .name-right-group { display: flex; align-items: center; gap: 4px; min-width: 0; flex: 1; overflow: hidden; }
-.panel-enemy .name-right-group { justify-content: flex-end; }
-
-.warlord-name { font-size: 12.5px; font-weight: 900; color: #ffe699; letter-spacing: 0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.warlord-name-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 4px; min-width: 0;
+}
+.warlord-title-box { display: flex; align-items: center; gap: 4px; min-width: 0; overflow: hidden; }
+.warlord-name {
+  font-size: clamp(11.5px, 1.65vh, 13.5px); font-weight: 900; color: #ffe699; letter-spacing: 0.5px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.warlord-strategist-badge {
+  font-size: 8px; font-weight: 900; color: #ffd700; background: #3d1405;
+  border: 0.6px solid #b88a32; border-radius: 2px; padding: 0.5px 3px; white-space: nowrap;
+}
 
 .panel-select-btn {
-  font-family: var(--font-ui); font-size: 9.5px; font-weight: 900;
-  padding: 2.5px 6px; border-radius: 4px; cursor: pointer; white-space: nowrap; flex-shrink: 0;
+  font-family: var(--font-ui); font-size: clamp(8px, 1.15vh, 9.5px); font-weight: 900;
+  padding: 1px 6px; border-radius: 3px; cursor: pointer; white-space: nowrap; flex-shrink: 0; line-height: 1.2;
 }
 .btn-select-enemy {
   background: linear-gradient(180deg, #6b3b16 0%, #290e03 100%);
-  border: 1.3px solid #ffd700; color: #fff0aa;
-  box-shadow: 0 2.5px 0 #120501, 0 3px 5px rgba(0,0,0,0.8);
+  border: 1.2px solid #ffd700; color: #fff0aa;
 }
 .btn-select-player {
   background: linear-gradient(180deg, #9e1919 0%, #3d0606 100%);
-  border: 1.3px solid #ffb3b3; color: #ffffff;
-  box-shadow: 0 2.5px 0 #1f0303, 0 3px 5px rgba(0,0,0,0.8);
+  border: 1.2px solid #ffb3b3; color: #ffffff;
 }
-.panel-select-btn.is-locked-exhibition {
-  background: linear-gradient(180deg, #241407 0%, #120501 100%) !important;
-  border: 1.3px solid #ffd700 !important; color: #ffe699 !important;
-}
-
-.warlord-clan { font-size: 8px; color: #d6be89; font-weight: 700; line-height: 1.1; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-/* リアルタイム戦況動的セリフ（台詞のダイナミズム） */
-.warlord-quote {
-  font-size: 9px; color: #fff8e7; font-weight: 800;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  text-shadow: 0 1px 2px #000; margin: 1px 0; transition: color 0.3s ease;
-}
-.warlord-quote.quote-check { color: #ff5252 !important; text-shadow: 0 0 6px rgba(255, 80, 80, 0.8) !important; font-weight: 900; }
-.warlord-quote.quote-pinch { color: #ffb74d !important; font-weight: 900; }
-.warlord-quote.quote-adv   { color: #ffd700 !important; text-shadow: 0 0 5px rgba(255, 215, 0, 0.6) !important; font-weight: 900; }
 
 /* 兵力ゲージ */
-.gauge-group { display: flex; flex-direction: column; gap: 1px; margin-top: 1px; }
+.gauge-group { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .gauge-label-row { display: flex; justify-content: space-between; align-items: center; font-size: 8px; }
-.gauge-title-tag { color: #ffd700; font-weight: 900; letter-spacing: 0.5px; }
-.troops-num-txt { color: #ffffff; font-weight: 900; font-size: 8.5px; text-shadow: 0 1px 3px #000; }
+.warlord-clan { color: #d6be89; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.troops-num-txt { color: #ffffff; font-weight: 900; font-size: clamp(8px, 1.2vh, 9.5px); text-shadow: 0 1px 2px #000; }
 
 .troops-bar-frame {
-  width: 100%; height: 5px; background: #000000;
-  border: 0.8px solid #a67c33; border-radius: 2px; overflow: hidden;
+  width: 100%; height: 4px; background: #000000;
+  border: 0.7px solid #a67c33; border-radius: 2px; overflow: hidden;
   box-shadow: inset 0 1px 2px rgba(0,0,0,0.9);
 }
 .troops-bar-fill { height: 100%; width: 100%; transition: width 0.4s cubic-bezier(0.2, 0, 0.1, 1); }
 .troops-enemy {
   background: linear-gradient(90deg, #7a0c0c 0%, #d11919 60%, #ff5252 100%);
-  box-shadow: 0 0 6px rgba(255, 60, 60, 0.7);
+  box-shadow: 0 0 5px rgba(255, 60, 60, 0.7);
 }
 .troops-player {
   background: linear-gradient(90deg, #995c0d 0%, #e6a100 60%, #ffd700 100%);
-  box-shadow: 0 0 6px rgba(255, 215, 0, 0.7);
+  box-shadow: 0 0 5px rgba(255, 215, 0, 0.7);
 }
+
+/* 兵力バーの下：2行分の高さを確保したセリフ・ログ領域 */
+.warlord-quote-row {
+  min-height: 2.5em; height: 2.5em; max-height: 2.5em;
+  display: flex; align-items: center; overflow: hidden;
+  border-top: 1px dashed rgba(255, 215, 0, 0.2); padding-top: 1px;
+}
+.warlord-quote {
+  font-size: clamp(8px, 1.15vh, 9.5px); color: #fff8e7; font-weight: 800;
+  line-height: 1.25; margin: 0; width: 100%;
+  white-space: normal;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 2px #000;
+}
+.warlord-quote.quote-check { color: #ff5252 !important; text-shadow: 0 0 6px rgba(255, 80, 80, 0.8) !important; font-weight: 900; }
+.warlord-quote.quote-pinch { color: #ffb74d !important; font-weight: 900; }
+.warlord-quote.quote-adv   { color: #ffd700 !important; text-shadow: 0 0 5px rgba(255, 215, 0, 0.6) !important; font-weight: 900; }
+
+/* 手番オーラ発光 */
+@keyframes focus-aura-enemy {
+  0%   { border-color: #ffd700; box-shadow: 0 0 8px rgba(255, 80, 80, 0.5), inset 0 0 6px rgba(255, 60, 60, 0.2); }
+  50%  { border-color: #ff5252; box-shadow: 0 0 16px rgba(255, 80, 80, 0.9), inset 0 0 12px rgba(255, 80, 80, 0.4); }
+  100% { border-color: #ffd700; box-shadow: 0 0 8px rgba(255, 80, 80, 0.5), inset 0 0 6px rgba(255, 60, 60, 0.2); }
+}
+@keyframes focus-aura-player {
+  0%   { border-color: #ffd700; box-shadow: 0 0 8px rgba(255, 215, 0, 0.5), inset 0 0 6px rgba(255, 215, 0, 0.2); }
+  50%  { border-color: #ffffff; box-shadow: 0 0 18px rgba(255, 215, 0, 0.95), inset 0 0 12px rgba(255, 215, 0, 0.4); }
+  100% { border-color: #ffd700; box-shadow: 0 0 8px rgba(255, 215, 0, 0.5), inset 0 0 6px rgba(255, 215, 0, 0.2); }
+}
+.panel-enemy.turn-focus-enemy { animation: focus-aura-enemy 1.8s infinite ease-in-out !important; }
+.panel-player.turn-focus-player, .dock-player.turn-focus-player { animation: focus-aura-player 2.0s infinite ease-in-out !important; }
 
 /* =========================================================
-   【打ち込み駒台レーン（スマホ時・対角配置）】
+   【中段：将棋盤ゾーン ＆ 左上・右下に密着した持ち駒台】
+   将棋盤の周囲余白を極限まで削ぎ落とし、大盤化を実現！
    ========================================================= */
-.warlord-hand-area {
-  height: 34px; min-height: 34px;
-  background: var(--board-wood);
-  border: 1.5px solid #a67c33; border-radius: 4px; padding: 1.5px 5px;
-  display: flex; align-items: center; overflow-x: auto; gap: 4px;
-  box-shadow: inset 0 1px 3px rgba(0,0,0,0.5), inset 0 -1px 2px rgba(255,255,255,0.4), 0 2px 6px rgba(0,0,0,0.85);
-  position: relative; flex-shrink: 0; z-index: 10;
-  transition: all 0.3s ease;
-}
-.warlord-hand-area::after {
-  content: ''; position: absolute; inset: 0;
-  border: 0.8px solid rgba(80, 40, 10, 0.4); pointer-events: none; border-radius: 3px;
+.wing-center-zone {
+  width: 100%; flex: 1 1 0; min-height: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  position: relative;
 }
 
-/* スマホ時：敵軍駒台＝盤の左上、自軍駒台＝盤の右下 */
-.hand-lane-enemy {
-  width: clamp(170px, 50vw, 220px);
-  max-width: 62%;
-  align-self: flex-start;
-  margin-left: 2px;
-  margin-bottom: 2px;
-  justify-content: flex-start;
+.board-wrapper {
+  width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  flex: 1 1 0; min-height: 0; min-width: 0; position: relative; padding: 0;
 }
-.hand-lane-player {
-  width: clamp(170px, 50vw, 220px);
-  max-width: 62%;
-  align-self: flex-end;
-  margin-right: 2px;
-  margin-top: 2px;
-  justify-content: flex-end;
+
+/* 盤フレームの横幅・縦幅にピタッと寄り添うドック枠 */
+.board-hand-dock {
+  display: flex; align-items: center; gap: 4px; z-index: 10;
+  width: min(calc(100vw - 8px), calc(100vh - 250px), 620px);
+  max-width: 100%; flex-shrink: 0; height: clamp(22px, 3.2vh, 26px);
+}
+.dock-enemy { justify-content: flex-start; margin-bottom: 1px; }
+.dock-player { justify-content: flex-end; margin-top: 1px; }
+
+.dock-label {
+  font-family: var(--font-kaisho); font-size: 8px; font-weight: 900; color: #ffd700;
+  background: #2b1206; border: 0.8px solid #a67c33; border-radius: 2px; padding: 2px 3px;
+  line-height: 1; white-space: nowrap; text-shadow: 0 1px 2px #000;
+}
+
+/* 左上・右下に密着する持ち駒台（横1列〜2列のスリム工芸木製台） */
+.warlord-hand-box {
+  background: var(--board-wood);
+  border: 1.5px solid #a67c33; border-radius: 3px; padding: 1px 4px;
+  display: flex; flex-direction: row; align-items: center; justify-content: flex-start;
+  gap: 3px; height: 100%; min-width: 140px; max-width: 82%;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.6), 0 2px 5px rgba(0,0,0,0.85);
+  position: relative; overflow-x: auto; overflow-y: hidden;
 }
 
 /* 持ち駒デザイン */
 .hand-piece {
-  width: 26px; height: 30px;
-  background: var(--piece-bg); border: 1.2px solid #5a3813;
+  width: clamp(17px, 2.7vh, 22px); height: clamp(19px, 3.0vh, 24px);
+  background: var(--piece-bg); border: 1px solid #5a3813;
   clip-path: polygon(50% 0%, 88% 18%, 100% 100%, 0% 100%, 12% 18%);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  font-family: var(--font-kaisho); font-size: 9px; line-height: 0.95; font-weight: 900;
-  cursor: pointer; position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.7); flex-shrink: 0;
-  text-align: center; padding-top: 2px;
+  font-family: var(--font-kaisho); font-size: clamp(7.5px, 1.15vh, 9px); line-height: 0.95; font-weight: 900;
+  cursor: pointer; position: relative; box-shadow: 0 1.2px 2px rgba(0,0,0,0.7); flex-shrink: 0;
+  text-align: center; padding-top: 1px;
 }
 .hand-piece.player { color: var(--player-color); }
 .hand-piece.ai { color: var(--ai-color); transform: rotate(180deg); }
-.hand-piece.selected { background: #fff59d; box-shadow: 0 0 10px #ffd700; border-color: #ffd700; }
+.hand-piece.selected { background: #fff59d; box-shadow: 0 0 8px #ffd700; border-color: #ffd700; }
 .hand-piece-count {
-  position: absolute; bottom: 0; right: 0; font-size: 7.5px;
+  position: absolute; bottom: -1px; right: -1px; font-size: 6.5px;
   color: #fff; font-weight: 900; background: #960d0d;
-  border-radius: 50%; padding: 0 3px; line-height: 1.1;
-  border: 0.5px solid #ffd700; box-shadow: 0 1px 3px rgba(0,0,0,0.8);
+  border-radius: 50%; padding: 0 2px; line-height: 1.05;
+  border: 0.5px solid #ffd700; box-shadow: 0 1px 2px rgba(0,0,0,0.8);
 }
 
-/* =========================================================
-   将棋盤＆目盛り枠：完全正方形（1:1）絶対維持
-   ========================================================= */
-.board-wrapper {
-  width: 100%; max-width: 100%;
-  display: flex; justify-content: center; align-items: center;
-  flex: 1 1 0; min-height: 0; min-width: 0;
-  position: relative; overflow: hidden; padding: 1px 2px;
-}
-
+/* 将棋盤フレーム（余白を極限まで活用し堂々最大化） */
 .shogi-board-frame {
   display: flex; flex-direction: column;
   background: var(--border-frame);
   border: 2px solid #cca135; border-radius: 4px; padding: 1px;
   box-shadow: 0 5px 18px rgba(0,0,0,0.98), inset 0 0 10px rgba(0,0,0,0.95);
-  width: min(calc(100vw - 12px), calc(100vh - 325px), 480px);
-  height: min(calc(100vw - 12px), calc(100vh - 325px), 480px);
+  width: min(calc(100vw - 8px), calc(100vh - 250px), 620px);
+  height: min(calc(100vw - 8px), calc(100vh - 250px), 620px);
   max-width: 100%; max-height: 100%; flex-shrink: 0; position: relative;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
-
 .shogi-board-frame::after {
   content: ''; position: absolute; inset: 1px;
   border: 1px solid rgba(255, 215, 0, 0.4); pointer-events: none; border-radius: 2px;
 }
 
-.board-top-row { display: flex; width: 100%; height: 12px; margin-bottom: 1px; flex-shrink: 0; }
+.board-top-row { display: flex; width: 100%; height: clamp(9px, 1.4vh, 13px); margin-bottom: 1px; flex-shrink: 0; }
 .rank-index-container { flex: 1; display: grid; grid-template-columns: repeat(9, 1fr); }
-.rank-cell { display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; color: #ffe57f; text-shadow: 0 1px 2px #000; }
-.rank-corner-spacer { width: 13px; flex-shrink: 0; }
+.rank-cell { display: flex; align-items: center; justify-content: center; font-size: clamp(8.5px, 1.25vh, 11px); font-weight: 900; color: #ffe57f; text-shadow: 0 1px 2px #000; }
+.rank-corner-spacer { width: clamp(10px, 1.5vh, 14px); flex-shrink: 0; }
 
 .board-main-row { display: flex; width: 100%; flex: 1 1 0; min-height: 0; align-items: stretch; }
 
@@ -456,7 +450,7 @@ body {
 }
 
 .board-star {
-  position: absolute; width: clamp(5px, 1.2vw, 7px); height: clamp(5px, 1.2vw, 7px);
+  position: absolute; width: clamp(5px, 1.2vw, 8px); height: clamp(5px, 1.2vw, 8px);
   background: radial-gradient(circle at 35% 35%, #3d1a04 0%, #100501 70%, #000000 100%);
   border: 0.6px solid rgba(255, 215, 0, 0.85); border-radius: 50%;
   transform: translate(-50%, -50%); pointer-events: none; z-index: 15;
@@ -466,8 +460,8 @@ body {
 #star-3 { top: calc(100% * 6 / 9); left: calc(100% * 3 / 9); }
 #star-4 { top: calc(100% * 6 / 9); left: calc(100% * 6 / 9); }
 
-.file-index-col { width: 13px; flex-shrink: 0; display: grid; grid-template-rows: repeat(9, 1fr); margin-left: 1px; }
-.file-cell { display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; color: #ffe57f; text-shadow: 0 1px 2px #000; }
+.file-index-col { width: clamp(10px, 1.5vh, 14px); flex-shrink: 0; display: grid; grid-template-rows: repeat(9, 1fr); margin-left: 1px; }
+.file-cell { display: flex; align-items: center; justify-content: center; font-size: clamp(8.5px, 1.25vh, 11px); font-weight: 900; color: #ffe57f; text-shadow: 0 1px 2px #000; }
 
 /* 盤上の本格二文字駒 */
 .piece {
@@ -476,7 +470,7 @@ body {
   clip-path: polygon(50% 0%, 88% 18%, 100% 100%, 0% 100%, 12% 18%);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   font-family: var(--font-kaisho);
-  font-size: clamp(10.5px, calc(min(100vw - 36px, 100vh - 340px, 460px) / 9 * 0.34), 18px);
+  font-size: clamp(11.5px, calc(min(100vw - 16px, 100vh - 260px, 620px) / 9 * 0.36), 23px);
   line-height: 0.95; font-weight: 900; pointer-events: none;
   box-shadow: 0 2px 4px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.95);
   text-align: center; padding: 4px 1px 2px 1px;
@@ -485,45 +479,27 @@ body {
 .piece.ai { color: var(--ai-color); transform: rotate(180deg); }
 .piece.promoted {
   font-family: var(--font-gyosho) !important;
-  font-size: clamp(11.5px, calc(min(100vw - 36px, 100vh - 340px, 460px) / 9 * 0.37), 19.5px) !important;
+  font-size: clamp(12.5px, calc(min(100vw - 16px, 100vh - 260px, 620px) / 9 * 0.39), 25px) !important;
   color: var(--promoted-crimson) !important;
 }
 .piece-char-top { margin-bottom: 0px; transform: scale(0.92); }
 .piece-char-bottom { margin-top: -1px; transform: scale(0.92); }
 
-/* 飛翔・捕獲・着地アニメーション */
+/* 飛翔アニメーション */
 .anim-flying-piece {
   position: fixed !important; z-index: 2900 !important; pointer-events: none !important; margin: 0 !important;
   will-change: transform, left, top;
   filter: drop-shadow(0 12px 20px rgba(0,0,0,0.85)) drop-shadow(0 0 10px rgba(255, 215, 0, 0.65)) !important;
 }
-.anim-capture-piece {
-  position: fixed !important; z-index: 2850 !important; pointer-events: none !important; margin: 0 !important;
-  will-change: transform, left, top, opacity;
-}
-@keyframes hand-flash-pulse {
-  0%   { box-shadow: inset 0 0 16px #ffd700, 0 0 12px #ff9100; border-color: #ffd700; }
-  100% { box-shadow: inset 0 1px 3px rgba(0,0,0,0.5), 0 2px 5px rgba(0,0,0,0.85); border-color: #a67c33; }
-}
-.hand-just-captured { animation: hand-flash-pulse 0.4s ease-out !important; }
-
-@keyframes piece-landing-shock-player {
-  0%   { transform: scale(1.12); } 100% { transform: scale(1.0); }
-}
-@keyframes piece-landing-shock-ai {
-  0%   { transform: rotate(180deg) scale(1.12); } 100% { transform: rotate(180deg) scale(1.0); }
-}
-.piece-just-landed-player { animation: piece-landing-shock-player 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important; }
-.piece-just-landed-ai { animation: piece-landing-shock-ai 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important; }
 
 /* カットイン */
 .cutin-slot {
   position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  width: 95%; max-width: 480px; height: 0; min-height: 0;
+  width: 95%; max-width: 540px; height: 0; min-height: 0;
   display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 200;
 }
 .cutin-banner {
-  width: 100%; height: clamp(38px, 5.2vh, 46px);
+  width: 100%; height: clamp(36px, 5.0vh, 46px);
   background: linear-gradient(180deg, rgba(32, 8, 4, 0.98) 0%, rgba(175, 18, 18, 0.98) 50%, rgba(32, 8, 4, 0.98) 100%);
   border: 2px solid #ffd700; border-radius: 6px;
   box-shadow: 0 0 28px rgba(255, 215, 0, 0.95), 0 4px 14px rgba(0, 0, 0, 0.95);
@@ -535,37 +511,52 @@ body {
   border-color: #ffea70 !important;
 }
 .cutin-text {
-  font-family: var(--font-gyosho); font-size: clamp(15px, 2.4vh, 19px); font-weight: 900; color: #fffdf5;
+  font-family: var(--font-gyosho); font-size: clamp(14px, 2.3vh, 19px); font-weight: 900; color: #fffdf5;
   text-shadow: 0 0 12px #ffd700, 0 2px 4px #000000; letter-spacing: 1.5px; white-space: nowrap; line-height: 1;
 }
 .cutin-active .cutin-banner { opacity: 1 !important; transform: scale(1) !important; }
 
+/* 合戦再生バー */
+.replay-full-controls {
+  width: 100%; height: 30px;
+  background: linear-gradient(180deg, #3d1405 0%, #1a0802 100%);
+  border: 1.5px solid #ffd700; border-radius: 4px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 2px 6px; gap: 4px; flex-shrink: 0;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,235,150,0.5);
+}
+.replay-ctrl-left-group { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.replay-step-btn {
+  font-family: var(--font-ui); font-size: 9.5px; font-weight: 900; padding: 2px 6px;
+  border: 1.2px solid #ffd700; border-radius: 3px; background: linear-gradient(180deg, #421c0b 0%, #170702 100%);
+  color: #fff6be; cursor: pointer; white-space: nowrap; line-height: 1.2;
+}
+.kifu-auto-btn {
+  font-family: var(--font-ui); font-size: 9.5px; font-weight: 900; padding: 2px 8px;
+  border: 1.3px solid #ffd700; border-radius: 3px; background: linear-gradient(180deg, #703d0d 0%, #2e1604 100%);
+  color: #ffffff; cursor: pointer; white-space: nowrap; line-height: 1.2;
+}
+.kifu-auto-btn.is-playing { background: linear-gradient(180deg, #b81414 0%, #520505 100%) !important; }
+.kifu-speed-btn {
+  font-family: var(--font-ui); font-size: 8.5px; font-weight: 900; padding: 2px 5px;
+  border: 1px solid #ffd700; border-radius: 3px; background: #240e04; color: #ffd700; cursor: pointer; line-height: 1.2;
+}
+.btn-finish-replay {
+  font-family: var(--font-ui); font-size: 9.5px; font-weight: 900; padding: 2.5px 8px;
+  border: 1.5px solid #ffd700; border-radius: 3px; background: linear-gradient(180deg, #d41717 0%, #610505 100%);
+  color: #ffffff; cursor: pointer; white-space: nowrap; margin-left: auto; flex-shrink: 0;
+}
+
 /* =========================================================
-   【自軍本陣 ＆ 二段組・大判軍令高札】
+   【④ 盤下：大判軍令高札（情報の引き算・直感美学）】
    ========================================================= */
-.player-headquarters-zone {
-  width: 100%; display: flex; flex-direction: column; gap: 0;
-  border: 1.8px solid #a67c33; border-radius: 6px;
-  background: linear-gradient(180deg, rgba(32, 14, 5, 0.98) 0%, rgba(12, 4, 1, 0.98) 100%);
-  box-shadow: 0 4px 14px rgba(0,0,0,0.95); overflow: hidden; flex-shrink: 0;
-}
-.player-headquarters-zone .warlord-panel {
-  border: none !important; border-radius: 0 !important;
-  box-shadow: none !important; background: transparent !important;
-  border-bottom: 1.2px solid rgba(255, 215, 0, 0.25) !important;
-}
-
-@keyframes breathe-player-turn {
-  0%   { background: linear-gradient(90deg, rgba(38, 17, 7, 0.95) 0%, rgba(70, 32, 12, 0.95) 50%, rgba(38, 17, 7, 0.95) 100%); }
-  50%  { background: linear-gradient(90deg, rgba(58, 22, 8, 0.98) 0%, rgba(105, 42, 14, 0.98) 50%, rgba(58, 22, 8, 0.98) 100%); box-shadow: inset 0 0 18px rgba(255, 215, 0, 0.65); }
-  100% { background: linear-gradient(90deg, rgba(38, 17, 7, 0.95) 0%, rgba(70, 32, 12, 0.95) 50%, rgba(38, 17, 7, 0.95) 100%); }
-}
-
 .order-message-banner {
-  width: 100%; min-height: clamp(44px, 6.0vh, 52px); height: auto;
-  background: linear-gradient(90deg, rgba(26, 11, 4, 0.95) 0%, rgba(45, 19, 7, 0.95) 50%, rgba(26, 11, 4, 0.95) 100%);
+  width: 100%; min-height: clamp(38px, 5.2vh, 46px); height: auto;
+  background: linear-gradient(90deg, rgba(26, 11, 4, 0.98) 0%, rgba(45, 19, 7, 0.98) 50%, rgba(26, 11, 4, 0.98) 100%);
+  border: 1.8px solid #a67c33; border-radius: 5px;
   display: flex; align-items: center; justify-content: flex-start; gap: 5px;
   padding: 3px 6px; flex-shrink: 0; position: relative; transition: all 0.25s ease;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.95);
 }
 .order-banner-corner {
   position: absolute; width: 3.5px; height: 3.5px;
@@ -575,10 +566,10 @@ body {
 .banner-c-tl { top: 2px; left: 3px; } .banner-c-tr { top: 2px; right: 3px; }
 
 .order-tag-badge {
-  width: 32px; height: 34px;
+  width: 28px; height: 30px;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  border-radius: 4px; border: 1.5px solid #ffd700;
-  font-family: var(--font-kaisho); font-size: 10.5px; font-weight: 900; line-height: 1.05;
+  border-radius: 3px; border: 1.5px solid #ffd700;
+  font-family: var(--font-kaisho); font-size: 9.5px; font-weight: 900; line-height: 1.05;
   text-align: center; flex-shrink: 0;
 }
 .tag-badge-row { display: block; white-space: nowrap; }
@@ -595,269 +586,104 @@ body {
 .badge-tag-exhibition { background: linear-gradient(180deg, #1b283d 0%, #0a1324 100%) !important; border-color: #ffd700 !important; color: #ffe6aa !important; }
 
 .order-strategist-face {
-  width: 32px; height: 34px;
+  width: 28px; height: 30px;
   display: flex; flex-direction: column; align-items: center; justify-content: space-between;
-  border-radius: 4px; border: 1.5px solid #ffd700; background: #140502;
+  border-radius: 3px; border: 1.5px solid #ffd700; background: #140502;
   flex-shrink: 0; overflow: hidden; position: relative;
 }
-.strategist-face-img-box { width: 100%; height: 24px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.strategist-face-img-box { width: 100%; height: 21px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
 .strategist-face-img-box img, .strategist-face-img-box svg { width: 100%; height: 100%; object-fit: cover; object-position: center 10%; display: block; }
 .strategist-name-tag {
-  width: 100%; height: 9px; background: linear-gradient(180deg, #591e0a 0%, #260a02 100%);
-  border-top: 0.8px solid #ffd700; font-size: 7px; font-weight: 900; color: #fff4ba;
-  line-height: 8.5px; text-align: center; white-space: nowrap;
+  width: 100%; height: 8px; background: linear-gradient(180deg, #591e0a 0%, #260a02 100%);
+  border-top: 0.8px solid #ffd700; font-size: 6px; font-weight: 900; color: #fff4ba;
+  line-height: 8px; text-align: center; white-space: nowrap;
 }
 
 .order-message-center {
   flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center;
-  overflow: hidden; text-shadow: 0 1px 3px #000; padding-left: 6px;
+  overflow: hidden; text-shadow: 0 1px 3px #000; padding-left: 3px; gap: 1px;
 }
-.order-row-primary { min-height: 19px; display: flex; align-items: center; justify-content: space-between; gap: 4px; min-width: 0; }
+.order-row-primary { min-height: 17px; display: flex; align-items: center; justify-content: space-between; gap: 4px; min-width: 0; }
 .order-line-primary {
-  line-height: 1.25; font-size: clamp(10px, 1.45vh, 11.5px); font-weight: 800; color: #ffe699;
+  line-height: 1.25; font-size: clamp(9.5px, 1.4vh, 11.5px); font-weight: 800; color: #ffe699;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0;
 }
 .order-line-sub {
-  min-height: 15px; line-height: 1.25; font-size: clamp(9px, 1.3vh, 10px); font-weight: 800; color: #fff2b2;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; margin: 0; padding-left: 6px;
+  min-height: 13px; line-height: 1.25; font-size: clamp(8px, 1.15vh, 9.5px); font-weight: 800; color: #fff2b2;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; margin: 0;
 }
 .order-actions-slot { display: flex; align-items: center; gap: 3px; flex-shrink: 0; }
-.order-message-banner.my-turn { animation: breathe-player-turn 3.0s infinite ease-in-out !important; }
 
-.timer-pulse-tag {
-  font-size: 8px; font-weight: 900; color: #ffd700; background: rgba(0,0,0,0.65);
-  border: 0.8px solid #ffd700; border-radius: 3px; padding: 0.5px 3.5px; margin-right: 4px; flex-shrink: 0;
+.order-message-banner.hint-focus {
+  animation: hint-glow 1.5s infinite alternate ease-in-out !important;
+}
+@keyframes hint-glow {
+  0%   { border-color: #ffd700; box-shadow: 0 0 10px rgba(255, 215, 0, 0.6); }
+  100% { border-color: #ffffff; box-shadow: 0 0 18px rgba(255, 215, 0, 0.95); }
 }
 
 .alt-tactic-btn {
-  font-family: var(--font-ui); font-size: 9px; font-weight: 900;
+  font-family: var(--font-ui); font-size: 8.5px; font-weight: 900;
   background: linear-gradient(180deg, #1b6329 0%, #0a2e12 100%);
   border: 1.2px solid #ffd700; border-radius: 3px; color: #fff9db; padding: 2px 5px;
   white-space: nowrap; cursor: pointer; line-height: 1.1;
 }
 .rivalry-story-btn {
-  font-family: var(--font-ui); font-size: 9px; font-weight: 900;
+  font-family: var(--font-ui); font-size: 8.5px; font-weight: 900;
   background: linear-gradient(180deg, #b81414 0%, #4a0808 100%);
   border: 1.2px solid #ffd700; border-radius: 3px; color: #fff9db; padding: 2px 5px;
   white-space: nowrap; cursor: pointer; line-height: 1.1;
 }
 .btn-exhibition-quit-inline {
-  font-family: var(--font-ui); font-size: 9px; font-weight: 900;
-  padding: 2px 6px; border: 1.3px solid #ffd700; border-radius: 3px;
+  font-family: var(--font-ui); font-size: 8.5px; font-weight: 900;
+  padding: 2px 5px; border: 1.2px solid #ffd700; border-radius: 3px;
   background: linear-gradient(180deg, #d41717 0%, #610505 100%); color: #ffffff;
   cursor: pointer; white-space: nowrap;
 }
 
-.tactics-reason-badge {
-  font-size: 9.5px !important; font-weight: 900 !important; padding: 1px 4px !important; border-radius: 3px !important;
-  border: 1.2px solid #ffd700 !important; white-space: nowrap !important; margin-right: 3px !important;
-  line-height: 1.1 !important; display: inline-block !important;
+/* 整理された軍師助言タグ */
+.tactics-plan-tag {
+  font-size: 9.5px; font-weight: 900; color: #ffd700; margin-right: 3px;
+  background: rgba(0,0,0,0.5); padding: 1px 4px; border-radius: 2px; border: 0.6px solid #ffd700;
 }
-.badge-tactics-capture { background: linear-gradient(180deg, #a61717 0%, #470606 100%) !important; color: #fff6bd !important; }
-.badge-tactics-promote { background: linear-gradient(180deg, #70260c 0%, #3b1103 100%) !important; color: #ffd700 !important; }
-.badge-tactics-defense { background: linear-gradient(180deg, #1b283d 0%, #0a1324 100%) !important; color: #ffe899 !important; }
-.badge-tactics-trap    { background: linear-gradient(180deg, #b86200 0%, #522700 100%) !important; color: #ffffff !important; }
-.badge-tactics-attack  { background: linear-gradient(180deg, #8c0d38 0%, #420217 100%) !important; color: #ffffff !important; }
-.badge-tactics-open    { background: linear-gradient(180deg, #2e7d32 0%, #0d3810 100%) !important; color: #e8f5e9 !important; }
-
-.tactics-plan-tag { font-size: 10px; font-weight: 900; color: #ffd700; margin-right: 2px; }
-.hl-from { color: #ffb74d; font-weight: 900; text-decoration: underline; }
-.hl-to   { color: #ffd700; font-weight: 900; }
-.hl-act  { color: #ffd700; font-weight: 900; }
-.hl-prom { color: #ff5252; font-weight: 900; }
+.tactics-move-highlight {
+  font-size: 11px; font-weight: 900; color: #ffffff; text-shadow: 0 0 5px #ffd700; margin-right: 4px;
+}
+.tactics-aim-tag {
+  font-size: 8.5px; font-weight: 800; color: #ffe899; background: rgba(80, 20, 5, 0.7);
+  border: 0.6px solid #d4a040; border-radius: 2px; padding: 0.5px 4px;
+}
 
 /* =========================================================
-   下部帯：絵巻常駐＆棋譜ストリーム / 再生コントロール
-   ========================================================= */
-.kifu-bottom-banner {
-  width: 100%; height: clamp(38px, 5.5vh, 44px);
-  background: linear-gradient(180deg, rgba(25, 12, 5, 0.98) 0%, rgba(10, 5, 2, 0.98) 100%);
-  border: 1.5px solid #a67c33; border-radius: 4px;
-  display: flex; align-items: stretch; padding: 2px 4px; gap: 4px; flex-shrink: 0;
-}
-.battle-launcher-box { width: 80px; flex-shrink: 0; display: flex !important; height: 100%; }
-.btn-kifu-launcher {
-  width: 100%; height: 100%; font-family: var(--font-ui); font-size: 10.5px; font-weight: 900; color: #ffd700;
-  background: linear-gradient(180deg, #4d230d 0%, #1c0a03 100%);
-  border: 1.3px solid #ffd700; border-radius: 3px; display: flex; align-items: center; justify-content: center;
-  cursor: pointer; padding: 0 4px; white-space: nowrap;
-}
-
-.battle-stream-container { flex: 1; min-width: 0; display: flex; align-items: center; }
-.replay-full-controls { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 4px; }
-.replay-ctrl-left-group { display: flex; align-items: center; gap: 3px; flex-shrink: 0; }
-.replay-step-btn {
-  font-family: var(--font-ui); font-size: 10.5px; font-weight: 900; padding: 3px 6px;
-  border: 1.2px solid #ffd700; border-radius: 3px; background: linear-gradient(180deg, #421c0b 0%, #170702 100%);
-  color: #fff6be; cursor: pointer; white-space: nowrap;
-}
-.kifu-auto-btn {
-  font-family: var(--font-ui); font-size: 10.5px; font-weight: 900; padding: 3px 8px;
-  border: 1.5px solid #ffd700; border-radius: 3px; background: linear-gradient(180deg, #703d0d 0%, #2e1604 100%);
-  color: #ffffff; cursor: pointer; white-space: nowrap;
-}
-.kifu-speed-btn {
-  font-family: var(--font-ui); font-size: 9.5px; font-weight: 900; padding: 3px 5px;
-  border: 1px solid #ffd700; border-radius: 3px; background: #240e04; color: #ffd700; cursor: pointer;
-}
-.btn-finish-replay {
-  font-family: var(--font-ui); font-size: 10.5px; font-weight: 900; padding: 4px 9px;
-  border: 1.8px solid #ffd700; border-radius: 4px; background: linear-gradient(180deg, #d41717 0%, #610505 100%);
-  color: #ffffff; cursor: pointer; white-space: nowrap; margin-left: auto; flex-shrink: 0;
-}
-
-.kifu-stream-box {
-  display: grid; grid-template-rows: repeat(2, 15px); grid-auto-flow: column; gap: 1px 10px;
-  overflow-x: auto; overflow-y: hidden; font-size: 10px; color: #fcedcb; text-align: left;
-  white-space: nowrap; align-items: center;
-}
-.kifu-item-cell { display: flex; align-items: center; white-space: nowrap; cursor: pointer; line-height: 15px; }
-.kifu-item-cell:hover { color: #ffd700; text-decoration: underline; }
-.kifu-item-cell.active-review { color: #ffeb3b; font-weight: 900; }
-
-/* =========================================================
-   最下部コマンドバー（工芸色分け立体小判ボタン群）
+   最下部コマンドバー（工芸色分け立体小判ボタン群・6列グリッド）
    ========================================================= */
 .bottom-command-bar {
-  width: 100%; max-width: 520px; height: 38px;
-  display: grid; grid-template-columns: 1fr 1fr 1.65fr 1.15fr 1fr;
-  gap: 4px; padding: 2px 2px 3px 2px; flex-shrink: 0;
+  width: 100%; max-width: min(98vw, 680px); height: 35px;
+  display: grid; grid-template-columns: 1fr 1fr 1.55fr 1.15fr 1.15fr 1.05fr;
+  gap: 3px; padding: 2px; flex-shrink: 0;
 }
 .cmd-btn {
-  font-family: var(--font-ui); font-size: clamp(9px, 1.3vh, 10.5px); font-weight: 900;
+  font-family: var(--font-ui); font-size: clamp(8px, 1.2vh, 10px); font-weight: 900;
   border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-  white-space: nowrap; padding: 0 2px; text-shadow: 0 1.2px 2px rgba(0,0,0,0.95);
+  white-space: nowrap; padding: 0 1px; text-shadow: 0 1.2px 2px rgba(0,0,0,0.95);
 }
-.btn-undo { background: linear-gradient(180deg, #591b4f 0%, #260a22 100%); border: 1.5px solid #e094f7; color: #fce8ff; }
-.btn-surrender { background: linear-gradient(180deg, #1b2638 0%, #09111c 100%); border: 1.5px solid #a88438; color: #fff1c7; }
+.btn-undo { background: linear-gradient(180deg, #591b4f 0%, #260a22 100%); border: 1.3px solid #e094f7; color: #fce8ff; }
+.btn-surrender { background: linear-gradient(180deg, #1b2638 0%, #09111c 100%); border: 1.3px solid #a88438; color: #fff1c7; }
 .btn-start {
   background: linear-gradient(180deg, #d11919 0%, #6e0808 50%, #450404 100%) !important;
-  border: 2px solid #ffd700 !important; color: #ffffff !important;
-  font-size: clamp(10px, 1.45vh, 11.5px) !important;
+  border: 1.8px solid #ffd700 !important; color: #ffffff !important;
+  font-size: clamp(9px, 1.35vh, 10.5px) !important;
 }
-.btn-hint { background: linear-gradient(180deg, #195228 0%, #07240f 100%); border: 1.5px solid #6ee08b; color: #e5ffe9; }
+.btn-hint { background: linear-gradient(180deg, #195228 0%, #07240f 100%); border: 1.3px solid #6ee08b; color: #e5ffe9; }
 .btn-hint.awakened {
   background: linear-gradient(180deg, #ba1600 0%, #590800 100%) !important;
   border: 2px solid #ffd700 !important; color: #fff9db !important;
 }
-.btn-book { background: linear-gradient(180deg, #704c16 0%, #301f05 100%); border: 1.5px solid #ffd700; color: #fff2d6; }
-
-/* =========================================================================
-   【超進化：タブレット・PC・横広画面向け「戦国本陣・左右両翼陣幕レイアウト」】
-   画面幅680px以上、またはアスペクト比が横に広い端末で堂々発動！
-   ========================================================================= */
-@media (min-width: 680px) and (min-height: 480px) {
-  .top-header, .bottom-command-bar, .main-wrapper {
-    max-width: min(96vw, 1080px) !important;
-  }
-
-  /* 戦闘主ステージを堂々たる3列グリッドへ変貌 */
-  .battle-theatre-layout {
-    display: grid !important;
-    grid-template-columns: minmax(180px, 240px) 1fr minmax(200px, 280px) !important;
-    grid-template-rows: 1fr !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 8px !important;
-    height: 100% !important;
-  }
-
-  /* 【左翼：敵軍本陣】 */
-  .wing-enemy-zone {
-    height: 100% !important;
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
-    gap: 8px !important;
-  }
-  .wing-enemy-zone .warlord-panel {
-    min-height: 110px !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    padding: 8px !important;
-    text-align: center !important;
-  }
-  .wing-enemy-zone .warlord-avatar {
-    width: 64px !important; height: 72px !important;
-    margin-bottom: 4px !important;
-  }
-  .wing-enemy-zone .warlord-info { text-align: center !important; width: 100% !important; }
-  .wing-enemy-zone .warlord-name-row { justify-content: center !important; }
-
-  /* 【中央：本丸対局場（将棋盤 ＆ 左右独立木目角駒台）】 */
-  .wing-center-zone {
-    height: 100% !important;
-    display: flex !important;
-    flex-direction: row !important; /* 駒台と盤を横並び本将棋配置へ！ */
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 6px !important;
-  }
-
-  /* タブレット時：打ち込み駒台を「盤の左右脇」の堂々たる本木目角台へ昇華 */
-  .hand-lane-enemy {
-    width: 48px !important;
-    height: min(calc(100vh - 210px), 520px) !important;
-    max-width: 48px !important;
-    flex-direction: column !important;
-    justify-content: flex-start !important;
-    align-self: center !important;
-    margin: 0 !important;
-    padding: 4px 2px !important;
-  }
-  .hand-lane-player {
-    width: 48px !important;
-    height: min(calc(100vh - 210px), 520px) !important;
-    max-width: 48px !important;
-    flex-direction: column !important;
-    justify-content: flex-end !important;
-    align-self: center !important;
-    margin: 0 !important;
-    padding: 4px 2px !important;
-  }
-
-  /* 将棋盤を縦サイズ目一杯までド迫力拡大（上下の圧迫を完全排除） */
-  .shogi-board-frame {
-    width: min(calc(100vh - 210px), calc(100vw - 520px), 540px) !important;
-    height: min(calc(100vh - 210px), calc(100vw - 520px), 540px) !important;
-  }
-
-  /* 【右翼：自軍本陣（主将肖像 ＆ 大判軍令高札）】 */
-  .wing-player-zone {
-    height: 100% !important;
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
-    gap: 8px !important;
-  }
-  .player-headquarters-zone {
-    border-radius: 6px !important;
-    padding: 4px !important;
-  }
-  .player-headquarters-zone .warlord-panel {
-    min-height: 90px !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    text-align: center !important;
-    padding: 6px !important;
-  }
-  .player-headquarters-zone .warlord-avatar {
-    width: 60px !important; height: 68px !important;
-    margin-bottom: 4px !important;
-  }
-  .player-headquarters-zone .warlord-info { text-align: center !important; width: 100% !important; }
-  .player-headquarters-zone .warlord-name-row { justify-content: center !important; }
-
-  /* 軍令高札をタブレット向けにゆったり大判化 */
-  .order-message-banner {
-    min-height: 80px !important;
-    padding: 6px 8px !important;
-  }
-  .order-tag-badge { width: 36px !important; height: 38px !important; }
-  .order-strategist-face { width: 36px !important; height: 38px !important; }
-  .order-line-primary { font-size: 12px !important; }
-  .order-line-sub { font-size: 10.5px !important; }
+.btn-kifu-launcher {
+  background: linear-gradient(180deg, #4d230d 0%, #1c0a03 100%);
+  border: 1.3px solid #ffd700; color: #ffd700;
 }
+.btn-book { background: linear-gradient(180deg, #704c16 0%, #301f05 100%); border: 1.3px solid #ffd700; color: #fff2d6; }
 
 /* =========================================================
    【モーダル共通工芸デザインシステム】
@@ -890,19 +716,19 @@ body {
   pointer-events: none;
 }
 .modal-title-shikkoku {
-  font-family: var(--font-gyosho); margin: 0; font-size: clamp(13px, 2.1vh, 16px); font-weight: 900;
+  font-family: var(--font-gyosho); margin: 0; font-size: clamp(12.5px, 2.0vh, 15.5px); font-weight: 900;
   letter-spacing: 1.2px; color: #0c0502; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6), 0 -0.5px 0 rgba(0, 0, 0, 0.8);
   position: relative; z-index: 2; text-align: center; line-height: 1.2;
 }
 
 .modal-buttons { margin-top: 8px; display: flex; gap: 8px; justify-content: center; flex-shrink: 0; }
 .modal-action-btn {
-  font-family: var(--font-ui); font-size: 11.5px; font-weight: 900; padding: 5px 16px; border-radius: 4px;
+  font-family: var(--font-ui); font-size: 11px; font-weight: 900; padding: 5px 16px; border-radius: 4px;
   border: 1.5px solid #ffd700; background: linear-gradient(180deg, #6e4310 0%, #2e1904 100%); color: #fff1b8;
   box-shadow: 0 3px 0 #140901, 0 4px 6px rgba(0,0,0,0.8);
 }
 .modal-close-btn {
-  font-family: var(--font-ui); font-size: 11.5px; font-weight: 900; padding: 5px 14px; border-radius: 4px;
+  font-family: var(--font-ui); font-size: 11px; font-weight: 900; padding: 5px 14px; border-radius: 4px;
   border: 1.3px solid #8e6c31; background: linear-gradient(180deg, #331709 0%, #140702 100%); color: #ebd4a0;
   box-shadow: 0 3px 0 #0a0301, 0 4px 6px rgba(0,0,0,0.8);
 }
@@ -911,11 +737,11 @@ body {
 .promote-modal-box { width: 90vw; max-width: 320px; text-align: center; }
 .btn-promote-act {
   background: linear-gradient(180deg, #b81414 0%, #4a0808 100%);
-  border: 1.5px solid #ff7777; color: #ffffff; padding: 6px 18px; border-radius: 4px; font-size: 12.5px; font-weight: 900;
+  border: 1.5px solid #ff7777; color: #ffffff; padding: 6px 18px; border-radius: 4px; font-size: 12px; font-weight: 900;
 }
 .btn-kif-save {
   background: linear-gradient(180deg, #991818 0%, #420606 100%);
-  border: 1.5px solid #ff9e9e; color: #ffffff; padding: 5px 14px; border-radius: 4px; font-size: 11px; font-weight: 900;
+  border: 1.5px solid #ff9e9e; color: #ffffff; padding: 5px 14px; border-radius: 4px; font-size: 10.5px; font-weight: 900;
 }
 
 /* 御前試合モーダル */
@@ -926,11 +752,11 @@ body {
 .exhibition-guide-plaque {
   background: linear-gradient(90deg, rgba(20, 11, 4, 0.95) 0%, rgba(46, 22, 9, 0.95) 50%, rgba(20, 11, 4, 0.95) 100%);
   border: 1.3px solid #b88a32; border-radius: 4px; padding: 4px 8px; margin-bottom: 5px;
-  font-size: 9.5px; font-weight: 800; color: #ffefa8; display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+  font-size: 9px; font-weight: 800; color: #ffefa8; display: flex; align-items: center; gap: 6px; flex-shrink: 0;
 }
 .exhibition-mobile-tab-bar { display: none; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 5px; flex-shrink: 0; }
 .exhibition-mobile-tab-btn {
-  font-family: var(--font-ui); font-size: 11px; font-weight: 900; padding: 5px 4px; border-radius: 4px;
+  font-family: var(--font-ui); font-size: 10.5px; font-weight: 900; padding: 5px 4px; border-radius: 4px;
   border: 1.3px solid #8e6c31; background: linear-gradient(180deg, #2b1307 0%, #120501 100%); color: #ebd4a0; cursor: pointer; text-align: center;
 }
 .exhibition-mobile-tab-btn.active {
@@ -947,23 +773,23 @@ body {
   .exhibition-side-col { display: none !important; flex: 1 1 0 !important; min-height: 0 !important; }
   .exhibition-side-col.mobile-active-col { display: flex !important; width: 100% !important; height: 100% !important; }
 }
-.exhibition-side-title { font-size: 11px; font-weight: 900; color: #ffd700; text-align: center; border-bottom: 1.2px solid rgba(255, 215, 0, 0.3); padding-bottom: 2px; flex-shrink: 0; }
+.exhibition-side-title { font-size: 10.5px; font-weight: 900; color: #ffd700; text-align: center; border-bottom: 1.2px solid rgba(255, 215, 0, 0.3); padding-bottom: 2px; flex-shrink: 0; }
 .exhibition-warlord-preview-card {
   background: linear-gradient(135deg, #3d1406 0%, #170701 100%);
   border: 1.8px solid #ffd700; border-radius: 5px; padding: 5px 6px; display: flex; flex-direction: row; gap: 6px; flex-shrink: 0; width: 100%; min-width: 0; overflow: hidden;
 }
-.preview-avatar-box { width: 44px; height: 52px; border-radius: 4px; border: 1.5px solid #ffd700; overflow: hidden; flex-shrink: 0; background: #120401; }
+.preview-avatar-box { width: 42px; height: 50px; border-radius: 4px; border: 1.5px solid #ffd700; overflow: hidden; flex-shrink: 0; background: #120401; }
 .preview-info-box { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1.5px; overflow: hidden; }
 .card-top-header { display: flex; justify-content: space-between; align-items: center; gap: 3px; min-width: 0; }
-.card-inst-name { font-size: 11.5px; font-weight: 900; color: #fff8e7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
-.badge-inst-rank { font-size: 8px; font-weight: 900; color: #ffd700; background: #260f04; border: 0.6px solid #b88a32; border-radius: 2px; padding: 0.5px 3px; flex-shrink: 0; }
+.card-inst-name { font-size: 11px; font-weight: 900; color: #fff8e7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+.badge-inst-rank { font-size: 7.5px; font-weight: 900; color: #ffd700; background: #260f04; border: 0.6px solid #b88a32; border-radius: 2px; padding: 0.5px 3px; flex-shrink: 0; }
 .preview-stat-grid { display: flex; flex-direction: column; gap: 1px; margin-top: 1px; min-width: 0; }
-.preview-stat-row { display: flex; align-items: center; justify-content: space-between; font-size: 8.5px; font-weight: 800; min-width: 0; }
+.preview-stat-row { display: flex; align-items: center; justify-content: space-between; font-size: 8px; font-weight: 800; min-width: 0; }
 .preview-troops-highlight { color: #ffd700; font-weight: 900; }
 .preview-spec-highlight { color: #ffd700; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .exhibition-list-header {
-  font-size: 9.5px; font-weight: 900; color: #ebd4a0; background: linear-gradient(90deg, #2e1406 0%, #4a2108 50%, #2e1406 100%);
+  font-size: 9px; font-weight: 900; color: #ebd4a0; background: linear-gradient(90deg, #2e1406 0%, #4a2108 50%, #2e1406 100%);
   border: 1px solid #8e6c31; border-radius: 3px; padding: 2px 6px; text-align: center; margin-top: 2px; flex-shrink: 0;
 }
 .exhibition-avatar-pick-list { flex: 1 1 0; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; padding-right: 2px; min-height: 0; width: 100%; min-width: 0; }
@@ -973,32 +799,32 @@ body {
 }
 .pick-avatar-item:hover { background: linear-gradient(90deg, #3d1c07 0%, #59280a 100%); border-color: #ffd700; }
 .pick-avatar-item.active { border-color: #ffd700 !important; background: linear-gradient(90deg, #1b283d 0%, #2a3c5a 100%) !important; }
-.pick-thumb-box { width: 38px; height: 46px; border-radius: 3px; border: 1.2px solid #ffd700; overflow: hidden; flex-shrink: 0; background: #0c0401; }
+.pick-thumb-box { width: 36px; height: 44px; border-radius: 3px; border: 1.2px solid #ffd700; overflow: hidden; flex-shrink: 0; background: #0c0401; }
 .pick-info-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1.5px; overflow: hidden; }
 .pick-name-row { display: flex; align-items: center; justify-content: space-between; gap: 3px; min-width: 0; }
-.pick-name-txt { font-size: 10.5px; font-weight: 900; color: #fff3c9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
-.badge-ai-dan { font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 3px; background: #1b283d; color: #ffd700; border: 0.8px solid #a88438; flex-shrink: 0; }
-.badge-ai-level { font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 3px; background: #7a1515; color: #ffd700; border: 0.8px solid #ffd700; flex-shrink: 0; }
-.badge-ai-tactician { font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 3px; background: #441254; color: #f0c4ff; border: 0.8px solid #d98eff; flex-shrink: 0; }
-.pick-stats-row { display: flex; align-items: center; gap: 4px; font-size: 8px; font-weight: 800; min-width: 0; }
+.pick-name-txt { font-size: 10px; font-weight: 900; color: #fff3c9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+.badge-ai-dan { font-size: 7.5px; font-weight: 900; padding: 1px 4px; border-radius: 3px; background: #1b283d; color: #ffd700; border: 0.8px solid #a88438; flex-shrink: 0; }
+.badge-ai-level { font-size: 7.5px; font-weight: 900; padding: 1px 4px; border-radius: 3px; background: #7a1515; color: #ffd700; border: 0.8px solid #ffd700; flex-shrink: 0; }
+.badge-ai-tactician { font-size: 7.5px; font-weight: 900; padding: 1px 4px; border-radius: 3px; background: #441254; color: #f0c4ff; border: 0.8px solid #d98eff; flex-shrink: 0; }
+.pick-stats-row { display: flex; align-items: center; gap: 4px; font-size: 7.5px; font-weight: 800; min-width: 0; }
 .badge-ai-troops { background: #2b0e04; color: #ffd700; border: 0.6px solid #b88a32; border-radius: 2px; padding: 0.5px 3px; }
 .badge-ai-depth { background: #101c2e; color: #ffd700; border: 0.6px solid #a88438; border-radius: 2px; padding: 0.5px 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pick-desc-txt { font-size: 8px; color: #c4b08f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.badge-active-stamp { font-size: 7.5px; font-weight: 900; color: #ffd700; background: #1c2e47; border: 0.8px solid #ffd700; border-radius: 2px; padding: 0.5px 3px; }
+.pick-desc-txt { font-size: 7.5px; color: #c4b08f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.badge-active-stamp { font-size: 7px; font-weight: 900; color: #ffd700; background: #1c2e47; border: 0.8px solid #ffd700; border-radius: 2px; padding: 0.5px 3px; }
 
 .exhibition-config-row {
   display: flex; flex-direction: column; gap: 4px; background: rgba(22, 10, 4, 0.95);
   border: 1.2px solid #8e6c31; border-radius: 4px; padding: 5px 8px; margin-top: 4px; flex-shrink: 0;
 }
 .config-group { display: flex; align-items: center; justify-content: space-between; width: 100%; flex-wrap: wrap; gap: 4px; }
-.config-label { font-size: 10.5px; font-weight: 900; color: #ffd700; white-space: nowrap; }
+.config-label { font-size: 10px; font-weight: 900; color: #ffd700; white-space: nowrap; }
 .btn-speed-choice {
-  font-family: var(--font-ui); font-size: 9.5px; font-weight: 900; padding: 3px 8px; border-radius: 3px;
+  font-family: var(--font-ui); font-size: 9px; font-weight: 900; padding: 3px 8px; border-radius: 3px;
   border: 1.2px solid #73511f; background: #241105; color: #d6be89; cursor: pointer;
 }
 .btn-speed-choice.active { background: linear-gradient(180deg, #1b283d 0%, #0a1324 100%); border-color: #ffd700; color: #ffffff; }
 .exhibition-mode-desc-plaque {
-  font-size: 8.5px; color: #f5eedb; line-height: 1.35; background: rgba(10, 4, 1, 0.75);
+  font-size: 8px; color: #f5eedb; line-height: 1.35; background: rgba(10, 4, 1, 0.75);
   border: 0.8px dashed rgba(255, 215, 0, 0.35); border-radius: 3px; padding: 3px 6px; margin-top: 2px;
 }
 .exhibition-bottom-buttons {
@@ -1006,7 +832,7 @@ body {
 }
 .btn-start-exhibition {
   grid-column: 2 / 3 !important; justify-self: center !important; width: min(100%, 250px) !important;
-  padding: 6px 16px !important; font-size: 12.5px !important; font-weight: 900 !important;
+  padding: 6px 16px !important; font-size: 12px !important; font-weight: 900 !important;
   background: linear-gradient(180deg, #1b283d 0%, #0a1324 100%) !important; border: 2px solid #ffd700 !important; color: #fff3c4 !important;
 }
 .exhibition-bottom-buttons .modal-close-btn { grid-column: 3 / 4 !important; justify-self: end !important; width: 80px !important; padding: 5px 0 !important; text-align: center !important; }
@@ -1016,7 +842,7 @@ body {
 .history-header-box { display: flex; flex-direction: column; gap: 3px; margin-bottom: 3px; flex-shrink: 0; }
 .history-tab-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 2px 0; }
 .history-tab-btn {
-  font-family: var(--font-ui); font-size: 10.5px; font-weight: 900; padding: 5px 4px; border-radius: 4px;
+  font-family: var(--font-ui); font-size: 10px; font-weight: 900; padding: 5px 4px; border-radius: 4px;
   border: 1.2px solid #8e6c31; background: linear-gradient(180deg, #2b1307 0%, #120501 100%); color: #d6be89; cursor: pointer; text-align: center;
 }
 .history-tab-btn.active { background: linear-gradient(180deg, #8a1414 0%, #3d0505 100%) !important; border-color: #ffd700 !important; color: #ffffff !important; }
@@ -1025,8 +851,8 @@ body {
   background: linear-gradient(90deg, #2b1305 0%, #4a2108 50%, #2b1305 100%); border: 1.2px solid #ffd700; border-radius: 4px;
   padding: 3px 8px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
 }
-.summary-rank-tag { font-family: var(--font-kaisho); font-size: 11px; font-weight: 900; color: #ffd700; background: #7a1515; border: 1px solid #ffd700; border-radius: 3px; padding: 1px 5px; }
-.summary-stats-txt { font-size: 10px; font-weight: 900; color: #fff8e7; }
+.summary-rank-tag { font-family: var(--font-kaisho); font-size: 10.5px; font-weight: 900; color: #ffd700; background: #7a1515; border: 1px solid #ffd700; border-radius: 3px; padding: 1px 5px; }
+.summary-stats-txt { font-size: 9.5px; font-weight: 900; color: #fff8e7; }
 .summary-stats-txt b { color: #ffd700; }
 
 .history-filter-grid {
@@ -1037,10 +863,10 @@ body {
   .history-filter-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 3px 5px !important; }
 }
 .filter-item-group { display: flex; align-items: center; gap: 3px; min-width: 0; }
-.filter-label { font-size: 8.5px; font-weight: 900; color: #ffd700; white-space: nowrap; flex-shrink: 0; }
+.filter-label { font-size: 8px; font-weight: 900; color: #ffd700; white-space: nowrap; flex-shrink: 0; }
 .history-select-input {
-  font-family: var(--font-ui); font-size: 9px; font-weight: 800; background: #170702; color: #ffe899;
-  border: 1px solid #a67c33; border-radius: 3px; padding: 1px 3px; outline: none; flex: 1; min-width: 0; height: 21px; cursor: pointer;
+  font-family: var(--font-ui); font-size: 8.5px; font-weight: 800; background: #170702; color: #ffe899;
+  border: 1px solid #a67c33; border-radius: 3px; padding: 1px 3px; outline: none; flex: 1; min-width: 0; height: 20px; cursor: pointer;
 }
 
 .history-records-scroll { flex: 1 1 0; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 3px; min-height: 0; }
@@ -1051,14 +877,14 @@ body {
 .card-tier-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed rgba(255, 215, 0, 0.25); padding-bottom: 2px; }
 .tier-header-left { display: flex; align-items: center; gap: 4px; }
 .history-res-badge {
-  font-family: var(--font-kaisho); font-size: 10.5px; font-weight: 900; padding: 1px 6px; border-radius: 3px; white-space: nowrap;
+  font-family: var(--font-kaisho); font-size: 10px; font-weight: 900; padding: 1px 6px; border-radius: 3px; white-space: nowrap;
 }
 .badge-win { background: linear-gradient(180deg, #c71818 0%, #6e0b0b 100%); border: 1.3px solid #ffd700; color: #fff8bd; }
 .badge-lose { background: linear-gradient(180deg, #1b2638 0%, #09111c 100%); border: 1.3px solid #a88438; color: #fff1c7; }
 .badge-draw { background: linear-gradient(180deg, #593e14 0%, #241705 100%); border: 1.3px solid #ffe57f; color: #ffeb3b; }
 .badge-exhibition-honshogi { background: linear-gradient(180deg, #1b283d 0%, #0a1324 100%) !important; border: 1.3px solid #ffd700 !important; color: #fff3a8 !important; }
 .badge-exhibition-hayazashi { background: linear-gradient(180deg, #44183d 0%, #1e081c 100%) !important; border: 1.3px solid #ffd700 !important; color: #ffe6fa !important; }
-.tier-header-meta { font-size: 8.5px; color: #d6be89; font-weight: 700; }
+.tier-header-meta { font-size: 8px; color: #d6be89; font-weight: 700; }
 .btn-delete-card-mini { background: transparent; border: none; color: #ff9e9e; font-size: 11px; cursor: pointer; padding: 0 3px; opacity: 0.7; }
 
 .card-tier-clash {
@@ -1068,26 +894,26 @@ body {
 .clash-side { display: flex; align-items: center; gap: 5px; flex: 1; min-width: 0; overflow: hidden; }
 .clash-side-enemy { flex-direction: row-reverse; text-align: right; }
 .clash-avatar-box {
-  width: 30px; height: 36px; border-radius: 3px; border: 1.3px solid #ffd700; overflow: hidden; flex-shrink: 0; background: #140502;
+  width: 28px; height: 34px; border-radius: 3px; border: 1.3px solid #ffd700; overflow: hidden; flex-shrink: 0; background: #140502;
 }
-.clash-name-txt { font-size: 10.5px; font-weight: 900; color: #fff8e7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.clash-tag-sente { font-size: 7.5px; font-weight: 800; color: #ffd700; background: rgba(0,0,0,0.6); border-radius: 2px; padding: 0.5px 2px; margin-left: 2px; }
+.clash-name-txt { font-size: 10px; font-weight: 900; color: #fff8e7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.clash-tag-sente { font-size: 7px; font-weight: 800; color: #ffd700; background: rgba(0,0,0,0.6); border-radius: 2px; padding: 0.5px 2px; margin-left: 2px; }
 .clash-side.is-winner .clash-avatar-box { border-color: #ffd700 !important; box-shadow: 0 0 8px rgba(255, 215, 0, 0.8) !important; }
 .clash-side.is-winner .clash-name-txt { color: #ffd700 !important; font-weight: 900; }
 .clash-side.is-loser .clash-avatar-box { filter: grayscale(80%) brightness(0.7) !important; border-color: #594730 !important; }
 .clash-side.is-loser .clash-name-txt { color: #a39580 !important; }
-.clash-vs-mark { color: #ffb74d; font-size: 9px; font-weight: 900; flex-shrink: 0; }
+.clash-vs-mark { color: #ffb74d; font-size: 8.5px; font-weight: 900; flex-shrink: 0; }
 
 .card-tier-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 1px; gap: 6px; }
 .tier-footer-stats { display: flex; align-items: center; gap: 5px; flex: 1; min-width: 0; flex-wrap: wrap; }
-.footer-stat-pill { font-size: 8px; font-weight: 800; color: #ebd4a0; background: rgba(18, 7, 2, 0.85); border: 0.6px solid #5a3813; border-radius: 2px; padding: 1px 4px; }
+.footer-stat-pill { font-size: 7.5px; font-weight: 800; color: #ebd4a0; background: rgba(18, 7, 2, 0.85); border: 0.6px solid #5a3813; border-radius: 2px; padding: 1px 4px; }
 .footer-stat-pill b { color: #ffd700; }
 .footer-stat-selfwin { color: #ffd700 !important; border-color: #ffd700 !important; background: #4a2a05 !important; }
 .btn-replay-card-main {
-  font-family: var(--font-ui); font-size: 9.5px; font-weight: 900; padding: 3px 8px; border-radius: 3px;
+  font-family: var(--font-ui); font-size: 9px; font-weight: 900; padding: 3px 8px; border-radius: 3px;
   border: 1.3px solid #ffd700; background: linear-gradient(180deg, #6e4310 0%, #291402 100%); color: #fff4ba; cursor: pointer; white-space: nowrap; flex-shrink: 0;
 }
-.btn-history-clear { background: #591515; border: 1.2px solid #ff7777; color: #ffdddd; font-size: 9.5px; padding: 3px 8px; border-radius: 3px; }
+.btn-history-clear { background: #591515; border: 1.2px solid #ff7777; color: #ffdddd; font-size: 9px; padding: 3px 8px; border-radius: 3px; }
 
 /* 振り駒モーダル */
 .furigoma-modal {
@@ -1114,24 +940,24 @@ body {
 .conquest-modal-box { width: 96vw !important; max-width: 540px !important; height: 88vh !important; display: flex; flex-direction: column; justify-content: space-between; }
 .conquest-header-stat {
   display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.6);
-  padding: 4px 10px; border-radius: 4px; border: 1px solid #8e6c31; margin-bottom: 4px; font-size: 10.5px; font-weight: 900; flex-shrink: 0;
+  padding: 4px 10px; border-radius: 4px; border: 1px solid #8e6c31; margin-bottom: 4px; font-size: 10px; font-weight: 900; flex-shrink: 0;
 }
-.conquest-progress-fill { width: 120px; height: 7px; background: #261103; border-radius: 3px; border: 0.5px solid #ffd700; overflow: hidden; }
+.conquest-progress-fill { width: 120px; height: 6px; background: #261103; border-radius: 3px; border: 0.5px solid #ffd700; overflow: hidden; }
 .conquest-progress-bar { height: 100%; background: linear-gradient(90deg, #ffd700, #ff3b30); width: 0%; transition: width 0.5s ease; }
 .conquest-player-link-btn {
-  font-family: var(--font-ui); font-size: 9.5px; font-weight: 900; padding: 2px 7px; border-radius: 3px; border: 1.2px solid #ff9e9e;
+  font-family: var(--font-ui); font-size: 9px; font-weight: 900; padding: 2px 7px; border-radius: 3px; border: 1.2px solid #ff9e9e;
   background: linear-gradient(180deg, #7a1515 0%, #2e0505 100%); color: #fff0f0; cursor: pointer; white-space: nowrap;
 }
 .conquest-troops-growth-banner {
   background: linear-gradient(90deg, #381a0a 0%, #6e2e0f 50%, #381a0a 100%); border: 1.3px solid #ffd700; border-radius: 4px;
-  padding: 3px 8px; margin-bottom: 5px; display: flex; align-items: center; justify-content: space-between; font-size: 9.5px; flex-shrink: 0;
+  padding: 3px 8px; margin-bottom: 5px; display: flex; align-items: center; justify-content: space-between; font-size: 9px; flex-shrink: 0;
 }
 .growth-label { color: #fcedcb; font-weight: 900; }
-.growth-val { color: #ffd700; font-size: 11.5px; font-weight: 900; }
-.growth-sub { color: #a5d6a7; font-weight: 800; font-size: 8.5px; }
+.growth-val { color: #ffd700; font-size: 11px; font-weight: 900; }
+.growth-sub { color: #a5d6a7; font-weight: 800; font-size: 8px; }
 
 .conquest-map-stage {
-  width: 100%; height: 170px; position: relative; background: #0b1524;
+  width: 100%; height: 165px; position: relative; background: #0b1524;
   border: 1.5px solid #a67c33; border-radius: 4px; overflow: hidden; flex-shrink: 0;
 }
 #japan-conquest-svg { width: 100%; height: 100%; display: block; }
@@ -1150,13 +976,13 @@ body {
 .conquest-card-item.cleared { border-color: #ffb300; }
 .conquest-card-item.locked { opacity: 0.5; cursor: not-allowed; }
 .conquest-card-left { display: flex; align-items: center; gap: 7px; flex: 1; min-width: 0; }
-.conquest-avatar-thumb { width: 40px !important; height: 48px !important; border-radius: 4px !important; border: 1.5px solid #ffd700 !important; overflow: hidden !important; flex-shrink: 0; }
+.conquest-avatar-thumb { width: 38px !important; height: 46px !important; border-radius: 4px !important; border: 1.5px solid #ffd700 !important; overflow: hidden !important; flex-shrink: 0; }
 .conquest-card-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-.conquest-card-title { font-size: 11.5px; font-weight: 900; color: #fff8e7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.conquest-card-clan { font-size: 9px; color: #d6be89; font-weight: 700; }
-.conquest-card-feature { font-size: 8.5px; color: #ffe699; }
+.conquest-card-title { font-size: 11px; font-weight: 900; color: #fff8e7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.conquest-card-clan { font-size: 8.5px; color: #d6be89; font-weight: 700; }
+.conquest-card-feature { font-size: 8px; color: #ffe699; }
 .conquest-status-badge {
-  font-size: 10.5px !important; font-weight: 900 !important; padding: 3px 8px !important; border-radius: 4px !important;
+  font-size: 10px !important; font-weight: 900 !important; padding: 3px 8px !important; border-radius: 4px !important;
   border: 1.3px solid #ffd700 !important; white-space: nowrap !important; flex-shrink: 0 !important;
 }
 .badge-conquered { background: linear-gradient(180deg, #9e1919 0%, #470606 100%) !important; color: #fff6bd !important; }
@@ -1170,72 +996,72 @@ body {
   border: 1.5px solid #8e6c31; border-radius: 5px; padding: 5px 8px; cursor: pointer;
 }
 .warlord-select-card.active { border-color: #ffd700; background: linear-gradient(90deg, #4f1e0d 0%, #7e2d14 100%); }
-.card-avatar-mini { width: 50px !important; height: 60px !important; border-radius: 5px !important; border: 2px solid #ffd700 !important; overflow: hidden !important; flex-shrink: 0; }
+.card-avatar-mini { width: 48px !important; height: 58px !important; border-radius: 5px !important; border: 2px solid #ffd700 !important; overflow: hidden !important; flex-shrink: 0; }
 .card-info-col { flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.card-name-title { font-size: 13px; font-weight: 900; color: #ffd700; }
-.card-clan-tag { font-size: 9px; color: #d6be89; }
-.card-strategist-tag { font-size: 8.5px; font-weight: 800; color: #fff3cc; background: rgba(80, 25, 10, 0.85); border: 0.8px solid #e0a348; border-radius: 3px; padding: 1px 5px; width: fit-content; }
+.card-name-title { font-size: 12.5px; font-weight: 900; color: #ffd700; }
+.card-clan-tag { font-size: 8.5px; color: #d6be89; }
+.card-strategist-tag { font-size: 8px; font-weight: 800; color: #fff3cc; background: rgba(80, 25, 10, 0.85); border: 0.8px solid #e0a348; border-radius: 3px; padding: 1px 5px; width: fit-content; }
 
 /* 当局・合戦絵巻 */
 .modal-kifu-panorama { width: 96vw; max-width: 540px; height: 88vh; display: flex; flex-direction: column; gap: 5px; }
-.kifu-title-sub { font-size: clamp(10px, 1.6vh, 11.5px) !important; display: block; margin-top: 1px; color: #3b1704; }
-.kifu-status-badge { font-family: var(--font-kaisho); font-size: 10.5px; font-weight: 900; color: #ffeb3b; border: 1.2px solid #ffd700; padding: 2px 7px; border-radius: 4px; background: #240a02; flex-shrink: 0; }
+.kifu-title-sub { font-size: clamp(9.5px, 1.5vh, 11px) !important; display: block; margin-top: 1px; color: #3b1704; }
+.kifu-status-badge { font-family: var(--font-kaisho); font-size: 10px; font-weight: 900; color: #ffeb3b; border: 1.2px solid #ffd700; padding: 2px 7px; border-radius: 4px; background: #240a02; flex-shrink: 0; }
 .kifu-troops-confrontation-bar {
   background: linear-gradient(90deg, #3d1405 0%, #160601 50%, #16243d 100%); border: 1.5px solid #ffd700; border-radius: 5px;
   padding: 4px 10px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
 }
 .kifu-troops-side { display: flex; align-items: center; gap: 6px; }
 .side-player { color: #ffe57f; } .side-enemy { color: #ffe6aa; }
-.side-troops-val { font-size: 12.5px; font-weight: 900; color: #ffffff; }
+.side-troops-val { font-size: 12px; font-weight: 900; color: #ffffff; }
 .kifu-vs-core { display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.kifu-troops-diff-badge { font-size: 9px; font-weight: 900; color: #ffd700; background: rgba(0,0,0,0.7); border: 0.8px solid #ffd700; border-radius: 3px; padding: 0.5px 5px; }
+.kifu-troops-diff-badge { font-size: 8.5px; font-weight: 900; color: #ffd700; background: rgba(0,0,0,0.7); border: 0.8px solid #ffd700; border-radius: 3px; padding: 0.5px 5px; }
 .kifu-situation-summary {
   background: linear-gradient(90deg, #281409 0%, #52250d 50%, #281409 100%); border: 1.2px solid #b88a32; border-radius: 4px; padding: 3px 8px;
-  font-size: 10px; font-weight: 800; color: #fff8e7; display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+  font-size: 9.5px; font-weight: 800; color: #fff8e7; display: flex; align-items: center; gap: 6px; flex-shrink: 0;
 }
-.kifu-situation-summary .badge { background: #b81414; color: #fff; font-size: 9px; font-weight: 900; padding: 1px 5px; border-radius: 3px; border: 0.8px solid #ffd700; }
+.kifu-situation-summary .badge { background: #b81414; color: #fff; font-size: 8.5px; font-weight: 900; padding: 1px 5px; border-radius: 3px; border: 0.8px solid #ffd700; }
 
-.territory-chart-box { width: 100%; height: 135px; background: #080301; border: 1.5px solid #a67c33; border-radius: 5px; position: relative; overflow: hidden; flex-shrink: 0; }
+.territory-chart-box { width: 100%; height: 130px; background: #080301; border: 1.5px solid #a67c33; border-radius: 5px; position: relative; overflow: hidden; flex-shrink: 0; }
 #chart-canvas { width: 100%; height: 100%; display: block; }
-.chart-legend-top, .chart-legend-bottom { position: absolute; left: 8px; right: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 9px; font-weight: 900; pointer-events: none; z-index: 5; }
+.chart-legend-top, .chart-legend-bottom { position: absolute; left: 8px; right: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 8.5px; font-weight: 900; pointer-events: none; z-index: 5; }
 .chart-legend-top { top: 3px; } .chart-legend-bottom { bottom: 3px; }
 .chart-tag-player { color: #ffe066; } .chart-tag-enemy { color: #f5eedb; }
-.chart-tag-mid { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 8px; color: #c9a35b; font-weight: 900; }
-.chart-eval-troops-txt { font-size: 9.5px; font-weight: 900; }
+.chart-tag-mid { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 7.5px; color: #c9a35b; font-weight: 900; }
+.chart-eval-troops-txt { font-size: 9px; font-weight: 900; }
 
-.modal-kifu-content { flex: 1; overflow-y: auto; border: 1.2px solid #73511f; background: rgba(10,5,2,0.92); padding: 4px; font-size: 10.5px; border-radius: 4px; display: flex; flex-direction: column; gap: 3px; }
+.modal-kifu-content { flex: 1; overflow-y: auto; border: 1.2px solid #73511f; background: rgba(10,5,2,0.92); padding: 4px; font-size: 10px; border-radius: 4px; display: flex; flex-direction: column; gap: 3px; }
 .kifu-row-item {
   display: flex; justify-content: space-between; align-items: center; padding: 3px 8px; border-radius: 3px;
   cursor: pointer; background: rgba(26, 12, 5, 0.7); border: 0.8px solid rgba(166, 124, 51, 0.4);
 }
 .kifu-row-item:hover { background: rgba(255, 215, 0, 0.22); border-color: #ffd700; }
 .kifu-row-right-group { display: flex; align-items: center; gap: 5px; margin-left: auto; }
-.kifu-badge-critical { font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 2px; border: 0.5px solid #ffd700; }
+.kifu-badge-critical { font-size: 7.5px; font-weight: 900; padding: 1px 4px; border-radius: 2px; border: 0.5px solid #ffd700; }
 .badge-tennozan { background: #b71c1c; color: #fff; }
 .badge-shock { background: #824707; color: #fff; }
-.kifu-metric-pill { font-size: 8.5px; color: #ffd700; font-weight: 800; background: rgba(0,0,0,0.65); padding: 1px 5px; border-radius: 3px; border: 0.7px solid #b88a32; }
+.kifu-metric-pill { font-size: 8px; color: #ffd700; font-weight: 800; background: rgba(0,0,0,0.65); padding: 1px 5px; border-radius: 3px; border: 0.7px solid #b88a32; }
 
 /* 指南書モーダル */
 .guide-modal-box { width: 96vw; max-width: 540px; height: 90vh; display: flex; flex-direction: column; padding: 8px 10px !important; }
 .guide-modal-header { display: flex; flex-direction: column; gap: 3px; margin-bottom: 5px; flex-shrink: 0; }
 .guide-narrator-panel { display: flex; align-items: center; justify-content: center; gap: 8px; background: rgba(20, 8, 3, 0.95); border: 1px solid #73511f; border-radius: 4px; padding: 2px 8px; }
-.narrator-label { font-size: 10px; font-weight: 900; color: #ffd700; }
+.narrator-label { font-size: 9.5px; font-weight: 900; color: #ffd700; }
 .narrator-btn-group { display: flex; gap: 6px; }
 .narrator-toggle-btn {
-  font-family: var(--font-ui); font-size: 9.5px; font-weight: 900; padding: 2px 7px; border-radius: 3px;
+  font-family: var(--font-ui); font-size: 9px; font-weight: 900; padding: 2px 7px; border-radius: 3px;
   border: 1px solid #a67c33; background: #241207; color: #ebd4a0; cursor: pointer;
 }
 .narrator-toggle-btn.active { background: linear-gradient(180deg, #8a1414 0%, #3d0505 100%); border-color: #ffd700; color: #ffffff; }
 
 .guide-tab-bar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; margin-bottom: 5px; flex-shrink: 0; }
 .guide-tab-btn {
-  font-family: var(--font-ui); font-size: clamp(9px, 1.4vh, 10.5px); font-weight: 900; padding: 5px 1px; border-radius: 3px;
+  font-family: var(--font-ui); font-size: clamp(8.5px, 1.3vh, 10px); font-weight: 900; padding: 5px 1px; border-radius: 3px;
   border: 1.2px solid #a67c33; background: linear-gradient(180deg, #2f1607 0%, #150802 100%); color: #ebd4a0; cursor: pointer; text-align: center; line-height: 1.1;
 }
 .guide-tab-btn.active { background: linear-gradient(180deg, #8a1414 0%, #3d0505 100%); border-color: #ffd700; color: #ffffff; }
 
 .guide-scroll-body {
-  flex: 1; overflow-y: auto; padding-right: 4px; font-size: clamp(10.5px, 1.5vh, 12px); line-height: 1.6;
+  flex: 1; overflow-y: auto; padding-right: 4px; font-size: clamp(10px, 1.45vh, 11.5px); line-height: 1.6;
   background: rgba(10, 4, 1, 0.85); border: 1.2px solid #8e6c31; border-radius: 4px; padding: 7px 9px;
 }
 .guide-pane { display: none; } .guide-pane.active { display: block; }
@@ -1244,23 +1070,23 @@ body {
   border: 1.4px solid #8e6c31; border-radius: 5px; padding: 7px 9px; margin-bottom: 7px; position: relative;
 }
 .guide-card-header-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 5px; border-bottom: 1.2px solid #8c671a; padding-bottom: 3px; }
-.guide-card-box h4 { margin: 0; color: #ffd700; font-size: clamp(12px, 1.7vh, 13.5px); font-weight: 900; }
+.guide-card-box h4 { margin: 0; color: #ffd700; font-size: clamp(11.5px, 1.65vh, 13px); font-weight: 900; }
 .card-speech-btn {
-  font-family: var(--font-ui); font-size: 9.5px; font-weight: 900; padding: 2px 6px; border-radius: 3px;
+  font-family: var(--font-ui); font-size: 9px; font-weight: 900; padding: 2px 6px; border-radius: 3px;
   border: 1.2px solid #ffd700; background: linear-gradient(180deg, #44210c 0%, #1c0a03 100%); color: #fff4b8; cursor: pointer;
 }
 .guide-card-box.reading-active { border: 1.8px solid #ffffff !important; }
 .beginner-highlight-box { border: 1.8px solid #ffd700 !important; background: linear-gradient(180deg, rgba(64, 25, 8, 0.98) 0%, rgba(26, 8, 2, 0.98) 100%) !important; }
 .kw-gold { color: #ffd700; font-weight: 900; } .kw-crimson { color: #ff4d4d; font-weight: 900; } .kw-green { color: #aeea00; font-weight: 900; } .kw-blue { color: #ffe6aa; font-weight: 900; }
-.enemy-line-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed rgba(166, 124, 51, 0.35); padding: 2.5px 0; font-size: 10.5px; }
-.enemy-line-left { font-weight: 900; color: #ffe899; } .enemy-line-right { color: #d6be89; font-size: 9.5px; }
+.enemy-line-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed rgba(166, 124, 51, 0.35); padding: 2.5px 0; font-size: 10px; }
+.enemy-line-left { font-weight: 900; color: #ffe899; } .enemy-line-right { color: #d6be89; font-size: 9px; }
 .rivalry-story-card { border: 1.5px solid #a67c33; position: relative; }
 .rivalry-card-header { display: flex; align-items: center; gap: 5px; flex: 1; min-width: 0; }
-.rivalry-card-header h4 { margin: 0 !important; font-size: clamp(12px, 1.7vh, 13.5px) !important; color: #ffe699 !important; }
-.rivalry-badge-tag { font-size: 8.5px; font-weight: 900; color: #fff3cc; background: #8a1414; border: 0.8px solid #ffd700; border-radius: 3px; padding: 1px 5px; }
-.rivalry-story-sub { font-size: 10.5px; font-weight: 800; color: #ffb74d; margin-bottom: 4px; border-bottom: 1px dashed rgba(255, 215, 0, 0.35); padding-bottom: 2px; }
-.rivalry-story-p { margin: 0 0 4px 0; font-size: 10.5px; line-height: 1.55; color: #fcedcb; }
-.rivalry-dialogue-box { background: rgba(14, 5, 2, 0.9); border: 1px solid #73511f; border-left: 3px solid #ff3b30; border-radius: 4px; padding: 4px 7px; margin: 4px 0; font-size: 10.5px; }
+.rivalry-card-header h4 { margin: 0 !important; font-size: clamp(11.5px, 1.65vh, 13px) !important; color: #ffe699 !important; }
+.rivalry-badge-tag { font-size: 8px; font-weight: 900; color: #fff3cc; background: #8a1414; border: 0.8px solid #ffd700; border-radius: 3px; padding: 1px 5px; }
+.rivalry-story-sub { font-size: 10px; font-weight: 800; color: #ffb74d; margin-bottom: 4px; border-bottom: 1px dashed rgba(255, 215, 0, 0.35); padding-bottom: 2px; }
+.rivalry-story-p { margin: 0 0 4px 0; font-size: 10px; line-height: 1.55; color: #fcedcb; }
+.rivalry-dialogue-box { background: rgba(14, 5, 2, 0.9); border: 1px solid #73511f; border-left: 3px solid #ff3b30; border-radius: 4px; padding: 4px 7px; margin: 4px 0; font-size: 10px; }
 .highlight-rivalry-card { border: 2px solid #ffffff !important; background: linear-gradient(180deg, rgba(64, 25, 8, 0.98) 0%, rgba(26, 8, 2, 0.98) 100%) !important; }
 
 
