@@ -521,7 +521,6 @@ function preloadRealKomaSound() {
     realKomaAudioElement.volume = 0.95;
   } catch(e) { realKomaAudioElement = null; }
 
-  // ローカルファイル直接起動（file:///）時は、ブラウザのCORS赤エラーを防ぐためfetchをスキップ
   const isLocalFileProtocol = (typeof window !== 'undefined' && window.location && window.location.protocol === 'file:');
 
   if (!isLocalFileProtocol && window.fetch && (window.AudioContext || window.webkitAudioContext)) {
@@ -906,7 +905,7 @@ function updateThinkingTimerDisplay() {
     return;
   }
 
-  // ★軍師進言表示中は、毎秒10回のタイマーでメッセージを上書き消去しない★
+  // 軍師進言表示中は、毎秒10回のタイマーでメッセージを上書き消去しない
   if (isPlayer) {
     if (tacticsCandidates && tacticsCandidates.length > 0) return;
     if (isHintThinking) return;
@@ -2623,8 +2622,16 @@ function finishTurn() {
   if (checkSennichite()) return;
   if (isCheckState('AI')) {
     playCheckSound(); triggerCutin('敵将へ王手！');
-    document.getElementById('player-quote-disp').textContent = PLAYER_WARLORDS[currentMyWarlordId].quotes.check;
-    document.getElementById('ai-quote-disp').textContent = WARLORDS_DATA[currentAiLevel].quotes.pinch;
+    const pQuoteEl = document.getElementById('player-quote-disp');
+    if (pQuoteEl) {
+      pQuoteEl.textContent = PLAYER_WARLORDS[currentMyWarlordId].quotes.check;
+      pQuoteEl.className = 'warlord-quote quote-check';
+    }
+    const aiQuoteEl = document.getElementById('ai-quote-disp');
+    if (aiQuoteEl) {
+      aiQuoteEl.textContent = WARLORDS_DATA[currentAiLevel].quotes.pinch;
+      aiQuoteEl.className = 'warlord-quote quote-pinch';
+    }
   }
   if (checkGameOver('AI')) return;
   
@@ -2812,8 +2819,16 @@ function handleWorkerMessage(e) {
       const pName = PLAYER_WARLORDS[currentMyWarlordId].name;
       if (isCheckState('PLAYER')) {
         playCheckSound(); triggerCutin('敵の奇襲！ 王手！');
-        document.getElementById('ai-quote-disp').textContent = WARLORDS_DATA[currentAiLevel].quotes.check;
-        document.getElementById('player-quote-disp').textContent = PLAYER_WARLORDS[currentMyWarlordId].quotes.pinch;
+        const aiQuoteEl = document.getElementById('ai-quote-disp');
+        if (aiQuoteEl) {
+          aiQuoteEl.textContent = WARLORDS_DATA[currentAiLevel].quotes.check;
+          aiQuoteEl.className = 'warlord-quote quote-check';
+        }
+        const pQuoteEl = document.getElementById('player-quote-disp');
+        if (pQuoteEl) {
+          pQuoteEl.textContent = PLAYER_WARLORDS[currentMyWarlordId].quotes.pinch;
+          pQuoteEl.className = 'warlord-quote quote-pinch';
+        }
       }
       startTurnTimer('PLAYER', pName);
     }
@@ -3038,6 +3053,10 @@ function updateTroopsAndSituation() {
     }
   }
 
+  // 武将パネルのリアルタイムセリフ演出（情勢に応じた動的リアクション）
+  const pQuoteEl = document.getElementById('player-quote-disp');
+  const aiQuoteEl = document.getElementById('ai-quote-disp');
+
   const sit = document.getElementById('situation-text');
   if (sit && !isReviewingPast()) {
     if (isGameOver) {
@@ -3058,12 +3077,12 @@ function updateTroopsAndSituation() {
       const gData = getTargetAIData(exhibitionGoteTarget);
       if (pPct >= 80 && aiPct <= 50) {
         sit.textContent = `【御前試合】${sData.name}が怒涛の進撃！ ${gData.name}本陣へ猛攻を仕掛けております！`;
-        if (sData.quotes?.adv) document.getElementById('player-quote-disp').textContent = sData.quotes.adv;
-        if (gData.quotes?.pinch) document.getElementById('ai-quote-disp').textContent = gData.quotes.pinch;
+        if (sData.quotes?.adv && pQuoteEl) { pQuoteEl.textContent = sData.quotes.adv; pQuoteEl.className = 'warlord-quote quote-adv'; }
+        if (gData.quotes?.pinch && aiQuoteEl) { aiQuoteEl.textContent = gData.quotes.pinch; aiQuoteEl.className = 'warlord-quote quote-pinch'; }
       } else if (aiPct >= 80 && pPct <= 50) {
         sit.textContent = `【御前試合】${gData.name}が反撃！ ${sData.name}陣列に激震が走っております！`;
-        if (gData.quotes?.adv) document.getElementById('ai-quote-disp').textContent = gData.quotes.adv;
-        if (sData.quotes?.pinch) document.getElementById('player-quote-disp').textContent = sData.quotes.pinch;
+        if (gData.quotes?.adv && aiQuoteEl) { aiQuoteEl.textContent = gData.quotes.adv; aiQuoteEl.className = 'warlord-quote quote-adv'; }
+        if (sData.quotes?.pinch && pQuoteEl) { pQuoteEl.textContent = sData.quotes.pinch; pQuoteEl.className = 'warlord-quote quote-pinch'; }
       } else if (pPct > aiPct) {
         sit.textContent = `【御前試合】${sData.name}がやや優勢。大駒を利かせて敵陣の隙を伺っております。`;
       } else if (pPct < aiPct) {
@@ -3072,12 +3091,23 @@ function updateTroopsAndSituation() {
         sit.textContent = `【御前試合】両者互角の白兵戦！ 名だたる棋力と武芸が盤上で激突しております。`;
       }
     } else {
-      if (moveObjectsHistory.length <= 10 && pPct >= 95 && aiPct >= 95) sit.textContent = '両軍、互いに布陣を整えつつ前進中。陣形の隙を伺っております（損害なし）。';
-      else if (pPct >= 80 && aiPct <= 50) { sit.textContent = `我が軍怒涛の進撃！ 敵兵力残存 ${aiCurrent.toLocaleString()} 兵、本陣包囲せり！`; document.getElementById('player-quote-disp').textContent = p.quotes.adv; }
-      else if (pPct >= 65 && pPct > aiPct) { sit.textContent = `我が軍前線突破！ 敵部隊を各個撃破し、優勢を確立中！`; document.getElementById('player-quote-disp').textContent = p.quotes.adv; }
-      else if (aiPct >= 80 && pPct <= 50) { sit.textContent = `我が本陣危急！ 自軍残存 ${pCurrent.toLocaleString()} 兵、防衛陣列を再編せよ！`; document.getElementById('player-quote-disp').textContent = p.quotes.pinch; }
-      else if (pPct < aiPct) { sit.textContent = `敵軍の猛攻を許す！ 駒を連携させ、反撃の好機を待たれよ！`; document.getElementById('player-quote-disp').textContent = p.quotes.pinch; }
-      else sit.textContent = `白熱の激戦！ 両軍の主力隊が盤上で激しく激突しております。`;
+      if (moveObjectsHistory.length <= 10 && pPct >= 95 && aiPct >= 95) {
+        sit.textContent = '両軍、互いに布陣を整えつつ前進中。陣形の隙を伺っております（損害なし）。';
+      } else if (pPct >= 80 && aiPct <= 50) {
+        sit.textContent = `我が軍怒涛の進撃！ 敵兵力残存 ${aiCurrent.toLocaleString()} 兵、本陣包囲せり！`;
+        if (pQuoteEl) { pQuoteEl.textContent = p.quotes.adv; pQuoteEl.className = 'warlord-quote quote-adv'; }
+      } else if (pPct >= 65 && pPct > aiPct) {
+        sit.textContent = `我が軍前線突破！ 敵部隊を各個撃破し、優勢を確立中！`;
+        if (pQuoteEl) { pQuoteEl.textContent = p.quotes.adv; pQuoteEl.className = 'warlord-quote quote-adv'; }
+      } else if (aiPct >= 80 && pPct <= 50) {
+        sit.textContent = `我が本陣危急！ 自軍残存 ${pCurrent.toLocaleString()} 兵、防衛陣列を再編せよ！`;
+        if (pQuoteEl) { pQuoteEl.textContent = p.quotes.pinch; pQuoteEl.className = 'warlord-quote quote-pinch'; }
+      } else if (pPct < aiPct) {
+        sit.textContent = `敵軍の猛攻を許す！ 駒を連携させ、反撃の好機を待たれよ！`;
+        if (pQuoteEl) { pQuoteEl.textContent = p.quotes.pinch; pQuoteEl.className = 'warlord-quote quote-pinch'; }
+      } else {
+        sit.textContent = `白熱の激戦！ 両軍の主力隊が盤上で激しく激突しております。`;
+      }
     }
   }
 }
@@ -4212,7 +4242,7 @@ function switchHistoryTab(tab) {
 }
 
 /* =========================================================
-   【戦績画面（勲功録）UI刷新：三段メリハリ設計】
+   【戦績画面（勲功録）UI：三段メリハリ設計】
    ========================================================= */
 function renderBattleHistoryList() {
   const isPlayerTab = (currentHistoryTab === 'player');
@@ -4344,7 +4374,6 @@ function renderBattleHistoryList() {
     }
 
     card.innerHTML = `
-      <!-- ① 【ヘッダー行】結果・日時・手数 -->
       <div class="card-tier-header">
         <div class="tier-header-left">
           <span class="history-res-badge ${badgeClass}">【${r.resultLabel}】</span>
@@ -4356,7 +4385,6 @@ function renderBattleHistoryList() {
         </div>
       </div>
 
-      <!-- ② 【メイン対決行】勝者と敗者の視覚的クリア対決 -->
       <div class="card-tier-clash">
         <div class="clash-side ${isPlayerWinner ? 'is-winner' : (isEnemyWinner ? 'is-loser' : '')}">
           <div class="clash-avatar-box">
@@ -4376,7 +4404,6 @@ function renderBattleHistoryList() {
         </div>
       </div>
 
-      <!-- ③ 【フッター行】重要な武功データ ＆ 盤上再現ボタン -->
       <div class="card-tier-footer">
         <div class="tier-footer-stats">
           <span class="footer-stat-pill">⏱ 合戦刻: <b>${durationStr}</b></span>
