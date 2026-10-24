@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Klee+One:wght@600;900&family=Shippori+Mincho:wght@700;900&family=Yuji+Boku&display=swap');
 
 :root {
@@ -283,12 +284,10 @@ body {
   z-index: 2; transition: opacity 0.35s ease-in-out;
 }
 
-/* 画像が読み込まれたら最優先で表示 */
 .portrait-has-image .portrait-face-img {
   display: block !important;
   opacity: 1 !important;
 }
-/* 家紋表示切替時のみ透過 */
 .show-crest .portrait-face-img {
   opacity: 0 !important;
   pointer-events: none;
@@ -598,25 +597,35 @@ body {
 /* =========================================================
    【駒移動＆持ち駒打ち飛来・拡大アニメーション用】
    ========================================================= */
-.animating-flying-piece {
-  position: fixed;
-  z-index: 2600;
-  pointer-events: none;
-  margin: 0;
-  transition-property: transform, opacity;
-  transition-timing-function: cubic-bezier(0.2, 0.8, 0.25, 1);
-  will-change: transform, opacity;
-  filter: drop-shadow(0 8px 16px rgba(0,0,0,0.75)) drop-shadow(0 0 6px rgba(255, 215, 0, 0.45));
+.anim-flying-piece {
+  position: fixed !important;
+  z-index: 2900 !important;
+  pointer-events: none !important;
+  margin: 0 !important;
+  will-change: transform, left, top, width, height;
+  filter: drop-shadow(0 10px 18px rgba(0,0,0,0.85)) drop-shadow(0 0 8px rgba(255, 215, 0, 0.6)) !important;
 }
 
-@keyframes piece-landing-shock {
+/* 自軍駒の着地衝撃（正面向き） */
+@keyframes piece-landing-shock-player {
   0%   { transform: scale(1.08); filter: brightness(1.25); }
   50%  { transform: scale(0.96); filter: brightness(1.1); }
   100% { transform: scale(1.0);  filter: brightness(1.0); }
 }
 
-.piece-just-landed {
-  animation: piece-landing-shock 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+/* 敵軍駒の着地衝撃（180度反転を厳密に保持して一瞬も正面に戻さない！） */
+@keyframes piece-landing-shock-ai {
+  0%   { transform: rotate(180deg) scale(1.08); filter: brightness(1.25); }
+  50%  { transform: rotate(180deg) scale(0.96); filter: brightness(1.1); }
+  100% { transform: rotate(180deg) scale(1.0);  filter: brightness(1.0); }
+}
+
+.piece-just-landed-player {
+  animation: piece-landing-shock-player 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
+}
+
+.piece-just-landed-ai {
+  animation: piece-landing-shock-ai 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
 }
 
 /* カットイン演出 */
@@ -1785,5 +1794,4 @@ body {
   border: 2px solid #ffffff !important;
   background: linear-gradient(180deg, rgba(64, 25, 8, 0.98) 0%, rgba(26, 8, 2, 0.98) 100%) !important;
 }
-
 

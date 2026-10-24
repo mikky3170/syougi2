@@ -1,3 +1,4 @@
+
 /* =========================================================
    将棋王 2026 〜 天下統一・戦国決戦 〜
    メインスクリプト（軍略・演出・思考エンジン・御前試合統合管理）
@@ -516,7 +517,6 @@ let audioCtx = null, soundEnabled = true, isPageHidden = false;
 let realKomaAudioBuffer = null;
 let realKomaAudioElement = null;
 
-// 実音ファイル koma_sound.wav のプリロード
 function preloadRealKomaSound() {
   try {
     realKomaAudioElement = new Audio('koma_sound.wav');
@@ -656,7 +656,6 @@ function playUiClickSound() {
   } catch(e) {}
 }
 
-// 榧盤木質衝撃物理モデリング合成（駒音の完全フォールバック）
 function playSynthesizedKomaSound() {
   if (!audioCtx) return;
   const now = audioCtx.currentTime;
@@ -877,7 +876,6 @@ function toggleWarlordAvatarView(side) {
   if (box) box.classList.toggle('show-crest', avatarViewMode[side] === 'crest');
 }
 
-// 画像の多段階自動探索フォールバック（軍師画像、武将画像、enemy_11/keiji等を完全救済）
 function getWarlordPortraitHtml(warlordData, isInteractive = false, side = null) {
   if (!warlordData) return '';
 
@@ -886,7 +884,6 @@ function getWarlordPortraitHtml(warlordData, isInteractive = false, side = null)
   if (warlordData.strategistImgId) candidates.push(`images/${warlordData.strategistImgId}`);
   if (warlordData.id) candidates.push(`images/${warlordData.id}`);
 
-  // Lv.11「前田慶次」などの別名候補を自動追加
   if (warlordData.id === 'enemy_11') candidates.push('images/keiji');
   if (warlordData.id && warlordData.id.startsWith('strategist_')) {
     const baseWarlordId = warlordData.id.replace('strategist_', '');
@@ -916,7 +913,6 @@ function getWarlordPortraitHtml(warlordData, isInteractive = false, side = null)
   `;
 }
 
-// 多重画像探索エラーハンドラ（png -> jpg -> webp -> 次の候補画像）
 window.handlePortraitError = function(img) {
   const exts = ['.png', '.jpg', '.webp'];
   let candList = [];
@@ -1083,7 +1079,7 @@ const PLAYER_WARLORDS = {
   }
 };
 
-/* 対戦武将十一人（Lv.11前田慶次は客分画像keijiへのフォールバックを自動内包） */
+/* 対戦武将十一人 */
 const WARLORDS_DATA = {
   1: { id: 'enemy_1', province: '尾張国', name: '木下藤吉郎', clan: '尾張国｜織田足軽隊', maxTroops: 3000, depthSpec: '深さ1＋足軽速攻', featureShort: '足軽戦法。前進重視。', tacticsHint: '駒にヒモをつけ、角・飛車の道を開いて突入されよ！', portraitSvg: `<rect width="100" height="100" rx="6" fill="#140d06"/><path d="M50 20 Q56 28 50 36 Q44 28 50 20 Z M50 36 Q62 50 50 68 Q38 50 50 36 Z M50 68 Q68 85 50 94 Q32 85 50 68 Z" fill="#ffd700"/>`, quotes: { default: '「草履取りとて天下を夢見候！ 足軽の意地、見せてくれよう！」', check: '「猿の一撃、侮りめさるな！」', pinch: '「あわわ…！ 信長様にお叱りを受けてしまう！」', adv: '「出世の足音が聞こえてき申した！」' }, defeatQuote: '「参り申した…！ されど猿は何度でも木を登り候！」', victoryQuote: '「勝ったぞ！ 信長様、藤吉郎やりましたぞ！」' },
   2: { id: 'enemy_2', province: '加賀国', name: '前田利家', clan: '加賀国｜槍の又左', maxTroops: 8000, depthSpec: '深さ1＋槍の突破', featureShort: '中央5筋から飛車で突進。', tacticsHint: '真ん中に金銀を配して防壁を築き、飛車の突撃を跳ね返されよ！', portraitSvg: `<rect width="100" height="100" rx="6" fill="#180707"/><circle cx="50" cy="50" r="10" fill="#ffd700"/><circle cx="50" cy="24" r="8" fill="#ffd700"/><circle cx="75" cy="42" r="8" fill="#ffd700"/><circle cx="65" cy="74" r="8" fill="#ffd700"/><circle cx="35" cy="74" r="8" fill="#ffd700"/><circle cx="25" cy="42" r="8" fill="#ffd700"/>`, quotes: { default: '「我が槍に迷いなし！ 槍の又左が一撃、盤上に受けてみよ！」', check: '「槍の又左、一騎当千の突撃ぞ！」', pinch: '「ぬう…！ 前田の槍衾を崩されるとは！」', adv: '「槍を引くな！ この利家が押し通る！」' }, defeatQuote: '「見事な槍さばき… 前田の当主として完敗を認めよう！」', victoryQuote: '「槍の又左の前に敵なし！ 百万石の礎となれ！」' },
@@ -2180,7 +2176,7 @@ document.getElementById('btn-promote-no').onclick = () => {
 };
 
 /* =========================================================
-   【駒移動＆持ち駒打ちアニメーション・駒音完全連動エンジン】
+   【駒移動＆持ち駒打ち飛来・拡大アニメーション（敵軍反転保持・情緒速度調整版）】
    ========================================================= */
 function animateAndExecuteMove(m, metric = null, onComplete = null) {
   isPieceAnimating = true;
@@ -2226,7 +2222,9 @@ function animateAndExecuteMove(m, metric = null, onComplete = null) {
   const displayCode = m.promote ? (PROMOTE_MAP[animPieceCode] || animPieceCode) : animPieceCode;
   const name2 = PIECES[displayCode] || PIECES[animPieceCode] || '歩兵';
 
-  animPiece.className = `piece anim-flying-piece ${m.owner === 'PLAYER' ? 'player' : 'ai'} ${isPromotedAtArrival ? 'promoted' : ''}`;
+  // 敵軍（AI側）の駒クラスと向きの設定
+  const isAiPiece = (m.owner === 'AI');
+  animPiece.className = `piece anim-flying-piece ${isAiPiece ? 'ai' : 'player'} ${isPromotedAtArrival ? 'promoted' : ''}`;
   animPiece.innerHTML = `<span class="piece-char-top">${name2[0]}</span><span class="piece-char-bottom">${name2[1]}</span>`;
 
   // スタイルの初期化（画面固定オーバーレイ）
@@ -2240,13 +2238,12 @@ function animateAndExecuteMove(m, metric = null, onComplete = null) {
   animPiece.style.margin = '0';
   animPiece.style.transformOrigin = 'center center';
   animPiece.style.transition = 'none';
-  animPiece.style.filter = 'drop-shadow(0 10px 18px rgba(0,0,0,0.85)) drop-shadow(0 0 8px rgba(255, 215, 0, 0.6))';
 
-  // 持ち駒から打つ場合は、開始時に少し小さく（0.78倍）
+  // 敵軍（AI側）は絶対に180度反転（rotate(180deg)）を保持！
   if (m.type === 'drop') {
-    animPiece.style.transform = (m.owner === 'AI') ? 'rotate(180deg) scale(0.78)' : 'scale(0.78)';
+    animPiece.style.transform = isAiPiece ? 'rotate(180deg) scale(0.75)' : 'scale(0.75)';
   } else {
-    animPiece.style.transform = (m.owner === 'AI') ? 'rotate(180deg) scale(1.02)' : 'scale(1.02)';
+    animPiece.style.transform = isAiPiece ? 'rotate(180deg) scale(1.03)' : 'scale(1.03)';
   }
 
   document.body.appendChild(animPiece);
@@ -2254,16 +2251,23 @@ function animateAndExecuteMove(m, metric = null, onComplete = null) {
   // 強制リフロー（初期位置の確定）
   void animPiece.offsetWidth;
 
-  // 4. アニメーション設定（等速=180ms、高速=100ms）
-  const duration = (isAutoReplaying && replaySpeedIndex >= 1) ? 110 : 190;
-  animPiece.style.transition = `transform ${duration}ms cubic-bezier(0.18, 0.85, 0.32, 1.15), left ${duration}ms cubic-bezier(0.18, 0.85, 0.32, 1.15), top ${duration}ms cubic-bezier(0.18, 0.85, 0.32, 1.15), width ${duration}ms ease, height ${duration}ms ease`;
+  // 4. アニメーション速度の設定（持ち駒打ち=約480msでゆったり拡大飛来、盤上移動=約300ms）
+  let duration = 300;
+  if (m.type === 'drop') {
+    duration = (isAutoReplaying && replaySpeedIndex >= 1) ? 220 : 480;
+  } else {
+    duration = (isAutoReplaying && replaySpeedIndex >= 1) ? 140 : 300;
+  }
+
+  // イージング：飛び上がって滑空し、目標マスへ吸い込まれるように着地
+  animPiece.style.transition = `transform ${duration}ms cubic-bezier(0.22, 0.9, 0.35, 1), left ${duration}ms cubic-bezier(0.22, 0.9, 0.35, 1), top ${duration}ms cubic-bezier(0.22, 0.9, 0.35, 1), width ${duration}ms ease, height ${duration}ms ease`;
 
   // 目標座標へ移動＆実寸大（1.0倍）へ拡大！
   animPiece.style.left = `${toRect.left}px`;
   animPiece.style.top = `${toRect.top}px`;
   animPiece.style.width = `${toRect.width}px`;
   animPiece.style.height = `${toRect.height}px`;
-  animPiece.style.transform = (m.owner === 'AI') ? 'rotate(180deg) scale(1.0)' : 'scale(1.0)';
+  animPiece.style.transform = isAiPiece ? 'rotate(180deg) scale(1.0)' : 'scale(1.0)';
 
   // 5. 着地瞬間の同期処理
   setTimeout(() => {
@@ -2277,11 +2281,12 @@ function animateAndExecuteMove(m, metric = null, onComplete = null) {
     // 盤面データ更新と描画
     executeMove(m, metric);
 
-    // 着地マスへの着地エフェクト
-    const justLandedCell = document.querySelector(`#board .cell[data-r="${m.to.r}"][data-c="${m.to.c}"] .piece`);
-    if (justLandedCell) {
-      justLandedCell.classList.add('piece-just-landed');
-      setTimeout(() => justLandedCell.classList.remove('piece-just-landed'), 220);
+    // 着地マスへの着地エフェクト（敵軍は絶対に正面に戻さず180度反転したまま衝撃を受ける！）
+    const justLandedPiece = document.querySelector(`#board .cell[data-r="${m.to.r}"][data-c="${m.to.c}"] .piece`);
+    if (justLandedPiece) {
+      const shockClass = isAiPiece ? 'piece-just-landed-ai' : 'piece-just-landed-player';
+      justLandedPiece.classList.add(shockClass);
+      setTimeout(() => justLandedPiece.classList.remove(shockClass), 240);
     }
 
     isPieceAnimating = false;
@@ -4056,4 +4061,5 @@ document.addEventListener('touchstart', () => initAudio(), { once: true });
 loadProgress();
 setPlayerWarlord(currentMyWarlordId);
 initBoardState();
+
 
