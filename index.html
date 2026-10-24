@@ -40,7 +40,7 @@
 </div>
 
 <div class="main-wrapper" id="main-wrapper">
-  <!-- ① 最上部：戦況評定スリムバー（全体の大局観に特化） -->
+  <!-- ① 最上部：戦況評定スリムバー（全体の大局観に特化・更新時フラッシュ演出） -->
   <div class="situation-banner" id="situation-banner">
     <div class="situation-title" id="situation-title">戦況</div>
     <div class="situation-text" id="situation-text">互角の白兵戦。両軍ともに布陣を整え、緊迫の機を伺っております。</div>
@@ -48,48 +48,59 @@
 
   <!-- =========================================================
        戦闘主ステージ：battle-theatre-layout
-       （上段：敵将パネル全幅 / 中段：左上・右下駒台密着の最大化将棋盤 / 下段：自将パネル全幅）
+       （スマホ：縦積み布陣 / タブレット：上段横並び・中段大盤・下段横並び布陣）
        ========================================================= -->
   <div class="battle-theatre-layout" id="battle-theatre-layout">
     
-    <!-- 【上段：敵将パネル（全幅・肖像全高・兵力バー直下2行メッセージ）】 -->
-    <div class="warlord-panel panel-enemy" id="ai-panel">
-      <!-- 枠の上下高さいっぱいに大きく表示される敵将アバター -->
-      <div class="warlord-avatar" id="ai-avatar-container" onclick="toggleWarlordAvatarView('ai')" title="肖像／家紋切替"></div>
-      
-      <!-- 右側情報エリア：名前行 ── 兵力バー ── その下に2行分メッセージ -->
-      <div class="warlord-info-col">
-        <div class="warlord-name-row">
-          <span class="warlord-name" id="ai-name-disp">木下藤吉郎</span>
-          <button class="panel-select-btn btn-3d btn-select-enemy" onclick="openConquestMapModal()" id="btn-enemy-change" title="進軍先（敵国）を選定">⚔ 進軍先</button>
-        </div>
-        <div class="gauge-group">
-          <div class="gauge-label-row">
-            <span class="warlord-clan" id="ai-clan-disp">尾張国｜織田足軽隊</span>
-            <span id="ai-troops-disp" class="troops-num-txt">3,000 / 3,000 兵</span>
+    <!-- 【上陣セクション：敵軍エリア】 -->
+    <div class="battle-section-top">
+      <!-- 敵軍持ち駒台（2行構成） -->
+      <div class="board-hand-dock dock-enemy" id="dock-enemy-wrapper" title="敵軍持ち駒台（2行）">
+        <div class="dock-label">▽敵駒</div>
+        <div class="warlord-hand-box hand-box-enemy" id="ai-hand"></div>
+      </div>
+
+      <!-- 敵将パネル（肖像 ＋ [名前・説明 ＆ 思考時間] ＋ 兵力バー ＋ セリフ） -->
+      <div class="warlord-panel panel-enemy" id="ai-panel">
+        <div class="warlord-avatar" id="ai-avatar-container" onclick="toggleWarlordAvatarView('ai')" title="肖像／家紋切替"></div>
+        
+        <div class="warlord-info-col">
+          <!-- 上段：左に[名前＋説明]、右に[思考時間＋進軍先ボタン] -->
+          <div class="warlord-header-row">
+            <div class="warlord-identity-block">
+              <span class="warlord-name" id="ai-name-disp">木下藤吉郎</span>
+              <span class="warlord-desc" id="ai-clan-disp">尾張国｜織田足軽隊</span>
+            </div>
+            <div class="warlord-time-action-block">
+              <div class="warlord-time-badge time-enemy" id="ai-time-badge" title="敵将の思考時間">
+                ⏱ <span id="ai-time-sec">0.0s</span>
+              </div>
+              <button class="panel-select-btn btn-3d btn-select-enemy" onclick="openConquestMapModal()" id="btn-enemy-change" title="進軍先（敵国）を選定">⚔ 進軍先</button>
+            </div>
           </div>
-          <div class="troops-bar-frame">
-            <div id="ai-troops-bar" class="troops-bar-fill troops-enemy" style="width: 100%;"></div>
+
+          <!-- 中段：兵力ゲージバー -->
+          <div class="gauge-group">
+            <div class="gauge-label-row">
+              <span class="gauge-label-txt">兵力残存</span>
+              <span id="ai-troops-disp" class="troops-num-txt">3,000 / 3,000 兵</span>
+            </div>
+            <div class="troops-bar-frame">
+              <div id="ai-troops-bar" class="troops-bar-fill troops-enemy" style="width: 100%;"></div>
+            </div>
           </div>
-        </div>
-        <!-- 兵力バーの下：2行分の高さを確保したセリフ・思考ログ領域 -->
-        <div class="warlord-quote-row">
-          <div class="warlord-quote" id="ai-quote-disp">「草履取りとて天下を夢見候！ 足軽の意地、見せてくれよう！」</div>
+
+          <!-- 下段：兵力バー直下のセリフ（2行枠） -->
+          <div class="warlord-quote-row">
+            <div class="warlord-quote" id="ai-quote-disp">「草履取りとて天下を夢見候！ 足軽の意地、見せてくれよう！」</div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- 【中段ゾーン：本丸対局場（盤の左上に敵駒台、右下に自駒台を密着結合し盤を最大化）】 -->
-    <div class="wing-center-zone">
+    <!-- 【中陣セクション：本丸対局場（将棋盤・中央大盤）】 -->
+    <div class="battle-section-middle">
       <div class="board-wrapper">
-        
-        <!-- 敵軍持ち駒台（将棋盤の左上に密着） -->
-        <div class="board-hand-dock dock-enemy" title="敵軍持ち駒（左上台）">
-          <div class="dock-label">▽敵駒</div>
-          <div class="warlord-hand-box hand-box-enemy" id="ai-hand"></div>
-        </div>
-
-        <!-- 将棋盤フレーム（画面余白を活かし最大限に大きく表示） -->
         <div class="shogi-board-frame">
           <div class="board-top-row">
             <div class="rank-index-container">
@@ -115,23 +126,16 @@
           </div>
         </div>
 
-        <!-- 自軍持ち駒台（将棋盤の右下に密着） -->
-        <div class="board-hand-dock dock-player" title="自軍持ち駒（右下台）">
-          <div class="warlord-hand-box hand-box-player" id="player-hand"></div>
-          <div class="dock-label">▲自駒</div>
-        </div>
-
         <!-- カットイン専用スロット（オーバーレイ浮遊表示） -->
         <div class="cutin-slot" id="cutin-slot">
           <div class="cutin-banner" id="cutin-banner">
             <div id="cutin-text" class="cutin-text">合戦開始！ いざ推して参る！</div>
           </div>
         </div>
-
       </div>
     </div>
 
-    <!-- 【振り返り・リプレイ時のみ将棋盤直下に出現する合戦再生バー】 -->
+    <!-- 【振り返り・合戦再生バー（リプレイ時出現）】 -->
     <div class="replay-full-controls" id="replay-full-controls" style="display:none;">
       <div class="replay-ctrl-left-group">
         <button class="replay-step-btn btn-3d" onclick="stepReviewToStart()" title="最初（初期配置）へ">⏮</button>
@@ -144,39 +148,58 @@
       <button class="btn-finish-replay btn-3d" onclick="exitReplayMode()" title="合戦鑑賞を終了して元の対局へ復帰">⚔ 対局へ戻る</button>
     </div>
 
-    <!-- 【下段：自将パネル（全幅・肖像全高・兵力バー直下2行メッセージ）】 -->
-    <div class="warlord-panel panel-player" id="player-panel">
-      <!-- 枠の上下高さいっぱいに大きく表示される自将アバター -->
-      <div class="warlord-avatar" id="player-avatar-container" onclick="toggleWarlordAvatarView('player')" title="肖像／家紋切替"></div>
-      
-      <!-- 右側情報エリア：名前行 ── 兵力バー ── その下に2行分メッセージ -->
-      <div class="warlord-info-col">
-        <div class="warlord-name-row">
-          <div class="warlord-title-box">
-            <span class="warlord-name" id="player-name-disp">真田幸村</span>
-            <span class="warlord-strategist-badge" id="player-strategist-badge">軍師:昌幸</span>
+    <!-- 【下陣セクション：自軍エリア】 -->
+    <div class="battle-section-bottom">
+      <!-- 自将パネル（肖像 ＋ [名前・説明 ＆ 思考時間] ＋ 兵力バー ＋ セリフ） -->
+      <div class="warlord-panel panel-player" id="player-panel">
+        <div class="warlord-avatar" id="player-avatar-container" onclick="toggleWarlordAvatarView('player')" title="肖像／家紋切替"></div>
+        
+        <div class="warlord-info-col">
+          <!-- 上段：左に[名前＋説明]、右に[思考時間＋自将変更ボタン] -->
+          <div class="warlord-header-row">
+            <div class="warlord-identity-block">
+              <div class="warlord-name-group">
+                <span class="warlord-name" id="player-name-disp">真田幸村</span>
+                <span class="warlord-strategist-badge" id="player-strategist-badge">軍師:昌幸</span>
+              </div>
+              <span class="warlord-desc" id="player-clan-disp">信濃国 ｜ 真田赤備隊</span>
+            </div>
+            <div class="warlord-time-action-block">
+              <div class="warlord-time-badge time-player" id="player-time-badge" title="自将の思考時間">
+                ⏱ <span id="player-time-sec">0.0s</span>
+              </div>
+              <button class="panel-select-btn btn-3d btn-select-player" onclick="openPlayerWarlordModal()" id="btn-player-change" title="自将を変更">🪭 自将変更</button>
+            </div>
           </div>
-          <button class="panel-select-btn btn-3d btn-select-player" onclick="openPlayerWarlordModal()" id="btn-player-change" title="自将を変更">🪭 自将変更</button>
-        </div>
-        <div class="gauge-group">
-          <div class="gauge-label-row">
-            <span class="warlord-clan" id="player-clan-disp">信濃国 ｜ 真田赤備隊</span>
-            <span id="player-troops-disp" class="troops-num-txt">3,000 / 3,000 兵</span>
+
+          <!-- 中段：兵力ゲージバー -->
+          <div class="gauge-group">
+            <div class="gauge-label-row">
+              <span class="gauge-label-txt">兵力残存</span>
+              <span id="player-troops-disp" class="troops-num-txt">3,000 / 3,000 兵</span>
+            </div>
+            <div class="troops-bar-frame">
+              <div id="player-troops-bar" class="troops-bar-fill troops-player" style="width: 100%;"></div>
+            </div>
           </div>
-          <div class="troops-bar-frame">
-            <div id="player-troops-bar" class="troops-bar-fill troops-player" style="width: 100%;"></div>
+
+          <!-- 下段：兵力バー直下のセリフ（2行枠） -->
+          <div class="warlord-quote-row">
+            <div class="warlord-quote" id="player-quote-disp">「不惜身命！ この一手に命を懸ける！」</div>
           </div>
         </div>
-        <!-- 兵力バーの下：2行分の高さを確保したセリフ・思案ログ領域 -->
-        <div class="warlord-quote-row">
-          <div class="warlord-quote" id="player-quote-disp">「不惜身命！ この一手に命を懸ける！」</div>
-        </div>
+      </div>
+
+      <!-- 自軍持ち駒台（2行構成） -->
+      <div class="board-hand-dock dock-player" id="dock-player-wrapper" title="自軍持ち駒台（2行）">
+        <div class="warlord-hand-box hand-box-player" id="player-hand"></div>
+        <div class="dock-label">▲自駒</div>
       </div>
     </div>
 
   </div>
 
-  <!-- ④ 盤下：大判軍令高札（専属軍師の陣中指示 ＆ 手番ナビゲーション専用） -->
+  <!-- ④ 盤下：大判軍令高札（専属軍師の陣中指示 ＆ 手番ナビゲーション・軍師進言時発光） -->
   <div class="order-message-banner" id="order-message-banner">
     <div class="order-banner-corner banner-c-tl"></div>
     <div class="order-banner-corner banner-c-tr"></div>
@@ -217,7 +240,7 @@
   <button class="cmd-btn btn-3d btn-surrender" id="btn-cmd-surrender" onclick="surrenderGame()">🏳 投了</button>
   <button class="cmd-btn btn-3d btn-start" id="furigoma-btn" onclick="openFurigomaModal()">⚜ 対局開始</button>
   <button class="cmd-btn btn-3d btn-hint" id="btn-master-hint" onclick="showMasterHint()">💡 軍師進言</button>
-  <!-- 当局の全棋譜・前線進撃マップをいつでも展開 -->
+  <!-- 当局の全棋譜・前線進撃マップを展開 -->
   <button class="cmd-btn btn-3d btn-kifu-launcher" onclick="openKifuModal()" title="当局の全棋譜と前線進撃絵巻を展開">📖 合戦絵巻</button>
   <!-- 大戦略マップ「天下絵巻」へ進出 -->
   <button class="cmd-btn btn-3d btn-book" id="btn-cmd-book" onclick="openConquestMapModal()" title="全国地図と平定状況を展開">🗺 天下絵巻</button>
@@ -416,7 +439,7 @@
         <button class="history-tab-btn btn-3d" id="tab-btn-history-exhibition" onclick="switchHistoryTab('exhibition')">⚔ 御前試合録（武芸観戦）</button>
       </div>
 
-      <!-- 上品な金蒔絵1行サマリーバー -->
+      <!-- 金蒔絵1行サマリーバー -->
       <div class="history-summary-strip" id="history-summary-strip">
         <span class="summary-rank-tag">🏆 天下無双</span>
         <span class="summary-stats-txt">通算 <b>0</b>戦 <b>0</b>勝 <b>0</b>敗 <b>0</b>分（勝率 <b>0%</b>）</span>
@@ -794,7 +817,6 @@
   </div>
 </div>
 
-<!-- 外部AIスクリプトを先に読み込み、メイン処理を起動 -->
 <script src="external_ai.js"></script>
 <script src="main.js"></script>
 </body>

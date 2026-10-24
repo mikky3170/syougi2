@@ -882,21 +882,24 @@ function formatTimeMinutesSeconds(totalSec) {
   return `${m}分${s.toString().padStart(2, '0')}秒`;
 }
 
-/* 手番フォーカス（オーラ発光）切り替え */
+/* 手番フォーカス（オーラ発光 ＆ 思考タイマー脈動）切り替え */
 function updateTurnFocus(activeTurn) {
   const pPanel = document.getElementById('player-panel');
   const aiPanel = document.getElementById('ai-panel');
-  const pHand = document.getElementById('player-hand');
+  const pBadge = document.getElementById('player-time-badge');
+  const aiBadge = document.getElementById('ai-time-badge');
 
   if (pPanel) pPanel.classList.remove('turn-focus-player');
-  if (pHand) pHand.parentElement?.classList.remove('turn-focus-player');
   if (aiPanel) aiPanel.classList.remove('turn-focus-enemy');
+  if (pBadge) pBadge.classList.remove('timer-active');
+  if (aiBadge) aiBadge.classList.remove('timer-active');
 
   if (activeTurn === 'PLAYER') {
     if (pPanel) pPanel.classList.add('turn-focus-player');
-    if (pHand) pHand.parentElement?.classList.add('turn-focus-player');
+    if (pBadge) pBadge.classList.add('timer-active');
   } else if (activeTurn === 'AI') {
     if (aiPanel) aiPanel.classList.add('turn-focus-enemy');
+    if (aiBadge) aiBadge.classList.add('timer-active');
   }
 }
 
@@ -920,12 +923,21 @@ function updateThinkingTimerDisplay() {
   const currentStep = moveObjectsHistory.length + 1;
   const isPlayer = (currentThinkingSide === 'PLAYER');
 
+  // 新設：パネル内上段右側の専用思考時間スロットにリアルタイム反映！
+  const pTimeSecEl = document.getElementById('player-time-sec');
+  const aiTimeSecEl = document.getElementById('ai-time-sec');
+  if (isPlayer && pTimeSecEl) {
+    pTimeSecEl.textContent = `${elapsedSec}s`;
+  } else if (!isPlayer && aiTimeSecEl) {
+    aiTimeSecEl.textContent = `${elapsedSec}s`;
+  }
+
   if (isExhibitionActive) {
     updateExhibitionThinkingDisplay(true);
     return;
   }
 
-  // 武将パネルのセリフ領域に、現在思考中であることをリアルタイム反映！
+  // 武将パネル下段のセリフ領域にも思考中ステータスを即時反映！
   if (isPlayer) {
     const pQuoteEl = document.getElementById('player-quote-disp');
     if (pQuoteEl) {
@@ -960,6 +972,10 @@ function stopTurnTimer() {
     clearInterval(turnTimerInterval);
     turnTimerInterval = null;
   }
+  const pBadge = document.getElementById('player-time-badge');
+  const aiBadge = document.getElementById('ai-time-badge');
+  if (pBadge) pBadge.classList.remove('timer-active');
+  if (aiBadge) aiBadge.classList.remove('timer-active');
 }
 
 function resumeTurnTimer() {
@@ -976,7 +992,18 @@ function recordTurnTime(side) {
   const spentMs = Math.max(100, Date.now() - turnStartTime);
   totalTimeSpentMs[side] = (totalTimeSpentMs[side] || 0) + spentMs;
   movesCountBySide[side] = (movesCountBySide[side] || 0) + 1;
-  return (spentMs / 1000).toFixed(1);
+  const secStr = (spentMs / 1000).toFixed(1);
+
+  // 確定した着手時間をバッジに固定反映
+  if (side === 'PLAYER') {
+    const el = document.getElementById('player-time-sec');
+    if (el) el.textContent = `${secStr}s`;
+  } else {
+    const el = document.getElementById('ai-time-sec');
+    if (el) el.textContent = `${secStr}s`;
+  }
+
+  return secStr;
 }
 
 /* =========================================================
@@ -1293,9 +1320,17 @@ function updateExhibitionThinkingDisplay(isThinking = true) {
   const tagSide = (currentThinkingSide === 'PLAYER') ? '先手' : '後手';
   const modeTitle = (exhibitionSpeed === 'fast') ? '早指し戦' : '通常本将棋';
   
-  const targetQuoteEl = (currentThinkingSide === 'PLAYER')
+  const isPlayerSide = (currentThinkingSide === 'PLAYER');
+  const targetQuoteEl = isPlayerSide
     ? document.getElementById('player-quote-disp')
     : document.getElementById('ai-quote-disp');
+  const timeSecEl = isPlayerSide
+    ? document.getElementById('player-time-sec')
+    : document.getElementById('ai-time-sec');
+
+  if (timeSecEl && isThinking) {
+    timeSecEl.textContent = `${elapsedSec}s`;
+  }
 
   if (targetQuoteEl) {
     if (isThinking) {
@@ -1707,9 +1742,18 @@ function initBoardState() {
   totalTimeSpentMs = { PLAYER: 0, AI: 0 };
   movesCountBySide = { PLAYER: 0, AI: 0 };
 
+  // 討死演出・フォーカスの完全リセット
+  const aiPanelEl = document.getElementById('ai-panel');
+  if (aiPanelEl) aiPanelEl.classList.remove('warlord-defeated');
   updateTurnFocus(null);
   updateStrategistUI();
   updateWarlordBGM(currentAiLevel);
+
+  // 思考時間バッジの初期化（0.0s）
+  const pTimeEl = document.getElementById('player-time-sec');
+  const aiTimeEl = document.getElementById('ai-time-sec');
+  if (pTimeEl) pTimeEl.textContent = '0.0s';
+  if (aiTimeEl) aiTimeEl.textContent = '0.0s';
 
   if (!isExhibitionActive) {
     const p = PLAYER_WARLORDS[currentMyWarlordId] || PLAYER_WARLORDS['sanada'];
@@ -2327,7 +2371,7 @@ function animateAndExecuteMove(m, metric = null, onComplete = null) {
 
     executeMove(m, metric);
 
-    // 武将パネル下段に着手内容とキレのあるセリフを反映！
+    // 武将パネル下段に着手内容と武将の威風堂々たる台詞を反映！
     const rawCode = m.code || 'FU';
     const pPiece = m.type === 'drop' ? PIECES[m.code] : (m.promote ? (PIECES[PROMOTE_MAP[rawCode]] || PIECES[rawCode]) : PIECES[rawCode]);
     const moveTxt = `${9 - m.to.c}${KANJI_NUMS[m.to.r]}${pPiece}${m.promote ? '成' : ''}`;
@@ -2429,7 +2473,6 @@ createNewWorker();
 
 /* =========================================================
    【軍師助言メッセージの洗練・情報の引き算エンジン】
-   過剰な【】や専門用語の混雑を排し、一目瞭然の美学を実現
    ========================================================= */
 function analyzeTacticsIntent(bm) {
   const targetPiece = board[bm.to.r][bm.to.c];
@@ -2536,16 +2579,13 @@ function renderTacticProposal(idx) {
     }
   }
 
-  // 1行目：要点だけを明快に伝える（プラン名 ＋ 指し手 ── 狙い）
   const linePrimary = `
     <span class="tactics-plan-tag">【${planName}】</span>
     <span class="tactics-move-highlight">${moveActionTxt}</span>
     <span class="tactics-aim-tag">── ${intent.aim}</span>
   `;
 
-  // 2行目：機械的な接頭辞を外し、軍師の自然な助言台詞として伝える
   const lineSub = intent.advice;
-
   const categoryType = isCurrentHintAwakened ? 'hint-awakened' : 'hint';
   setOrderMessage({ line1: linePrimary, line2: lineSub }, true, categoryType);
 
@@ -2777,6 +2817,10 @@ function checkGameOver(nextOwner) {
     const p = PLAYER_WARLORDS[currentMyWarlordId];
 
     if (nextOwner === 'AI') {
+      // 敵将討死！ 赤黒い炎の壊滅演出を点火
+      const aiPanelEl = document.getElementById('ai-panel');
+      if (aiPanelEl) aiPanelEl.classList.add('warlord-defeated');
+
       const isNewClear = !clearedProvinces.includes(currentAiLevel);
       saveProgress(currentAiLevel); launchFireworksCelebration(); triggerCutin('敵将討ち取ったり！', true);
       if (enemy && enemy.defeatQuote) document.getElementById('ai-quote-disp').textContent = enemy.defeatQuote;
@@ -2889,7 +2933,6 @@ function stepReview(dir, isAuto = false) {
   updateTroopsAndSituation();
   updateReviewModeUI();
 
-  // 再生時の直近指し手を武将パネルに表示
   if (lastMove) {
     const rawCode = lastMove.code || 'FU';
     const pPiece = lastMove.type === 'drop' ? PIECES[lastMove.code] : (lastMove.promote ? (PIECES[PROMOTE_MAP[rawCode]] || PIECES[rawCode]) : PIECES[rawCode]);
