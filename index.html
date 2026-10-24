@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<!-- モバイルブラウザ全画面表示・PWA対応メタタグ（アドレスバー対策） -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#070301">
 <title>将棋王 2026 〜 天下統一・戦国決戦 〜</title>
 <link rel="stylesheet" href="style.css">
 </head>
@@ -12,12 +17,12 @@
 <!-- 状況・武将別BGM -->
 <audio id="bgm-audio" src="nobunaga_song.mp3" loop preload="auto"></audio>
 
-<!-- 最上部：本丸大扁額・鍛造純金立体プレート＆左右縦2段小判札ヘッダー -->
+<!-- 最上部：本丸大扁額・鍛造純金立体プレート＆左右小判札ヘッダー -->
 <div class="top-header">
-  <!-- 左翼：縦2段小判札（指南書 ＆ 御前試合） -->
+  <!-- 左翼：縦2段小判札（兵法指南書 ＆ 天下絵巻） -->
   <div class="header-actions-col header-left-col">
     <button class="header-btn btn-3d btn-guide" onclick="openGuideModal()" title="天下布武・兵法指南絵巻">📜 指南書</button>
-    <button class="header-btn btn-3d btn-exhibition" onclick="openExhibitionModal()" title="客分指南役・戦国武将の武芸観戦">⚔ 御前試合</button>
+    <button class="header-btn btn-3d btn-book" id="btn-header-conquest" onclick="openConquestMapModal()" title="全国地図・国盗り進軍先">🗺 天下絵巻</button>
   </div>
   
   <!-- 中央：本丸大扁額・鍛造立体純金金属プレート -->
@@ -32,10 +37,13 @@
     </h1>
   </div>
 
-  <!-- 右翼：縦2段小判札（勲功録 ＆ 奏楽入/切） -->
+  <!-- 右翼：縦2段小判札（御前試合 ＆ 勲功録） ＋ 音響ボタン -->
   <div class="header-actions-col header-right-col">
-    <button class="header-btn btn-3d btn-history" onclick="openHistoryModal()" title="天下合戦勲功録（対戦戦歴絵巻）">📜 勲功録</button>
-    <button class="header-btn btn-3d btn-snd" id="sound-toggle" onclick="toggleSound()" title="音響・奏楽の切替">♪ 奏楽入</button>
+    <button class="header-btn btn-3d btn-exhibition" onclick="openExhibitionModal()" title="客分指南役・戦国武将の武芸観戦">⚔ 御前試合</button>
+    <div class="header-right-subrow">
+      <button class="header-btn btn-3d btn-history" onclick="openHistoryModal()" title="天下合戦勲功録（対戦戦歴絵巻）">📜 勲功録</button>
+      <button class="header-btn btn-3d btn-snd" id="sound-toggle" onclick="toggleSound()" title="音響・奏楽の切替">♪ 奏楽入</button>
+    </div>
   </div>
 </div>
 
@@ -235,16 +243,18 @@
 
 </div>
 
-<!-- 最下部コマンドバー（工芸色分け立体小判ボタン群・📖合戦絵巻常駐） -->
+<!-- 最下部コマンドバー（戦場5大采配ボタン・中央特大黄金対局開始・誤爆防止配置） -->
 <div class="bottom-command-bar" id="bottom-command-bar">
-  <button class="cmd-btn btn-3d btn-undo" id="btn-cmd-undo" onclick="undoMove()">🪭 待った</button>
-  <button class="cmd-btn btn-3d btn-surrender" id="btn-cmd-surrender" onclick="surrenderGame()">🏳 投了</button>
-  <button class="cmd-btn btn-3d btn-start" id="furigoma-btn" onclick="openFurigomaModal()">⚜ 対局開始</button>
-  <button class="cmd-btn btn-3d btn-hint" id="btn-master-hint" onclick="showMasterHint()">💡 軍師進言</button>
-  <!-- 当局の全棋譜・前線進撃マップを展開 -->
+  <!-- 左端：待った（自陣側操作） -->
+  <button class="cmd-btn btn-3d btn-undo" id="btn-cmd-undo" onclick="undoMove()" title="局面を二手前まで巻き戻す">🪭 待った</button>
+  <!-- 左中：当局の全棋譜・前線進撃マップを展開 -->
   <button class="cmd-btn btn-3d btn-kifu-launcher" onclick="openKifuModal()" title="当局の全棋譜と前線進撃絵巻を展開">📖 合戦絵巻</button>
-  <!-- 大戦略マップ「天下絵巻」へ進出 -->
-  <button class="cmd-btn btn-3d btn-book" id="btn-cmd-book" onclick="openConquestMapModal()" title="全国地図と平定状況を展開">🗺 天下絵巻</button>
+  <!-- 中央：主役・特大立体黄金ボタン「対局開始」 -->
+  <button class="cmd-btn btn-3d btn-start-hero" id="furigoma-btn" onclick="openFurigomaModal()" title="振り駒の儀を執り行い合戦を開始">⚜ 対局開始</button>
+  <!-- 右中：軍師進言（局面打開の妙手を指南） -->
+  <button class="cmd-btn btn-3d btn-hint" id="btn-master-hint" onclick="showMasterHint()" title="専属軍師に次の一手を問う">💡 軍師進言</button>
+  <!-- 右端：投了（誤タップ防止のため待ったから最も遠い右端へ独立配置） -->
+  <button class="cmd-btn btn-3d btn-surrender" id="btn-cmd-surrender" onclick="surrenderGame()" title="形勢覆し難きとき潔く負けを認める">🏳 投了</button>
 </div>
 
 <!-- 振り駒モーダル -->
