@@ -14,7 +14,7 @@
   /* 書体定義 */
   --font-ui: 'Shippori Mincho', serif;
   --font-kaisho: 'Klee One', serif;      /* 表・生駒の楷書体 */
-  --font-gyosho: 'Yuji Boku', cursive;    /* 裏・成駒の行書・草書体 */
+  --font-gyosho: 'Yuji Boku', cursive;    /* 裏・成駒の行書・草書体、本丸毛筆漆黒タイトル */
   --player-theme-color: #e61919;
 }
 
@@ -81,11 +81,12 @@ body {
 }
 
 /* =========================================================
-   本丸扁額風・独立銘板ヘッダー
+   本丸大扁額ヘッダー（左右縦2段スタック ＆ 鍛造立体純金金属プレート）
    ========================================================= */
 .top-header {
-  width: 100%; max-width: 520px; height: 46px;
-  display: flex; justify-content: space-between; align-items: center;
+  width: 100%; max-width: 520px;
+  height: clamp(48px, 6.8vh, 58px);
+  display: flex; justify-content: space-between; align-items: stretch;
   border: 1.8px solid #997223; border-radius: 6px;
   background: linear-gradient(180deg, #2b1206 0%, #0d0401 50%, #1f0b03 100%);
   box-shadow: 
@@ -93,75 +94,119 @@ body {
     0 6px 16px rgba(0,0,0,0.98),
     inset 0 1.5px 0 rgba(255, 235, 140, 0.5),
     inset 0 0 12px rgba(0, 0, 0, 0.8);
-  padding: 2px 6px; flex-shrink: 0; position: relative; gap: 6px;
-  transition: max-width 0.3s ease;
+  padding: 3px 5px; flex-shrink: 0; position: relative; gap: 6px;
+  transition: all 0.3s ease;
 }
 
-.header-actions { display: flex; gap: 5px; flex-shrink: 0; z-index: 2; }
-.header-btn {
-  font-family: var(--font-ui); font-size: 11px; font-weight: 900;
-  padding: 5px 8px; border-radius: 4px; border-width: 1.3px;
-  color: #fff8d6; cursor: pointer; white-space: nowrap; line-height: 1.1;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.9);
+/* 左右ボタングループ：縦2段小判札レイアウト */
+.header-actions-col {
+  width: clamp(58px, 15vw, 68px);
+  display: flex; flex-direction: column; justify-content: space-between;
+  gap: 2px; flex-shrink: 0; z-index: 2; height: 100%;
 }
+
+.header-btn {
+  font-family: var(--font-ui); font-size: clamp(9.5px, 1.35vh, 10.5px); font-weight: 900;
+  padding: 0 4px; border-radius: 3px; border-width: 1.2px;
+  color: #fff8d6; cursor: pointer; white-space: nowrap; line-height: 1;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.9);
+  height: calc(50% - 1.5px);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 0 rgba(10,3,1,0.9), 0 2.5px 4px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.45);
+}
+
 .btn-guide { 
   background: linear-gradient(180deg, #6b430e 0%, #301a04 100%); 
   border-color: #ffd700; color: #ffefa8; 
-  box-shadow: 0 3px 0 #140801, 0 4px 6px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.45);
 }
 .btn-exhibition { 
   background: linear-gradient(180deg, #1b3d6e 0%, #091936 100%); 
   border-color: #72b2ff; color: #eaf3ff; 
-  box-shadow: 0 3px 0 #050d1c, 0 4px 6px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.45);
 }
 .btn-history { 
   background: linear-gradient(180deg, #6e1919 0%, #330505 100%); 
   border-color: #ff9e9e; color: #ffe8e8; 
-  box-shadow: 0 3px 0 #170202, 0 4px 6px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.45);
 }
 .btn-snd { 
   background: linear-gradient(180deg, #442554 0%, #1c0c24 100%); 
   border-color: #c98eeb; color: #f5e4ff; 
-  box-shadow: 0 3px 0 #0e0514, 0 4px 6px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.45);
 }
 
+/* =========================================================
+   【本丸大扁額】鍛造立体純金金属プレート × 漆黒の力強い毛筆文字
+   ========================================================= */
 .header-title-plaque {
-  flex: 1; height: 38px; min-width: 0;
-  background: linear-gradient(180deg, #421c0b 0%, #180702 50%, #2f1105 100%);
-  border: 1.5px solid #ffd700; border-radius: 4px;
+  flex: 1; height: 100%; min-width: 0;
+  background: linear-gradient(135deg, #fff7b8 0%, #ffd700 22%, #e6a800 48%, #fff099 72%, #cca114 100%);
+  border: 1.8px solid #ffe885;
+  border-radius: 4px;
   box-shadow: 
-    0 2px 5px rgba(0,0,0,0.9),
-    inset 0 1px 0 rgba(255, 245, 170, 0.7),
-    inset 0 0 10px rgba(255, 215, 0, 0.25);
+    0 3px 0 #593c04,
+    0 4px 10px rgba(0, 0, 0, 0.95),
+    inset 0 1.5px 0.8px rgba(255, 255, 255, 0.9),
+    inset 0 -1.5px 1px rgba(138, 92, 0, 0.8),
+    inset 0 0 12px rgba(255, 255, 255, 0.35);
   display: flex; align-items: center; justify-content: center;
-  position: relative; overflow: hidden; padding: 0 6px;
+  position: relative; overflow: hidden; padding: 0 4px;
+}
+
+.header-title-plaque::before {
+  content: ''; position: absolute; inset: 0;
+  background: repeating-linear-gradient(
+    60deg,
+    rgba(255, 255, 255, 0.12),
+    rgba(255, 255, 255, 0.12) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+  pointer-events: none;
 }
 
 .plaque-corner {
-  position: absolute; width: 4px; height: 4px;
-  background: radial-gradient(circle, #fff3a8 0%, #ffd700 60%, #8c5b05 100%);
-  border-radius: 50%; box-shadow: 0 0.5px 1px #000;
+  position: absolute; width: 4.5px; height: 4.5px;
+  background: radial-gradient(circle, #ffffff 0%, #ffd700 60%, #4a2d02 100%);
+  border-radius: 50%; box-shadow: 0 1px 2px #000; z-index: 3;
 }
-.plaque-tl { top: 2px; left: 2px; }
-.plaque-tr { top: 2px; right: 2px; }
-.plaque-bl { bottom: 2px; left: 2px; }
-.plaque-br { bottom: 2px; right: 2px; }
+.plaque-tl { top: 2px; left: 3px; }
+.plaque-tr { top: 2px; right: 3px; }
+.plaque-bl { bottom: 2px; left: 3px; }
+.plaque-br { bottom: 2px; right: 3px; }
 
 .app-title-main {
-  font-family: var(--font-kaisho);
-  margin: 0; line-height: 1.1; text-align: center;
-  background: linear-gradient(180deg, #ffffff 0%, #fffbe6 20%, #ffe066 50%, #ffcc00 75%, #ffa600 100%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 1.5px 3px rgba(0,0,0,0.95)) drop-shadow(0 0 10px rgba(255, 215, 0, 0.7));
+  font-family: var(--font-gyosho);
+  margin: 0; line-height: 1.05; text-align: center;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
+  z-index: 2; position: relative;
 }
-.title-main-txt { font-size: clamp(12px, 3.0vw, 15px); font-weight: 900; letter-spacing: 1.2px; white-space: nowrap; }
-.title-sub-txt { font-size: clamp(7.5px, 1.8vw, 9.5px); font-weight: 700; letter-spacing: 0.6px; white-space: nowrap; opacity: 0.95; }
 
-@media (min-width: 481px) {
-  .app-title-main { flex-direction: row; gap: 6px; }
-  .title-main-txt { font-size: 15px; }
-  .title-sub-txt { font-size: 10px; }
+.title-main-txt {
+  font-size: clamp(14px, 2.4vh, 18px);
+  font-weight: 900;
+  letter-spacing: 2px;
+  white-space: nowrap;
+  color: #0c0502;
+  text-shadow: 
+    0 1px 0 rgba(255, 255, 255, 0.5),
+    0 -0.5px 0 rgba(0, 0, 0, 0.8),
+    0 0 2px rgba(12, 5, 2, 0.4);
+  filter: drop-shadow(0 1px 1.5px rgba(255, 240, 150, 0.8));
+}
+
+.title-sub-txt {
+  font-family: var(--font-kaisho);
+  font-size: clamp(8px, 1.25vh, 10px);
+  font-weight: 900;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  color: #2b1204;
+  margin-top: 0px;
+  text-shadow: 0 0.8px 0 rgba(255, 255, 255, 0.6);
+}
+
+@media (min-width: 520px) {
+  .app-title-main { flex-direction: row; gap: 8px; }
+  .title-main-txt { font-size: 18px; }
+  .title-sub-txt { font-size: 11px; margin-top: 2px; }
 }
 
 /* メイン骨格 */
@@ -264,9 +309,7 @@ body {
 .warlord-avatar.turn-thinking-player { animation: pulse-aura-player 2.0s infinite ease-in-out !important; }
 .warlord-avatar.turn-thinking-enemy { animation: pulse-aura-enemy 2.0s infinite ease-in-out !important; }
 
-/* =========================================================
-   【全画面共通】肖像画・家紋SVG 表示保証ルール
-   ========================================================= */
+/* 肖像画・家紋SVG 表示保証ルール */
 .portrait-container-box {
   width: 100%; height: 100%; position: relative;
   overflow: hidden; display: flex; align-items: center; justify-content: center;
@@ -413,8 +456,8 @@ body {
   border: 2px solid #cca135; border-radius: 4px;
   padding: 1px;
   box-shadow: 0 5px 18px rgba(0,0,0,0.98), inset 0 0 10px rgba(0,0,0,0.95);
-  width: min(calc(100vw - 12px), calc(100vh - 325px), 480px);
-  height: min(calc(100vw - 12px), calc(100vh - 325px), 480px);
+  width: min(calc(100vw - 12px), calc(100vh - 330px), 480px);
+  height: min(calc(100vw - 12px), calc(100vh - 330px), 480px);
   max-width: 100%; max-height: 100%;
   flex-shrink: 0; position: relative;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
@@ -422,8 +465,8 @@ body {
 
 @media (min-width: 600px) {
   .shogi-board-frame {
-    width: min(calc(100vw - 40px), calc(100vh - 325px), 520px) !important;
-    height: min(calc(100vw - 40px), calc(100vh - 325px), 520px) !important;
+    width: min(calc(100vw - 40px), calc(100vh - 330px), 520px) !important;
+    height: min(calc(100vw - 40px), calc(100vh - 330px), 520px) !important;
   }
 }
 
@@ -501,16 +544,6 @@ body {
   border: 2px solid #ffffff !important; z-index: 4;
 }
 
-@keyframes spark-gold {
-  0%   { box-shadow: inset 0 0 0px #ffd700, 0 0 0px #fff; opacity: 1; }
-  50%  { box-shadow: inset 0 0 18px #ffd700, 0 0 14px #ffe57f; opacity: 1; }
-  100% { box-shadow: inset 0 0 0px #ffd700, 0 0 0px #fff; opacity: 0; }
-}
-.cell.sparkle::after {
-  content: ''; position: absolute; inset: 0; border: 2px solid #fff; pointer-events: none;
-  animation: spark-gold 0.6s ease-out forwards;
-}
-
 @keyframes hint-soft-pulse {
   0%   { box-shadow: inset 0 0 6px #ffd700, 0 0 4px #ffeb3b; }
   50%  { box-shadow: inset 0 0 18px #ffb300, 0 0 12px #fff9c4; }
@@ -525,10 +558,7 @@ body {
   border: 2px dashed #ffd700 !important; background: rgba(255, 215, 0, 0.45) !important;
 }
 
-/* =========================================================
-   【本格本将棋盤・四箇所の星（星印）】
-   三段目・六段目と3筋・7筋の交差点に漆黒金覆輪で常時配置
-   ========================================================= */
+/* 本格本将棋盤・四箇所の星（星印） */
 .board-star {
   position: absolute;
   width: clamp(5px, 1.2vw, 7.5px);
@@ -593,89 +623,87 @@ body {
   border: 0.5px solid #ffd700; box-shadow: 0 1px 3px rgba(0,0,0,0.8);
 }
 
-/* =========================================================
-   【駒移動＆持ち駒打ち・長距離大駒飛翔＆捕獲駒台収納アニメーション】
-   ========================================================= */
+/* 飛翔・捕獲・着地アニメーション */
 .anim-flying-piece {
-  position: fixed !important;
-  z-index: 2900 !important;
-  pointer-events: none !important;
-  margin: 0 !important;
+  position: fixed !important; z-index: 2900 !important;
+  pointer-events: none !important; margin: 0 !important;
   will-change: transform, left, top, width, height;
   filter: drop-shadow(0 12px 20px rgba(0,0,0,0.85)) drop-shadow(0 0 10px rgba(255, 215, 0, 0.65)) !important;
 }
 
-/* 捕獲された駒が駒台へ吸い込まれるエフェクト */
 .anim-capture-piece {
-  position: fixed !important;
-  z-index: 2850 !important;
-  pointer-events: none !important;
-  margin: 0 !important;
+  position: fixed !important; z-index: 2850 !important;
+  pointer-events: none !important; margin: 0 !important;
   will-change: transform, left, top, opacity;
   filter: drop-shadow(0 8px 14px rgba(0,0,0,0.8)) drop-shadow(0 0 8px rgba(255, 180, 0, 0.5)) !important;
 }
 
-/* 駒台へ収容された瞬間の駒台フラッシュエフェクト */
 @keyframes hand-flash-pulse {
   0%   { box-shadow: inset 0 0 16px #ffd700, 0 0 12px #ff9100; border-color: #ffd700; }
   50%  { box-shadow: inset 0 0 24px #ffffff, 0 0 18px #ffd700; border-color: #ffffff; }
   100% { box-shadow: inset 0 1px 3px rgba(0,0,0,0.5), 0 2px 5px rgba(0,0,0,0.85); border-color: #a67c33; }
 }
-.hand-just-captured {
-  animation: hand-flash-pulse 0.4s ease-out !important;
-}
+.hand-just-captured { animation: hand-flash-pulse 0.4s ease-out !important; }
 
-/* 自軍駒の着地衝撃（正面向き） */
 @keyframes piece-landing-shock-player {
   0%   { transform: scale(1.12); filter: brightness(1.3) contrast(1.1); }
   50%  { transform: scale(0.95); filter: brightness(1.1); }
   100% { transform: scale(1.0);  filter: brightness(1.0); }
 }
-
-/* 敵軍駒の着地衝撃（180度反転を厳密に保持して一瞬も正面に戻さない！） */
 @keyframes piece-landing-shock-ai {
   0%   { transform: rotate(180deg) scale(1.12); filter: brightness(1.3) contrast(1.1); }
   50%  { transform: rotate(180deg) scale(0.95); filter: brightness(1.1); }
   100% { transform: rotate(180deg) scale(1.0);  filter: brightness(1.0); }
 }
+.piece-just-landed-player { animation: piece-landing-shock-player 0.24s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important; }
+.piece-just-landed-ai { animation: piece-landing-shock-ai 0.24s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important; }
 
-.piece-just-landed-player {
-  animation: piece-landing-shock-player 0.24s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
-}
-
-.piece-just-landed-ai {
-  animation: piece-landing-shock-ai 0.24s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
-}
-
-/* カットイン演出 */
+/* =========================================================
+   【カットイン演出】文字をひと回り大きく拡大 ＆ 迫力強化
+   ========================================================= */
 .cutin-slot {
   position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  width: 92%; max-width: 440px; height: 0; min-height: 0;
+  width: 95%; max-width: 480px; height: 0; min-height: 0;
   display: flex; align-items: center; justify-content: center;
-  pointer-events: none; z-index: 100;
+  pointer-events: none; z-index: 200;
 }
 .cutin-banner {
-  width: 100%; height: 32px;
-  background: linear-gradient(180deg, rgba(30,10,5,0.98) 0%, rgba(150,15,15,0.98) 50%, rgba(30,10,5,0.98) 100%);
-  border: 2px solid #ffd700; border-radius: 5px;
-  box-shadow: 0 0 24px rgba(255, 215, 0, 0.9);
+  width: 100%;
+  /* 高さを32pxからひと回り拡大 */
+  height: clamp(38px, 5.2vh, 46px);
+  background: linear-gradient(180deg, rgba(32, 8, 4, 0.98) 0%, rgba(175, 18, 18, 0.98) 50%, rgba(32, 8, 4, 0.98) 100%);
+  border: 2px solid #ffd700; border-radius: 6px;
+  box-shadow: 
+    0 0 28px rgba(255, 215, 0, 0.95),
+    0 4px 14px rgba(0, 0, 0, 0.95),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
   display: flex; align-items: center; justify-content: center;
   opacity: 0; transform: scale(0.85);
   transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 .cutin-banner.rivalry {
-  background: linear-gradient(180deg, rgba(40,10,0,0.98) 0%, rgba(180,60,0,0.98) 50%, rgba(40,10,0,0.98) 100%) !important;
-  border-color: #ffea70 !important; box-shadow: 0 0 28px rgba(255, 120, 0, 0.95) !important;
+  background: linear-gradient(180deg, rgba(45, 12, 0, 0.98) 0%, rgba(200, 70, 0, 0.98) 50%, rgba(45, 12, 0, 0.98) 100%) !important;
+  border-color: #ffea70 !important; box-shadow: 0 0 32px rgba(255, 130, 0, 0.95), 0 4px 14px rgba(0, 0, 0, 0.95) !important;
 }
+
+/* カットイン文字：14pxからひと回り大きく拡大 */
 .cutin-text {
-  font-size: 14px; font-weight: 900; color: #fff9e6;
-  text-shadow: 0 0 10px #ffd700, 0 2px 4px #000; letter-spacing: 1.2px;
-  white-space: nowrap; line-height: 1;
+  font-family: var(--font-gyosho);
+  font-size: clamp(16px, 2.5vh, 20px);
+  font-weight: 900;
+  color: #fffdf5;
+  text-shadow: 
+    0 0 12px #ffd700,
+    0 0 22px rgba(255, 215, 0, 0.8),
+    0 2px 4px #000000;
+  letter-spacing: 1.8px;
+  white-space: nowrap;
+  line-height: 1;
 }
 .cutin-active .cutin-banner { opacity: 1 !important; transform: scale(1) !important; }
 
 /* =========================================================
-   自将本陣ゾーン ＆ 合戦軍令札の一体構造
+   自将本陣ゾーン ＆ 本陣直結・合戦軍令札
    ========================================================= */
 .player-headquarters-zone {
   width: 100%; display: flex; flex-direction: column; gap: 0;
@@ -704,10 +732,11 @@ body {
   100% { color: #ffe699; text-shadow: 0 1px 3px #000; }
 }
 
+/* 本陣直結・合戦軍令札 */
 .order-message-banner {
   width: 100%; height: clamp(44px, 6.2vh, 50px);
   background: linear-gradient(90deg, rgba(26, 11, 4, 0.95) 0%, rgba(45, 19, 7, 0.95) 50%, rgba(26, 11, 4, 0.95) 100%);
-  display: flex; align-items: center; justify-content: flex-start; gap: 6px;
+  display: flex; align-items: center; justify-content: flex-start; gap: 4px;
   padding: 2px 7px; flex-shrink: 0; position: relative;
   transition: all 0.35s ease;
 }
@@ -790,46 +819,82 @@ body {
 }
 
 /* =========================================================
-   【思考表示・上下ガタつき防止】2行独立完全固定スロット構造
+   【軍令札本文センター】左側絶妙マージン ＆ 2行目全角1文字字下げ
    ========================================================= */
-.order-message-text {
+.order-message-center {
   flex: 1; min-width: 0; height: 38px;
   display: flex; flex-direction: column; justify-content: center;
   overflow: hidden; text-shadow: 0 1px 3px #000;
+  padding-left: clamp(8px, 2.2vw, 12px);
+}
+
+.order-row-primary {
+  height: 20px;
+  display: flex; align-items: center; justify-content: space-between; gap: 4px;
 }
 
 .order-line-primary {
-  height: 19px; line-height: 19px;
+  line-height: 20px;
   font-size: clamp(10.5px, 1.5vh, 12px); font-weight: 800; color: #ffe699;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  display: block; margin: 0; padding: 0;
+  flex: 1; min-width: 0;
 }
 
+/* 2行目：左側に全角1文字分（約1em / 12px）の上品な字下げ */
 .order-line-sub {
   height: 17px; line-height: 17px;
   font-size: clamp(9.5px, 1.35vh, 10.5px); font-weight: 800; color: #fff2b2;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  display: block; margin: 0; padding: 0;
+  display: block; margin: 0;
+  padding: 0 0 0 clamp(10px, 2.4vw, 13px);
+}
+
+.order-actions-slot {
+  display: flex; align-items: center; gap: 3px; flex-shrink: 0;
 }
 
 .order-message-banner.my-turn { animation: breathe-player-turn 3.0s infinite ease-in-out !important; }
 .order-message-banner.my-turn .order-line-primary { animation: pulse-text-glow 2.0s infinite ease-in-out !important; }
 
-/* アクションボタン群 */
+/* リアルタイム思考タイマータグ */
+.timer-pulse-tag {
+  font-size: 8.5px; font-weight: 900; color: #ffd700;
+  background: rgba(0,0,0,0.65); border: 0.8px solid #ffd700;
+  border-radius: 3px; padding: 0.5px 4px; margin-right: 4px;
+}
+
+/* 1行目右端アクションボタン群 */
 .alt-tactic-btn {
-  font-family: var(--font-ui); font-size: 10.5px; font-weight: 900;
+  font-family: var(--font-ui); font-size: 9.5px; font-weight: 900;
   background: linear-gradient(180deg, #1b6329 0%, #0a2e12 100%);
-  border: 1.3px solid #ffd700; border-radius: 4px;
-  color: #fff9db; padding: 4px 7px; white-space: nowrap; cursor: pointer;
-  flex-shrink: 0; line-height: 1.1; text-shadow: 0 1px 2px #000;
+  border: 1.2px solid #ffd700; border-radius: 3px;
+  color: #fff9db; padding: 2px 6px; white-space: nowrap; cursor: pointer;
+  line-height: 1.1; text-shadow: 0 1px 2px #000;
+  box-shadow: 0 2px 0 #051408, 0 2px 4px rgba(0,0,0,0.8);
 }
 
 .rivalry-story-btn {
-  font-family: var(--font-ui); font-size: 10px; font-weight: 900;
+  font-family: var(--font-ui); font-size: 9.5px; font-weight: 900;
   background: linear-gradient(180deg, #b81414 0%, #4a0808 100%);
-  border: 1.3px solid #ffd700; border-radius: 4px;
-  color: #fff9db; padding: 3px 8px; white-space: nowrap; cursor: pointer;
-  flex-shrink: 0; line-height: 1.1;
+  border: 1.2px solid #ffd700; border-radius: 3px;
+  color: #fff9db; padding: 2px 6px; white-space: nowrap; cursor: pointer;
+  line-height: 1.1;
+  box-shadow: 0 2px 0 #1c0202, 0 2px 4px rgba(0,0,0,0.8);
+}
+
+@keyframes pulse-quit-exh {
+  0%   { border-color: #ffd700; box-shadow: 0 2px 0 #1c0202, 0 0 5px #ffd700; }
+  50%  { border-color: #ffffff; box-shadow: 0 2px 0 #1c0202, 0 0 12px #ff4d4d; }
+  100% { border-color: #ffd700; box-shadow: 0 2px 0 #1c0202, 0 0 5px #ffd700; }
+}
+
+.btn-exhibition-quit-inline {
+  font-family: var(--font-ui); font-size: 9.5px; font-weight: 900;
+  padding: 2.5px 7px; border: 1.3px solid #ffd700; border-radius: 3px;
+  background: linear-gradient(180deg, #d41717 0%, #610505 100%);
+  color: #ffffff; cursor: pointer; white-space: nowrap;
+  animation: pulse-quit-exh 1.8s infinite ease-in-out;
+  box-shadow: 0 2px 0 #1c0202, 0 2.5px 4px rgba(0,0,0,0.85);
 }
 
 /* 軍師戦術意図バッジ */
@@ -1002,18 +1067,22 @@ body {
 
 /* =========================================================
    【モーダル共通工芸デザインシステム】
+   ★最前面 z-index: 3500 に引き上げ（アニメーション駒の干渉を完全遮断）
    ========================================================= */
 .modal-overlay {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.88); display: flex; justify-content: center; align-items: center; z-index: 2500;
+  background: rgba(0, 0, 0, 0.90);
+  display: flex; justify-content: center; align-items: center;
+  z-index: 3500 !important; /* 飛翔駒(2900)より上位で完全に覆う */
 }
 .modal-content {
   background: radial-gradient(circle at center, #2e1408 0%, #0d0401 100%) !important;
   border: 2px solid #ffd700 !important; padding: 12px 14px; border-radius: 6px;
   color: #f7eed8; box-shadow: 0 10px 40px rgba(0,0,0,0.98), inset 0 0 15px rgba(0,0,0,0.9);
-  text-align: left;
+  text-align: left; position: relative; z-index: 3501 !important;
 }
 
+/* 従来型モーダル見出し */
 .modal-header-plaque {
   background: linear-gradient(180deg, #3d1b0b 0%, #160702 100%);
   border: 1.3px solid #ffd700; border-radius: 4px;
@@ -1023,6 +1092,58 @@ body {
 .modal-title-txt {
   margin: 0; color: #ffd700; font-size: 14.5px; font-weight: 900;
   letter-spacing: 1px; text-shadow: 0 1px 2px #000;
+}
+
+/* =========================================================
+   【モーダル用・鍛造立体純金金属プレート × 漆黒毛筆タイトル】
+   本丸大扁額と同等の格式・飾り鋲・ヘアライン光沢を移植
+   ========================================================= */
+.modal-gold-plaque {
+  background: linear-gradient(135deg, #fff7b8 0%, #ffd700 22%, #e6a800 48%, #fff099 72%, #cca114 100%) !important;
+  border: 1.8px solid #ffe885 !important;
+  border-radius: 5px !important;
+  padding: 6px 12px !important;
+  margin-bottom: 7px !important;
+  box-shadow: 
+    0 3px 0 #593c04,
+    0 4px 12px rgba(0, 0, 0, 0.95),
+    inset 0 1.5px 0.8px rgba(255, 255, 255, 0.9),
+    inset 0 -1.5px 1px rgba(138, 92, 0, 0.8),
+    inset 0 0 12px rgba(255, 255, 255, 0.35) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.modal-gold-plaque::before {
+  content: ''; position: absolute; inset: 0;
+  background: repeating-linear-gradient(
+    60deg,
+    rgba(255, 255, 255, 0.14),
+    rgba(255, 255, 255, 0.14) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+  pointer-events: none;
+}
+
+.modal-title-shikkoku {
+  font-family: var(--font-gyosho);
+  margin: 0;
+  font-size: clamp(14px, 2.3vh, 17.5px);
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  color: #0c0502;
+  text-shadow: 
+    0 1px 0 rgba(255, 255, 255, 0.6),
+    0 -0.5px 0 rgba(0, 0, 0, 0.8),
+    0 0 2px rgba(12, 5, 2, 0.4);
+  filter: drop-shadow(0 1px 1px rgba(255, 240, 150, 0.85));
+  position: relative;
+  z-index: 2;
+  text-align: center;
 }
 
 .modal-buttons { margin-top: 10px; display: flex; gap: 8px; justify-content: center; }
@@ -1058,7 +1179,7 @@ body {
 }
 
 /* =========================================================
-   【御前試合】対局方式（通常／早指し）＆ ビジュアル選択
+   【御前試合】対局方式（通常本将棋／早指し戦）
    ========================================================= */
 .exhibition-modal-box {
   width: 96vw !important; max-width: 600px !important; height: 92vh !important;
@@ -1197,7 +1318,7 @@ body {
   padding: 0.5px 3px; white-space: nowrap;
 }
 
-/* 対局方式選択バー ＆ 解説プレート */
+/* 対局方式選択バー */
 .exhibition-config-row {
   display: flex; flex-direction: column; gap: 4px;
   background: rgba(22, 10, 4, 0.95); border: 1.2px solid #8e6c31; border-radius: 4px;
@@ -1223,7 +1344,6 @@ body {
   border-radius: 3px; padding: 3px 6px; margin-top: 2px;
 }
 
-/* 【御前試合モーダル下部】開始ボタン中央・閉じるボタン右下配置 */
 .exhibition-bottom-buttons {
   width: 100%; display: grid !important;
   grid-template-columns: 80px 1fr 80px !important;
@@ -1257,7 +1377,6 @@ body {
   border: 2px solid #72b2ff !important; color: #ffffff !important;
   box-shadow: 0 3.5px 0 #031024, 0 5px 14px rgba(114, 178, 255, 0.6), inset 0 1.2px 0 rgba(255,255,255,0.5) !important;
 }
-
 .btn-start-exhibition.is-ready-pulse {
   animation: pulse-start-exhibition-gold 2.0s infinite ease-in-out !important;
 }
@@ -1270,13 +1389,31 @@ body {
 }
 
 /* =========================================================
-   【天下合戦勲功録】
+   【天下合戦勲功録】二大絵巻タブ ＆ 消費時間完全記録
    ========================================================= */
 .battle-history-modal-box {
   width: 96vw !important; max-width: 540px !important; height: 88vh !important;
   display: flex; flex-direction: column; justify-content: space-between;
 }
 .history-header-box { display: flex; flex-direction: column; gap: 4px; margin-bottom: 4px; }
+
+/* 二大絵巻タブバー */
+.history-tab-bar {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 2px 0;
+}
+.history-tab-btn {
+  font-family: var(--font-ui); font-size: 11.5px; font-weight: 900;
+  padding: 6px 4px; border-radius: 4px; border: 1.2px solid #8e6c31;
+  background: linear-gradient(180deg, #2b1307 0%, #120501 100%);
+  color: #d6be89; cursor: pointer; text-align: center;
+  box-shadow: 0 2px 0 #0a0301, 0 2px 4px rgba(0,0,0,0.8);
+  transition: all 0.2s ease;
+}
+.history-tab-btn.active {
+  background: linear-gradient(180deg, #8a1414 0%, #3d0505 100%) !important;
+  border-color: #ffd700 !important; color: #ffffff !important;
+  box-shadow: 0 2.5px 0 #1c0202, 0 0 12px rgba(255, 215, 0, 0.6) !important;
+}
 
 .history-guide-plaque {
   background: linear-gradient(90deg, rgba(46, 20, 8, 0.95) 0%, rgba(92, 38, 14, 0.95) 50%, rgba(46, 20, 8, 0.95) 100%);
@@ -1341,9 +1478,10 @@ body {
 }
 .history-record-card:hover { border-color: #ffd700; box-shadow: 0 4px 12px rgba(255,215,0,0.3); }
 
-.history-card-top-row { display: flex; justify-content: space-between; align-items: center; }
+.history-card-top-row { display: flex; justify-content: space-between; align-items: center; gap: 4px; }
 .history-date-txt { font-size: 9px; color: #d6be89; font-weight: 700; }
 
+/* 勝敗・方式バッジ */
 .history-res-badge {
   font-family: var(--font-kaisho); font-size: 11px; font-weight: 900; padding: 2px 8px; border-radius: 4px;
   white-space: nowrap; letter-spacing: 0.5px;
@@ -1352,10 +1490,15 @@ body {
 .badge-win { background: linear-gradient(180deg, #c71818 0%, #6e0b0b 100%); border: 1.3px solid #ffd700; color: #fff8bd; text-shadow: 0 1px 2px #000; }
 .badge-lose { background: linear-gradient(180deg, #1b3552 0%, #091726 100%); border: 1.3px solid #6db1ff; color: #e1f0ff; text-shadow: 0 1px 2px #000; }
 .badge-draw { background: linear-gradient(180deg, #593e14 0%, #241705 100%); border: 1.3px solid #ffe57f; color: #ffeb3b; }
-.badge-exhibition {
+.badge-exhibition-honshogi {
   background: linear-gradient(180deg, #0d386b 0%, #051936 100%) !important;
-  border: 1.3px solid #72b2ff !important; color: #eaf3ff !important;
-  box-shadow: 0 0 8px rgba(114, 178, 255, 0.6) !important;
+  border: 1.3px solid #ffd700 !important; color: #fff3a8 !important;
+  box-shadow: 0 0 8px rgba(114, 178, 255, 0.7) !important;
+}
+.badge-exhibition-hayazashi {
+  background: linear-gradient(180deg, #6a1478 0%, #2d0533 100%) !important;
+  border: 1.3px solid #ff72e5 !important; color: #ffe6fa !important;
+  box-shadow: 0 0 8px rgba(255, 114, 229, 0.7) !important;
 }
 
 .history-matchup-row {
@@ -1380,8 +1523,7 @@ body {
 
 .history-combatant.combatant-loser .history-combatant-avatar {
   filter: grayscale(85%) contrast(0.85) brightness(0.65) !important;
-  border-color: #594730 !important;
-  box-shadow: none !important;
+  border-color: #594730 !important; box-shadow: none !important;
 }
 .history-combatant.combatant-loser .history-combatant-name { color: #a39580 !important; }
 .history-combatant.combatant-loser .history-matchup-troops { color: #736756 !important; }
@@ -1399,6 +1541,15 @@ body {
 .history-combatant-name { font-size: 11px; font-weight: 800; color: #fff8e7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .history-matchup-troops { font-size: 8.5px; color: #ffd700; font-weight: 800; }
 .matchup-vs-txt { color: #ffb74d; font-size: 10px; font-weight: 900; flex-shrink: 0; }
+
+/* 両軍の消費時間・平均思考時間ストリップ */
+.history-time-strip {
+  display: flex; justify-content: space-between; align-items: center;
+  background: rgba(18, 7, 2, 0.85); border: 0.8px solid #5a3813;
+  border-radius: 4px; padding: 3px 6px; font-size: 8.5px; color: #ebd4a0;
+}
+.time-side-txt { font-weight: 800; }
+.time-side-txt b { color: #ffd700; }
 
 .history-details-bottom-row {
   display: flex; justify-content: space-between; align-items: center;
@@ -1422,6 +1573,16 @@ body {
   color: #ffe899; cursor: pointer;
   box-shadow: 0 2px 0 #100401, 0 2px 4px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.4);
 }
+/* 個別抹消ボタン */
+.history-delete-single-btn {
+  font-family: var(--font-ui); font-size: 9px; font-weight: 900;
+  padding: 3px 6px; border-radius: 3px; border: 1px solid #a63b3b;
+  background: linear-gradient(180deg, #471111 0%, #1a0404 100%);
+  color: #ffb8b8; cursor: pointer;
+  box-shadow: 0 2px 0 #0d0202, 0 2px 4px rgba(0,0,0,0.8);
+}
+.history-delete-single-btn:hover { background: #6b1414; color: #ffffff; }
+
 .btn-history-clear {
   background: #591515; border: 1.2px solid #ff7777; color: #ffdddd;
   font-size: 10px; padding: 4px 10px; border-radius: 3px;
@@ -1431,7 +1592,7 @@ body {
 /* 振り駒モーダル */
 .furigoma-modal {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0, 0, 0, 0.92); z-index: 3000;
+  background: rgba(0, 0, 0, 0.92); z-index: 3600 !important;
   display: none; align-items: center; justify-content: center;
 }
 .furigoma-board {
@@ -1579,7 +1740,7 @@ body {
 }
 
 /* =========================================================
-   【当局・合戦絵巻】棋譜リスト整列＆陣地推移
+   【当局・合戦絵巻】直感的「天下陣地・前線進撃マップ」グラフ
    ========================================================= */
 .modal-kifu-panorama {
   width: 96vw; max-width: 540px; height: 88vh; display: flex; flex-direction: column; gap: 5px;
@@ -1620,8 +1781,8 @@ body {
   padding: 1px 5px; border-radius: 3px; border: 0.8px solid #ffd700; white-space: nowrap;
 }
 
-/* 陣地争奪グラフコンテナ */
-.chart-container {
+/* 陣地争奪エリアグラフ（上が敵陣、下が自軍） */
+.territory-chart-box {
   width: 100%; height: 140px; background: #080301; border: 1.5px solid #a67c33;
   border-radius: 5px; position: relative; overflow: hidden;
   box-shadow: inset 0 0 15px rgba(0,0,0,0.95);
@@ -1668,9 +1829,9 @@ body {
 .badge-shock { background: #0d47a1; color: #fff; }
 
 .kifu-metric-pill {
-  font-size: 9.5px; color: #ffd700; font-weight: 800;
+  font-size: 9px; color: #ffd700; font-weight: 800;
   background: rgba(0,0,0,0.65); padding: 1.5px 6px; border-radius: 3px;
-  border: 0.7px solid #b88a32; white-space: nowrap; min-width: 82px; text-align: center;
+  border: 0.7px solid #b88a32; white-space: nowrap; text-align: center;
 }
 
 /* 指南モーダル */

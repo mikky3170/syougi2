@@ -402,7 +402,7 @@ self.onmessage = function(e) {
   board = bD; hands = hD; moveHistory = history; pastHashes = hashHistory;
   searchStartTime = Date.now(); isSearchTimeout = false; nodeCount = 0;
   
-  searchTimeLimit = timeLimit || (isExhibition ? 5000 : 9000);
+  searchTimeLimit = timeLimit || (isExhibition ? 8500 : 9000);
   
   const searchOwner = isHintRequest ? 'PLAYER' : targetOwner;
   const enemyOwner = (searchOwner === 'AI') ? 'PLAYER' : 'AI';
@@ -508,13 +508,22 @@ self.onmessage = function(e) {
 `;
 
 /* =========================================================
-   最高峰二重音響エンジン
-   1. 駒着手専用音（koma_sound.wav ＋ 物理モデリング）
-   2. UI操作専用音（playUiClickSound：耳に優しい上品な木質音）
+   最高峰二重音響エンジン ＆ 全画面（Fullscreen）連動
    ========================================================= */
 let audioCtx = null, soundEnabled = true, isPageHidden = false;
 let realKomaAudioBuffer = null;
 let realKomaAudioElement = null;
+
+function requestAppFullscreen() {
+  try {
+    const de = document.documentElement;
+    if (de.requestFullscreen && !document.fullscreenElement) {
+      de.requestFullscreen().catch(() => {});
+    } else if (de.webkitRequestFullscreen && !document.webkitFullscreenElement) {
+      de.webkitRequestFullscreen().catch(() => {});
+    }
+  } catch(e) {}
+}
 
 function preloadRealKomaSound() {
   try {
@@ -564,6 +573,7 @@ function updateWarlordBGM(level) {
 }
 
 function initAudio() {
+  requestAppFullscreen();
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   if (audioCtx.state === 'suspended' && !isPageHidden) audioCtx.resume();
   if (!isPageHidden) startBgm();
@@ -577,7 +587,8 @@ function pauseBgm() {
 }
 function toggleSound() {
   soundEnabled = !soundEnabled;
-  document.getElementById('sound-toggle').textContent = `♪ ${soundEnabled ? '音ON' : '音OFF'}`;
+  const btn = document.getElementById('sound-toggle');
+  if (btn) btn.textContent = `♪ ${soundEnabled ? '奏楽入' : '奏楽切'}`;
   if (soundEnabled) { initAudio(); playUiClickSound(); startBgm(); }
   else { pauseBgm(); }
 }
@@ -588,6 +599,7 @@ function handleVisibilityChange() {
     pauseBgm();
     stopGuideSpeech();
     stopAutoReplay();
+    stopTurnTimer();
     if (audioCtx && audioCtx.state === 'suspended') audioCtx.suspend().catch(() => {});
   } else {
     isPageHidden = false;
@@ -595,13 +607,13 @@ function handleVisibilityChange() {
       if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
       startBgm();
     }
+    if (!isGameOver) resumeTurnTimer();
   }
 }
 document.addEventListener('visibilitychange', handleVisibilityChange);
-window.addEventListener('pagehide', () => { isPageHidden = true; pauseBgm(); stopGuideSpeech(); stopAutoReplay(); });
+window.addEventListener('pagehide', () => { isPageHidden = true; pauseBgm(); stopGuideSpeech(); stopAutoReplay(); stopTurnTimer(); });
 window.addEventListener('pageshow', () => { isPageHidden = false; if (soundEnabled) startBgm(); });
 
-// 【駒着地専用】本格着手音（盤上に駒が着地した時のみ鳴らす）
 function playPieceSound() {
   if (!soundEnabled || isPageHidden) return;
   initAudio();
@@ -629,7 +641,6 @@ function playPieceSound() {
   playSynthesizedKomaSound();
 }
 
-// 【UI操作専用】上品で耳に優しい木質クリック音（ボタン・タブ・モーダル等）
 function playUiClickSound() {
   if (!soundEnabled || isPageHidden) return;
   initAudio();
@@ -756,6 +767,7 @@ function launchFireworksCelebration() {
       alpha: 1, size: Math.random() * 3 + 2
     });
   }
+
   let startTime = Date.now();
   function loop() {
     ctxCelebration.clearRect(0, 0, canvasCelebration.width, canvasCelebration.height);
@@ -863,7 +875,87 @@ if ('speechSynthesis' in window) {
 }
 
 /* =========================================================
-   武将ポートレート・アバター表示管理（軍師AI・Lv.11前田慶次完全対応）
+   【重要改修】手番思考タイマー ＆ 0秒静止ラグ解消エンジン
+   ========================================================= */
+let turnStartTime = 0;
+let turnTimerInterval = null;
+let currentThinkingSide = 'PLAYER';
+let currentThinkingName = '';
+
+let totalTimeSpentMs = { PLAYER: 0, AI: 0 };
+let movesCountBySide = { PLAYER: 0, AI: 0 };
+
+function formatTimeMinutesSeconds(totalSec) {
+  const m = Math.floor(totalSec / 60);
+  const s = Math.floor(totalSec % 60);
+  if (m === 0) return `${s}秒`;
+  return `${m}分${s.toString().padStart(2, '0')}秒`;
+}
+
+function startTurnTimer(side, warlordName) {
+  stopTurnTimer();
+  currentThinkingSide = side;
+  currentThinkingName = warlordName;
+  turnStartTime = Date.now();
+  updateThinkingTimerDisplay();
+
+  // 100msごとにリアルタイム更新（0秒で静止しない）
+  turnTimerInterval = setInterval(() => {
+    updateThinkingTimerDisplay();
+  }, 100);
+}
+
+function updateThinkingTimerDisplay() {
+  if (isGameOver || isReviewingPast()) return;
+  const elapsedSec = Math.max(0.1, (Date.now() - turnStartTime) / 1000).toFixed(1);
+  const currentStep = moveObjectsHistory.length + 1;
+  const isPlayer = (currentThinkingSide === 'PLAYER');
+
+  if (isExhibitionActive) {
+    updateExhibitionThinkingDisplay(true);
+    return;
+  }
+
+  if (isPlayer) {
+    const pName = PLAYER_WARLORDS[currentMyWarlordId].name;
+    const line1 = `<span class="timer-pulse-tag">第${currentStep}手 考慮中</span><b>${pName}公の手番</b>`;
+    const line2 = `思案時間: <b>${elapsedSec}秒</b> ｜ 次なる妙手をお決め下され！`;
+    setOrderMessage({ line1, line2 }, true, 'player');
+  } else {
+    const eName = WARLORDS_DATA[currentAiLevel].name;
+    const depthStr = exhibitionAchievedDepth > 0 ? ` ｜ 探索: 深さ${exhibitionAchievedDepth}` : '';
+    const line1 = `<span class="timer-pulse-tag">第${currentStep}手 思考中</span><b>${eName}が軍略を巡らせております…</b>`;
+    const line2 = `考慮時間: <b>${elapsedSec}秒</b>${depthStr}`;
+    setOrderMessage({ line1, line2 }, false, 'enemy');
+  }
+}
+
+function stopTurnTimer() {
+  if (turnTimerInterval) {
+    clearInterval(turnTimerInterval);
+    turnTimerInterval = null;
+  }
+}
+
+function resumeTurnTimer() {
+  if (!isGameOver && !isReviewingPast() && turn) {
+    const name = (turn === 'PLAYER') 
+      ? (isExhibitionActive ? getTargetAIData(exhibitionSenteTarget).name : PLAYER_WARLORDS[currentMyWarlordId].name)
+      : (isExhibitionActive ? getTargetAIData(exhibitionGoteTarget).name : WARLORDS_DATA[currentAiLevel].name);
+    startTurnTimer(turn, name);
+  }
+}
+
+function recordTurnTime(side) {
+  stopTurnTimer();
+  const spentMs = Math.max(100, Date.now() - turnStartTime);
+  totalTimeSpentMs[side] = (totalTimeSpentMs[side] || 0) + spentMs;
+  movesCountBySide[side] = (movesCountBySide[side] || 0) + 1;
+  return (spentMs / 1000).toFixed(1);
+}
+
+/* =========================================================
+   武将ポートレート・アバター表示管理
    ========================================================= */
 let avatarViewMode = { player: 'face', ai: 'face' };
 
@@ -1134,16 +1226,20 @@ let replaySpeedIndex = 0;
 let isPastReplayActive = false, savedActiveBattle = null;
 
 let isExhibitionActive = false, exhibitionTimer = null, exhibitionSpeed = 'normal';
-const EXHIBITION_DELAYS = { normal: 1500, fast: 800 };
-const EXHIBITION_TIME_LIMITS = { normal: 5000, fast: 2500 };
+const EXHIBITION_DELAYS = { normal: 1200, fast: 650 };
+const EXHIBITION_TIME_LIMITS = { normal: 8500, fast: 2500 };
 let exhibitionSenteTarget = 'nanban', exhibitionGoteTarget = 'lvl_10', exhibitionRandomStrategistWarlordKey = 'sanada';
 
-let exhibitionThinkStartTime = 0, exhibitionThinkInterval = null;
 let exhibitionAchievedDepth = 0, exhibitionTotalNodes = 0;
-let exhibitionThinkingSide = 'PLAYER', exhibitionThinkingName = '';
 
 let moveMetricsHistory = [];
-let isPieceAnimating = false; // 駒アニメーション実行中フラグ
+let isPieceAnimating = false;
+
+let currentHistoryTab = 'player'; // 'player' | 'exhibition'
+
+// =========================================================
+// 【パート 1 / 2 終了】
+// =========================================================
 
 /* =========================================================
    将棋王 2026 〜 天下統一・戦国決戦 〜
@@ -1167,45 +1263,23 @@ function pickRandomStrategistWarlord() {
   exhibitionRandomStrategistWarlordKey = keys[Math.floor(Math.random() * keys.length)];
 }
 
-function startExhibitionThinkTimer(side, warlordName) {
-  stopExhibitionThinkTimer();
-  exhibitionThinkStartTime = Date.now();
-  exhibitionAchievedDepth = 1; exhibitionTotalNodes = 0;
-  exhibitionThinkingSide = side; exhibitionThinkingName = warlordName;
-  updateExhibitionThinkingDisplay(true);
-
-  exhibitionThinkInterval = setInterval(() => { updateExhibitionThinkingDisplay(true); }, 100);
-}
-
 function updateExhibitionThinkingDisplay(isThinking = true) {
   if (!isExhibitionActive) return;
-  const elapsedSec = ((Date.now() - exhibitionThinkStartTime) / 1000).toFixed(1);
+  const elapsedSec = Math.max(0.1, (Date.now() - turnStartTime) / 1000).toFixed(1);
   const currentStep = moveObjectsHistory.length + 1;
   const nodesStr = exhibitionTotalNodes > 0 ? ` ｜ ${exhibitionTotalNodes.toLocaleString()}局面` : '';
-  const tagSide = (exhibitionThinkingSide === 'PLAYER') ? '先手' : '後手';
-  const modeTitle = (exhibitionSpeed === 'fast') ? '早指し' : '本将棋';
+  const tagSide = (currentThinkingSide === 'PLAYER') ? '先手' : '後手';
+  const modeTitle = (exhibitionSpeed === 'fast') ? '早指し戦' : '通常本将棋';
   
   const linePrimary = isThinking 
-    ? `【御前${modeTitle} 第${currentStep}手】<b>${exhibitionThinkingName}（${tagSide}）</b>が思考中…`
-    : `【御前${modeTitle} 第${currentStep}手】<b>${exhibitionThinkingName}（${tagSide}）</b>が着手いたし候！`;
+    ? `【${modeTitle} 第${currentStep}手】<b>${currentThinkingName}（${tagSide}）</b>が思考中…`
+    : `【${modeTitle} 第${currentStep}手】<b>${currentThinkingName}（${tagSide}）</b>が着手いたし候！`;
 
   const lineSub = isThinking
-    ? `経過時間: ${elapsedSec}秒 ｜ 探索深度: 深さ${exhibitionAchievedDepth}${nodesStr}`
+    ? `考慮時間: <b>${elapsedSec}秒</b> ｜ 探索深度: 深さ${exhibitionAchievedDepth}${nodesStr}`
     : `着手完了 ｜ 次の手番へと陣を進めております`;
 
-  const structuredHtml = `
-    <div class="order-line-primary">${linePrimary}</div>
-    <div class="order-line-sub">${lineSub}</div>
-  `;
-
-  setOrderMessage(structuredHtml, isThinking, 'exhibition');
-}
-
-function stopExhibitionThinkTimer() {
-  if (exhibitionThinkInterval) {
-    clearInterval(exhibitionThinkInterval);
-    exhibitionThinkInterval = null;
-  }
+  setOrderMessage({ line1: linePrimary, line2: lineSub }, isThinking, 'exhibition');
 }
 
 const PIECE_WEIGHTS = { FU: 1.5, KY: 4.0, KE: 4.0, GI: 8.0, KI: 9.0, KA: 15.0, HI: 17.0, TO: 6.0, NY: 6.0, NK: 6.0, NG: 9.0, UM: 19.0, RY: 22.0 };
@@ -1339,9 +1413,7 @@ function calculateTroopsPercentages(bd, hd) {
   return { pPct, aiPct };
 }
 
-/* =========================================================
-   将棋ルール判定関数群
-   ========================================================= */
+/* 将棋ルール判定関数群 */
 function getValidBoardMoves(r, c, owner, targetBoard = board) {
   const item = targetBoard[r][c]; if (!item) return [];
   const dir = owner === 'AI' ? 1 : -1, moves = [];
@@ -1564,23 +1636,25 @@ function checkSennichite() {
     }
 
     isGameOver = true; playCheckSound();
-    stopAutoReplay();
-    if (isExhibitionActive) { stopExhibitionTimer(); stopExhibitionThinkTimer(); }
+    stopAutoReplay(); stopTurnTimer();
+    if (isExhibitionActive) stopExhibitionTimer();
     updateTurnAvatarGlow(null);
+
+    const exhModeTxt = (exhibitionSpeed === 'fast') ? '早指し戦' : '本将棋';
 
     if (stepCount >= 6 && playerAlwaysChecking && !aiAlwaysChecking) {
       triggerCutin('連続王手の反則！ 敗戦に候！', true);
       setOrderMessage('連続王手の千日手は反則！ 陣を立て直されよ。', false, 'alert');
-      saveBattleRecord(isExhibitionActive ? 'exhibition' : 'lose', isExhibitionActive ? '御前試合(反則決着)' : '反則負け');
+      saveBattleRecord(isExhibitionActive ? 'exhibition' : 'lose', isExhibitionActive ? `御前${exhModeTxt}(反則)` : '反則負け');
     } else if (stepCount >= 6 && aiAlwaysChecking && !playerAlwaysChecking) {
       triggerCutin('敵将の反則！ 我が軍の勝利！', true);
       setOrderMessage('相手が連続王手の千日手を犯し候！ 勝利なり！', false, 'settle');
       if (!isExhibitionActive) { saveProgress(currentAiLevel); launchFireworksCelebration(); }
-      saveBattleRecord(isExhibitionActive ? 'exhibition' : 'win', isExhibitionActive ? '御前試合(反則決着)' : '反則勝ち');
+      saveBattleRecord(isExhibitionActive ? 'exhibition' : 'win', isExhibitionActive ? `御前${exhModeTxt}(反則)` : '反則勝ち');
     } else {
       triggerCutin('千日手！ 痛み分けの引き分け！');
       setOrderMessage('同一局面四回にて引き分け（痛み分け）に候。', false, 'alert');
-      saveBattleRecord(isExhibitionActive ? 'exhibition' : 'draw', isExhibitionActive ? '御前試合(千日手)' : '千日手');
+      saveBattleRecord(isExhibitionActive ? 'exhibition' : 'draw', isExhibitionActive ? `御前${exhModeTxt}(千日手)` : '千日手');
     }
     updateReviewModeUI();
     return true;
@@ -1589,7 +1663,7 @@ function checkSennichite() {
 }
 
 function initBoardState() {
-  stopAutoReplay();
+  stopAutoReplay(); stopTurnTimer();
   if (!isExhibitionActive) isPastReplayActive = false;
   board = Array.from({length: 9}, () => Array(9).fill(null));
   hands = { PLAYER: {}, AI: {} };
@@ -1598,6 +1672,8 @@ function initBoardState() {
   hintSourceCell = null; hintTargetCell = null; selectedPos = null; currentValidMoves = [];
   isAiThinking = false; isHintThinking = false; isPieceAnimating = false;
   tacticsCandidates = []; currentTacticIndex = 0;
+  totalTimeSpentMs = { PLAYER: 0, AI: 0 };
+  movesCountBySide = { PLAYER: 0, AI: 0 };
 
   updateTurnAvatarGlow(null);
   updateStrategistUI();
@@ -1736,7 +1812,8 @@ function updateReviewModeUI() {
   if (sitBanner && sitTitle && sitText) {
     if (isExhibitionActive && !isReplay) {
       sitBanner.className = 'situation-banner mode-exhibition';
-      sitTitle.textContent = '⚔ 観戦';
+      const modeTxt = (exhibitionSpeed === 'fast') ? '⚡ 観戦（早指し）' : '⚔ 観戦（本将棋）';
+      sitTitle.textContent = modeTxt;
     } else if (isReplay) {
       sitBanner.className = 'situation-banner mode-replay';
       sitTitle.textContent = '🎞 鑑賞';
@@ -1792,41 +1869,97 @@ function onEnemyChangeClick() {
 
 function exitReplayMode() {
   playUiClickSound();
-  stopAutoReplay();
+  stopAutoReplay(); stopTurnTimer();
 
   if (savedActiveBattle) {
-    currentMyWarlordId = savedActiveBattle.currentMyWarlordId;
-    currentAiLevel = savedActiveBattle.currentAiLevel;
-    setPlayerWarlord(currentMyWarlordId);
-    selectConquestProvince(currentAiLevel);
+    const isSavedExhibition = !!savedActiveBattle.isExhibitionActive;
 
-    board = cloneBoardState(savedActiveBattle.board);
-    hands = JSON.parse(JSON.stringify(savedActiveBattle.hands));
-    turn = savedActiveBattle.turn;
-    isGameOver = false;
-    moveObjectsHistory = JSON.parse(JSON.stringify(savedActiveBattle.moveObjectsHistory));
-    historyStates = JSON.parse(JSON.stringify(savedActiveBattle.historyStates));
-    evalScoresHistory = JSON.parse(JSON.stringify(savedActiveBattle.evalScoresHistory));
-    boardHashHistory = JSON.parse(JSON.stringify(savedActiveBattle.boardHashHistory));
-    checkHistory = JSON.parse(JSON.stringify(savedActiveBattle.checkHistory));
-    moveMetricsHistory = JSON.parse(JSON.stringify(savedActiveBattle.moveMetricsHistory || []));
-    lastMove = savedActiveBattle.lastMove;
-    reviewingIndex = historyStates.length - 1;
-    hintUsedCount = savedActiveBattle.hintUsedCount;
-    awakenedHintCount = savedActiveBattle.awakenedHintCount;
+    if (isSavedExhibition) {
+      isExhibitionActive = true;
+      isPastReplayActive = false;
+      exhibitionSenteTarget = savedActiveBattle.exhibitionSenteTarget;
+      exhibitionGoteTarget = savedActiveBattle.exhibitionGoteTarget;
+      exhibitionSpeed = savedActiveBattle.exhibitionSpeed || 'normal';
+      if (savedActiveBattle.exhibitionStrategistKey) exhibitionRandomStrategistWarlordKey = savedActiveBattle.exhibitionStrategistKey;
 
-    savedActiveBattle = null;
-    isPastReplayActive = false;
-    isExhibitionActive = false;
+      board = cloneBoardState(savedActiveBattle.board);
+      hands = JSON.parse(JSON.stringify(savedActiveBattle.hands));
+      turn = savedActiveBattle.turn;
+      isGameOver = false;
+      moveObjectsHistory = JSON.parse(JSON.stringify(savedActiveBattle.moveObjectsHistory));
+      historyStates = JSON.parse(JSON.stringify(savedActiveBattle.historyStates));
+      evalScoresHistory = JSON.parse(JSON.stringify(savedActiveBattle.evalScoresHistory));
+      boardHashHistory = JSON.parse(JSON.stringify(savedActiveBattle.boardHashHistory));
+      checkHistory = JSON.parse(JSON.stringify(savedActiveBattle.checkHistory));
+      moveMetricsHistory = JSON.parse(JSON.stringify(savedActiveBattle.moveMetricsHistory || []));
+      lastMove = savedActiveBattle.lastMove;
+      reviewingIndex = historyStates.length - 1;
+      totalTimeSpentMs = savedActiveBattle.totalTimeSpentMs || { PLAYER: 0, AI: 0 };
+      movesCountBySide = savedActiveBattle.movesCountBySide || { PLAYER: 0, AI: 0 };
+      exhibitionAchievedDepth = savedActiveBattle.exhibitionAchievedDepth || 1;
+      exhibitionTotalNodes = savedActiveBattle.exhibitionTotalNodes || 0;
 
-    updateTurnAvatarGlow(turn);
-    renderBoard();
-    renderKifu();
-    updateTroopsAndSituation();
-    updateReviewModeUI();
+      const sData = getTargetAIData(exhibitionSenteTarget);
+      const gData = getTargetAIData(exhibitionGoteTarget);
+      const sTroops = sData.baseTroops || sData.maxTroops || 10000;
+      const gTroops = gData.maxTroops || gData.baseTroops || 10000;
 
-    triggerCutin('真剣勝負へ復帰！', true);
-    setOrderMessage(`【対局へ復帰いたし候】${PLAYER_WARLORDS[currentMyWarlordId].name}公、一手をお決め下され！`, turn === 'PLAYER', 'player');
+      document.getElementById('player-name-disp').textContent = `▲ ${sData.name}`;
+      document.getElementById('player-clan-disp').textContent = sData.clan;
+      document.getElementById('player-troops-disp').textContent = `${sTroops.toLocaleString()} / ${sTroops.toLocaleString()} 兵`;
+
+      document.getElementById('ai-name-disp').textContent = `▽ ${gData.name}`;
+      document.getElementById('ai-clan-disp').textContent = gData.clan;
+      document.getElementById('ai-troops-disp').textContent = `${gTroops.toLocaleString()} / ${gTroops.toLocaleString()} 兵`;
+
+      renderMainPortraits();
+      updateTurnAvatarGlow(turn);
+      renderBoard();
+      renderKifu();
+      updateTroopsAndSituation();
+      updateReviewModeUI();
+
+      savedActiveBattle = null;
+      triggerCutin('御前試合を再開いたし候！', true);
+      scheduleNextExhibitionTurn();
+
+    } else {
+      currentMyWarlordId = savedActiveBattle.currentMyWarlordId;
+      currentAiLevel = savedActiveBattle.currentAiLevel;
+      setPlayerWarlord(currentMyWarlordId);
+      selectConquestProvince(currentAiLevel);
+
+      board = cloneBoardState(savedActiveBattle.board);
+      hands = JSON.parse(JSON.stringify(savedActiveBattle.hands));
+      turn = savedActiveBattle.turn;
+      isGameOver = false;
+      moveObjectsHistory = JSON.parse(JSON.stringify(savedActiveBattle.moveObjectsHistory));
+      historyStates = JSON.parse(JSON.stringify(savedActiveBattle.historyStates));
+      evalScoresHistory = JSON.parse(JSON.stringify(savedActiveBattle.evalScoresHistory));
+      boardHashHistory = JSON.parse(JSON.stringify(savedActiveBattle.boardHashHistory));
+      checkHistory = JSON.parse(JSON.stringify(savedActiveBattle.checkHistory));
+      moveMetricsHistory = JSON.parse(JSON.stringify(savedActiveBattle.moveMetricsHistory || []));
+      lastMove = savedActiveBattle.lastMove;
+      reviewingIndex = historyStates.length - 1;
+      hintUsedCount = savedActiveBattle.hintUsedCount;
+      awakenedHintCount = savedActiveBattle.awakenedHintCount;
+      totalTimeSpentMs = savedActiveBattle.totalTimeSpentMs || { PLAYER: 0, AI: 0 };
+      movesCountBySide = savedActiveBattle.movesCountBySide || { PLAYER: 0, AI: 0 };
+
+      savedActiveBattle = null;
+      isPastReplayActive = false;
+      isExhibitionActive = false;
+
+      updateTurnAvatarGlow(turn);
+      renderBoard();
+      renderKifu();
+      updateTroopsAndSituation();
+      updateReviewModeUI();
+
+      triggerCutin('真剣勝負へ復帰！', true);
+      startTurnTimer(turn, (turn === 'PLAYER' ? PLAYER_WARLORDS[currentMyWarlordId].name : WARLORDS_DATA[currentAiLevel].name));
+    }
+
   } else {
     isPastReplayActive = false;
     isExhibitionActive = false;
@@ -1847,33 +1980,37 @@ function exitReplayMode() {
     updateTroopsAndSituation();
     updateReviewModeUI();
 
-    if (!isGameOver) setOrderMessage(`${PLAYER_WARLORDS[currentMyWarlordId].name}公、次なる一手をお決め下され！`, turn === 'PLAYER', 'player');
-    else setOrderMessage('「対局開始」を押して新たな合戦を始められよ！', false, 'player');
+    if (!isGameOver) {
+      startTurnTimer(turn, (turn === 'PLAYER' ? PLAYER_WARLORDS[currentMyWarlordId].name : WARLORDS_DATA[currentAiLevel].name));
+    } else {
+      setOrderMessage('「対局開始」を押して新たな合戦を始められよ！', false, 'player');
+    }
   }
 }
 
-function setOrderMessage(txt, isMyTurn = false, category = 'player') {
+function setOrderMessage(msgData, isMyTurn = false, category = 'player') {
   const bannerEl = document.getElementById('order-message-banner');
-  const textEl = document.getElementById('order-message-text');
+  const linePrimaryEl = document.getElementById('order-line-primary');
+  const lineSubEl = document.getElementById('order-line-sub');
   const badgeEl = document.getElementById('order-tag-badge');
   const r1El = document.getElementById('tag-badge-row1');
   const r2El = document.getElementById('tag-badge-row2');
   const faceEl = document.getElementById('order-strategist-face');
   const altBtn = document.getElementById('btn-alt-tactic');
+  const quitExhBtn = document.getElementById('btn-exhibition-quit');
 
-  if (textEl) {
-    if (typeof txt === 'string' && (txt.includes('order-line-primary') || txt.includes('<div'))) {
-      textEl.innerHTML = txt;
-    } else {
-      const parts = String(txt).split('<br>');
-      const line1 = parts[0] || '';
-      const line2 = parts[1] || '';
-      textEl.innerHTML = `
-        <div class="order-line-primary">${line1}</div>
-        <div class="order-line-sub">${line2}</div>
-      `;
-    }
+  let line1 = '', line2 = '';
+  if (typeof msgData === 'object' && msgData !== null) {
+    line1 = msgData.line1 || '';
+    line2 = msgData.line2 || '';
+  } else {
+    const parts = String(msgData).split('<br>');
+    line1 = parts[0] || '';
+    line2 = parts[1] || '';
   }
+
+  if (linePrimaryEl) linePrimaryEl.innerHTML = line1;
+  if (lineSubEl) lineSubEl.innerHTML = line2;
 
   if (bannerEl) bannerEl.classList.toggle('my-turn', isMyTurn);
   const pPanel = document.getElementById('player-panel');
@@ -1918,6 +2055,10 @@ function setOrderMessage(txt, isMyTurn = false, category = 'player') {
     altBtn.style.display = (isHintMode && tacticsCandidates.length > 1 && !isReviewingPast() && !isExhibitionActive) ? 'inline-block' : 'none';
   }
 
+  if (quitExhBtn) {
+    quitExhBtn.style.display = (isExhibitionActive && !isReviewingPast()) ? 'inline-block' : 'none';
+  }
+
   updateRivalryButton();
 }
 
@@ -1941,7 +2082,7 @@ function openRivalryInGuide(targetKey = null) {
 }
 
 function openFurigomaModal() {
-  initAudio(); playUiClickSound(); stopAutoReplay();
+  initAudio(); playUiClickSound(); stopAutoReplay(); stopTurnTimer();
   savedActiveBattle = null;
   isPastReplayActive = false;
   isExhibitionActive = false;
@@ -1991,20 +2132,17 @@ function startBattle() {
     document.getElementById('ai-quote-disp').textContent = enemy.quotes.default;
   }
 
-  const levelHint = enemy.tacticsHint ? `<span style="color:#ffe082; font-size:10px;">【${p.strategistShort}の兵法】${enemy.tacticsHint}</span>` : '';
-
   if (turn === 'PLAYER') {
     updateTurnAvatarGlow('PLAYER');
-    setOrderMessage(`${p.name}公、一手目をお決め下され！<br>${levelHint}`, true, 'player');
+    startTurnTimer('PLAYER', p.name);
   } else {
     updateTurnAvatarGlow('AI');
-    setOrderMessage(`${enemy.name}が軍略を巡らせております…<br>${levelHint}`, false, 'enemy');
-    setTimeout(aiTurn, 600);
+    startTurnTimer('AI', enemy.name);
+    setTimeout(aiTurn, 400);
   }
   updateReviewModeUI();
 }
 
-// 【将棋盤描画：81マス＋四箇所の星（星印）を常時完全維持】
 function renderBoard() {
   const el = document.getElementById('board');
   if (!el) return;
@@ -2049,7 +2187,6 @@ function renderBoard() {
     }
   }
 
-  // 盤面上の四箇所の星（星印）を再生成して常に確実配置
   for (let s = 1; s <= 4; s++) {
     const starEl = document.createElement('div');
     starEl.className = 'board-star';
@@ -2117,15 +2254,15 @@ function onCellClick(r, c) {
   hintSourceCell = null; hintTargetCell = null; tacticsCandidates = [];
   document.getElementById('btn-alt-tactic').style.display = 'none';
 
-  // ① 持ち駒を打つ
   if (selectedPos?.handCode && currentValidMoves.some(m => m.r === r && m.c === c)) {
+    const timeSpent = recordTurnTime('PLAYER');
+    const metric = { timeSec: timeSpent, depth: 1 };
     const moveData = { type:'drop', code:selectedPos.handCode, to:{r,c}, owner:'PLAYER' };
     selectedPos = null; currentValidMoves = [];
-    animateAndExecuteMove(moveData, null, finishTurn);
+    animateAndExecuteMove(moveData, metric, finishTurn);
     return;
   }
 
-  // ② 盤上の駒を移動する
   if (selectedPos?.r !== undefined && currentValidMoves.some(m => m.r === r && m.c === c)) {
     const p = board[selectedPos.r][selectedPos.c];
     const canP = PROMOTE_MAP[p.code] && (selectedPos.r <= 2 || r <= 2);
@@ -2136,13 +2273,14 @@ function onCellClick(r, c) {
       document.getElementById('promote-modal').style.display = 'flex';
       return;
     }
+    const timeSpent = recordTurnTime('PLAYER');
+    const metric = { timeSec: timeSpent, depth: 1 };
     const moveData = { type:'move', code: p.code, from:selectedPos, to:{r,c}, owner:'PLAYER', promote: canP || mustP };
     selectedPos = null; currentValidMoves = [];
-    animateAndExecuteMove(moveData, null, finishTurn);
+    animateAndExecuteMove(moveData, metric, finishTurn);
     return;
   }
 
-  // ③ 盤上の駒を選択する
   if (board[r][c]?.owner === 'PLAYER') {
     playUiClickSound();
     selectedPos = {r, c};
@@ -2156,27 +2294,28 @@ function onCellClick(r, c) {
 document.getElementById('btn-promote-yes').onclick = () => {
   if (pendingMove) {
     playUiClickSound();
+    const timeSpent = recordTurnTime('PLAYER');
+    const metric = { timeSec: timeSpent, depth: 1 };
     const m = {...pendingMove, promote:true};
     pendingMove = null;
     document.getElementById('promote-modal').style.display = 'none';
     selectedPos = null; currentValidMoves = [];
-    animateAndExecuteMove(m, null, finishTurn);
+    animateAndExecuteMove(m, metric, finishTurn);
   }
 };
 document.getElementById('btn-promote-no').onclick = () => {
   if (pendingMove) {
     playUiClickSound();
+    const timeSpent = recordTurnTime('PLAYER');
+    const metric = { timeSec: timeSpent, depth: 1 };
     const m = {...pendingMove, promote:false};
     pendingMove = null;
     document.getElementById('promote-modal').style.display = 'none';
     selectedPos = null; currentValidMoves = [];
-    animateAndExecuteMove(m, null, finishTurn);
+    animateAndExecuteMove(m, metric, finishTurn);
   }
 };
 
-/* =========================================================
-   【駒捕獲演出：討ち取った駒が駒台へと弧を描いて吸い込まれる】
-   ========================================================= */
 function animateCaptureToHand(capturedCode, fromRect, owner, onComplete) {
   if (!capturedCode || !fromRect) {
     if (onComplete) onComplete();
@@ -2188,12 +2327,11 @@ function animateCaptureToHand(capturedCode, fromRect, owner, onComplete) {
   const handBoxEl = document.getElementById(targetHandBoxId);
   const handRect = handBoxEl ? handBoxEl.getBoundingClientRect() : null;
 
-  // 目標座標（駒台の中央付近）
   const toX = handRect ? (handRect.left + handRect.width * 0.5 - fromRect.width * 0.4) : (fromRect.left + (owner === 'PLAYER' ? 100 : -100));
   const toY = handRect ? (handRect.top + handRect.height * 0.5 - fromRect.height * 0.4) : (fromRect.top + 200);
 
   const capturePiece = document.createElement('div');
-  const isAiCapture = (owner === 'AI'); // AIが捕獲した場合
+  const isAiCapture = (owner === 'AI');
   capturePiece.className = `piece anim-capture-piece ${isAiCapture ? 'ai' : 'player'}`;
   const name2 = PIECES[rawCode] || '歩兵';
   capturePiece.innerHTML = `<span class="piece-char-top">${name2[0]}</span><span class="piece-char-bottom">${name2[1]}</span>`;
@@ -2208,12 +2346,11 @@ function animateCaptureToHand(capturedCode, fromRect, owner, onComplete) {
   capturePiece.style.transition = 'none';
 
   document.body.appendChild(capturePiece);
-  void capturePiece.offsetWidth; // 強制リフロー
+  void capturePiece.offsetWidth;
 
   const duration = (isAutoReplaying && replaySpeedIndex >= 1) ? 220 : 420;
   capturePiece.style.transition = `left ${duration}ms cubic-bezier(0.25, 0.8, 0.25, 1), top ${duration}ms cubic-bezier(0.4, 0, 0.2, 1), transform ${duration}ms ease-in, opacity ${duration}ms ease-in`;
 
-  // 駒台へ向かって弧を描きながら縮小して吸い込まれる
   capturePiece.style.left = `${toX}px`;
   capturePiece.style.top = `${toY}px`;
   capturePiece.style.opacity = '0.4';
@@ -2229,13 +2366,9 @@ function animateCaptureToHand(capturedCode, fromRect, owner, onComplete) {
   }, duration);
 }
 
-/* =========================================================
-   【駒移動＆持ち駒打ち飛来・拡大アニメーション（大弧・タメ・急降下打突版）】
-   ========================================================= */
 function animateAndExecuteMove(m, metric = null, onComplete = null) {
   isPieceAnimating = true;
 
-  // 1. 移動先マス（ターゲットセル）の要素と座標を取得
   const targetCellEl = document.querySelector(`#board .cell[data-r="${m.to.r}"][data-c="${m.to.c}"]`);
   if (!targetCellEl) {
     executeMove(m, metric);
@@ -2244,11 +2377,8 @@ function animateAndExecuteMove(m, metric = null, onComplete = null) {
     return;
   }
   const toRect = targetCellEl.getBoundingClientRect();
-
-  // 捕獲対象の敵駒があるかチェック
   const targetCapturedPiece = (m.type === 'move') ? board[m.to.r][m.to.c] : null;
 
-  // 2. 移動元要素（盤上セル または 駒台の手駒）の座標を取得
   let fromRect = null;
   let animPieceCode = m.code;
 
@@ -2265,7 +2395,6 @@ function animateAndExecuteMove(m, metric = null, onComplete = null) {
     }
   }
 
-  // アニメーション座標が取れない場合の即時実行フォールバック
   if (!fromRect) {
     executeMove(m, metric);
     isPieceAnimating = false;
@@ -2273,7 +2402,6 @@ function animateAndExecuteMove(m, metric = null, onComplete = null) {
     return;
   }
 
-  // 3. 移動距離・大駒判定（長距離移動かどうかの判定）
   let isLongDistance = false;
   let moveDistance = 1;
   if (m.type === 'move') {
@@ -2283,21 +2411,18 @@ function animateAndExecuteMove(m, metric = null, onComplete = null) {
     const isMajorPiece = ['HI', 'KA', 'RY', 'UM', 'KY'].includes(animPieceCode);
     isLongDistance = (moveDistance >= 2) || (isMajorPiece && moveDistance >= 1);
   } else {
-    isLongDistance = true; // 持ち駒打ちも大弧の対象
+    isLongDistance = true;
   }
 
-  // 4. 浮遊する駒エレメント（animPiece）の生成
   const animPiece = document.createElement('div');
   const isPromotedAtArrival = m.promote || PROMOTED_PIECES.includes(animPieceCode);
   const displayCode = m.promote ? (PROMOTE_MAP[animPieceCode] || animPieceCode) : animPieceCode;
   const name2 = PIECES[displayCode] || PIECES[animPieceCode] || '歩兵';
 
-  // 敵軍（AI側）の駒クラスと向きの設定
   const isAiPiece = (m.owner === 'AI');
   animPiece.className = `piece anim-flying-piece ${isAiPiece ? 'ai' : 'player'} ${isPromotedAtArrival ? 'promoted' : ''}`;
   animPiece.innerHTML = `<span class="piece-char-top">${name2[0]}</span><span class="piece-char-bottom">${name2[1]}</span>`;
 
-  // スタイルの初期化（画面固定オーバーレイ）
   animPiece.style.position = 'fixed';
   animPiece.style.zIndex = '2900';
   animPiece.style.pointerEvents = 'none';
@@ -2309,7 +2434,6 @@ function animateAndExecuteMove(m, metric = null, onComplete = null) {
   animPiece.style.transformOrigin = 'center center';
   animPiece.style.transition = 'none';
 
-  // 初期サイズ・向きの設定（AIは厳格に180度反転）
   if (m.type === 'drop') {
     animPiece.style.transform = isAiPiece ? 'rotate(180deg) scale(0.8)' : 'scale(0.8)';
   } else {
@@ -2317,52 +2441,40 @@ function animateAndExecuteMove(m, metric = null, onComplete = null) {
   }
 
   document.body.appendChild(animPiece);
-  void animPiece.offsetWidth; // 強制リフロー
+  void animPiece.offsetWidth;
 
-  // 5. 【大弧放物線とタメの二段階アニメーション】
-  // Phase 1: 手元で一度ふわっと上空へ浮き上がる（武将のタメ演出）
   const isFastMode = isAutoReplaying && (replaySpeedIndex >= 1);
   const liftTime = isFastMode ? 80 : (m.type === 'drop' ? 240 : (isLongDistance ? 160 : 60));
   const flyTime  = isFastMode ? 140 : (m.type === 'drop' ? 440 : (isLongDistance ? 360 : 180));
 
-  // 浮上アニメーション
   animPiece.style.transition = `transform ${liftTime}ms cubic-bezier(0.2, 0.8, 0.4, 1), top ${liftTime}ms ease-out`;
   
-  // 浮き上がりの高さと拡大率（持ち駒打ちや大駒なら高く持ち上げる）
   const liftOffsetY = (m.type === 'drop') ? (isAiPiece ? 28 : -35) : (isLongDistance ? (isAiPiece ? 18 : -22) : (isAiPiece ? 8 : -10));
   const liftScale = (m.type === 'drop') ? 1.25 : (isLongDistance ? 1.18 : 1.05);
 
   animPiece.style.top = `${fromRect.top + liftOffsetY}px`;
   animPiece.style.transform = isAiPiece ? `rotate(180deg) scale(${liftScale})` : `scale(${liftScale})`;
 
-  // Phase 2: 頂点から放物線（大弧）を描いて目標マスへと急降下・打突！
   setTimeout(() => {
-    // 飛行時間と緩急（Ease-Inで加速してバシッと突入）
     animPiece.style.transition = `left ${flyTime}ms cubic-bezier(0.25, 0.9, 0.35, 1), top ${flyTime}ms cubic-bezier(0.38, 0.05, 0.25, 1), transform ${flyTime}ms cubic-bezier(0.3, 0.1, 0.3, 1), width ${flyTime}ms ease, height ${flyTime}ms ease`;
 
-    // 着地目標へ
     animPiece.style.left = `${toRect.left}px`;
     animPiece.style.top = `${toRect.top}px`;
     animPiece.style.width = `${toRect.width}px`;
     animPiece.style.height = `${toRect.height}px`;
     animPiece.style.transform = isAiPiece ? 'rotate(180deg) scale(1.0)' : 'scale(1.0)';
 
-    // Phase 3: 着地瞬間の打着音・盤面衝撃波・討ち取り駒の駒台吸い込み演出同期
     setTimeout(() => {
-      // 駒が着地した瞬間に実着手音を発火！
       playPieceSound();
 
       if (animPiece && animPiece.parentElement) animPiece.remove();
 
-      // 敵駒を討ち取っていた場合、駒台飛来アニメーションを発火
       if (targetCapturedPiece && targetCapturedPiece.owner !== m.owner) {
         animateCaptureToHand(targetCapturedPiece.code, toRect, m.owner, null);
       }
 
-      // 盤面データ更新と描画
       executeMove(m, metric);
 
-      // 着地マスへの着地エフェクト（敵軍は絶対に180度反転したまま衝撃を受ける！）
       const justLandedPiece = document.querySelector(`#board .cell[data-r="${m.to.r}"][data-c="${m.to.c}"] .piece`);
       if (justLandedPiece) {
         const shockClass = isAiPiece ? 'piece-just-landed-ai' : 'piece-just-landed-player';
@@ -2377,6 +2489,9 @@ function animateAndExecuteMove(m, metric = null, onComplete = null) {
   }, liftTime);
 }
 
+/* =========================================================
+   【重要改修】着手実行 ＆ 合戦絵巻リアルタイム自動追従
+   ========================================================= */
 function executeMove(m, metric = null) {
   if (m.type === 'move' && !m.code && board[m.from.r][m.from.c]) {
     m.code = board[m.from.r][m.from.c].code;
@@ -2419,9 +2534,90 @@ function executeMove(m, metric = null) {
   updateTroopsAndSituation();
   updateReviewModeUI();
 
+  // ★合戦絵巻モーダルが開いている場合はリアルタイムに全自動更新！
+  const kifuModalEl = document.getElementById('kifu-modal');
+  if (kifuModalEl && kifuModalEl.style.display === 'flex') {
+    updateKifuModalLive();
+  }
+
   if (isKingCaptured && capturedKingOwner) {
     checkGameOver(capturedKingOwner);
   }
+}
+
+function updateKifuModalLive() {
+  const p = isExhibitionActive ? getTargetAIData(exhibitionSenteTarget) : PLAYER_WARLORDS[currentMyWarlordId];
+  const e = isExhibitionActive ? getTargetAIData(exhibitionGoteTarget) : WARLORDS_DATA[currentAiLevel];
+
+  const pMax = getPlayerMaxTroops();
+  const aiMax = getAiMaxTroops();
+  const { pPct, aiPct } = calculateTroopsPercentages(board, hands);
+  const pCurrent = Math.round(pMax * (pPct / 100));
+  const aiCurrent = Math.round(aiMax * (aiPct / 100));
+
+  const pVal = document.getElementById('kifu-player-troops-val');
+  const eVal = document.getElementById('kifu-enemy-troops-val');
+  if (pVal) pVal.textContent = `${pCurrent.toLocaleString()} 兵`;
+  if (eVal) eVal.textContent = `${aiCurrent.toLocaleString()} 兵`;
+
+  const troopsDiff = pCurrent - aiCurrent;
+  const diffBadge = document.getElementById('kifu-troops-diff-disp');
+  if (diffBadge) {
+    if (troopsDiff >= 0) {
+      diffBadge.textContent = `我が軍 +${troopsDiff.toLocaleString()} 兵優勢`;
+      diffBadge.style.color = '#ffd700';
+    } else {
+      diffBadge.textContent = `敵軍 +${Math.abs(troopsDiff).toLocaleString()} 兵優勢`;
+      diffBadge.style.color = '#90caf9';
+    }
+  }
+
+  const modalSit = document.getElementById('kifu-modal-situation-text');
+  const curSitText = document.getElementById('situation-text')?.textContent || '';
+  if (modalSit) modalSit.textContent = curSitText;
+
+  const l = document.getElementById('kifu-list');
+  if (l) {
+    l.innerHTML = '';
+    moveObjectsHistory.forEach((m, idx) => {
+      const d = document.createElement('div');
+      d.className = 'kifu-row-item';
+      const rawCode = m.code || 'FU';
+      const pPiece = m.type === 'drop' ? PIECES[m.code] : PIECES[rawCode];
+      const mark = m.owner === 'PLAYER' ? '▲' : '△';
+      const moveStr = `${idx + 1}手目：${mark} ${9 - m.to.c}${KANJI_NUMS[m.to.r]} ${pPiece}${m.promote ? '成' : ''}`;
+
+      const metric = moveMetricsHistory[idx] || { timeSec: '0.1', depth: 1 };
+      const metricHtml = `<span class="kifu-metric-pill">⏱ ${metric.timeSec}s ｜ 深さ${metric.depth}</span>`;
+
+      let badgeHtml = '';
+      if (m.isCap) {
+        let victimName = '';
+        if (isExhibitionActive) {
+          const sName = getTargetAIData(exhibitionSenteTarget).name.split('・')[0];
+          const gName = getTargetAIData(exhibitionGoteTarget).name.split('・')[0];
+          victimName = (m.owner === 'PLAYER') ? `▽${gName}駒` : `▲${sName}駒`;
+        } else {
+          victimName = (m.owner === 'PLAYER') ? '敵駒' : '自軍駒';
+        }
+        badgeHtml = `<span class="kifu-badge-critical badge-tennozan">⚔ ${victimName}討死</span>`;
+      } else if (m.promote) {
+        badgeHtml = `<span class="kifu-badge-critical badge-shock">🔥 成駒覚醒！</span>`;
+      }
+
+      d.innerHTML = `
+        <span class="kifu-move-txt">${moveStr}</span>
+        <div class="kifu-row-right-group">
+          ${badgeHtml}
+          ${metricHtml}
+        </div>
+      `;
+      l.appendChild(d);
+    });
+    l.scrollTop = l.scrollHeight;
+  }
+
+  drawTerritoryChart();
 }
 
 function finishTurn() {
@@ -2439,8 +2635,11 @@ function finishTurn() {
   
   turn = 'AI';
   updateTurnAvatarGlow('AI');
-  setOrderMessage(`${WARLORDS_DATA[currentAiLevel].name}が次の一手を巡らせております…`, false, 'enemy');
-  setTimeout(aiTurn, 550);
+  const enemy = WARLORDS_DATA[currentAiLevel];
+  
+  // ★手番が移った瞬間から即座にタイマーを開始（0秒静止ラグを完全解消）
+  startTurnTimer('AI', enemy.name);
+  setTimeout(aiTurn, 450);
 }
 
 let aiWorker = null;
@@ -2541,11 +2740,10 @@ function renderTacticProposal(idx) {
   }
 
   const categoryType = isCurrentHintAwakened ? 'hint-awakened' : 'hint';
-  const structuredHtml = `
-    <div class="order-line-primary">${planLabel}${intentHtml}<b>${moveDetailHtml}</b></div>
-    <div class="order-line-sub">（理由：${intent.reason}）</div>
-  `;
-  setOrderMessage(structuredHtml, true, categoryType);
+  const linePrimary = `${planLabel}${intentHtml}<b>${moveDetailHtml}</b>`;
+  const lineSub = `（理由：${intent.reason}）`;
+
+  setOrderMessage({ line1: linePrimary, line2: lineSub }, true, categoryType);
 
   hintSourceCell = bm.type === 'move' ? { r: bm.from.r, c: bm.from.c } : null;
   hintTargetCell = { r: bm.to.r, c: bm.to.c };
@@ -2577,7 +2775,7 @@ function handleWorkerMessage(e) {
     isCurrentHintAwakened = !!data.isAwakened;
 
     if (tacticsCandidates.length === 0) {
-      setOrderMessage(`進言できる妙手がござらぬ…！`, true, 'hint');
+      setOrderMessage('進言できる妙手がござらぬ…！', true, 'hint');
       return;
     }
     if (data.isAwakened) triggerCutin(`軍師覚醒！ ${p.strategistName}の神算鬼謀！`, true);
@@ -2588,8 +2786,8 @@ function handleWorkerMessage(e) {
   isAiThinking = false;
   exhibitionAchievedDepth = data.depth || exhibitionAchievedDepth;
   exhibitionTotalNodes = data.nodes || exhibitionTotalNodes;
-  const elapsedSec = ((Date.now() - exhibitionThinkStartTime) / 1000).toFixed(1);
-  stopExhibitionThinkTimer();
+  const elapsedSec = recordTurnTime(turn);
+  stopTurnTimer();
   if (isExhibitionActive) updateExhibitionThinkingDisplay(false);
 
   const bm = data.bestMove;
@@ -2597,7 +2795,6 @@ function handleWorkerMessage(e) {
 
   const metric = { timeSec: elapsedSec, depth: exhibitionAchievedDepth };
   
-  // AIの手番も滑らかにアニメーション着手
   animateAndExecuteMove(bm, metric, () => {
     if (isGameOver) return;
     if (checkSennichite()) return;
@@ -2618,12 +2815,11 @@ function handleWorkerMessage(e) {
       const pName = PLAYER_WARLORDS[currentMyWarlordId].name;
       if (isCheckState('PLAYER')) {
         playCheckSound(); triggerCutin('敵の奇襲！ 王手！');
-        setOrderMessage(`敵の奇襲！ 王手を合駒か玉の移動で防がれよ！`, true, 'alert');
         document.getElementById('ai-quote-disp').textContent = WARLORDS_DATA[currentAiLevel].quotes.check;
         document.getElementById('player-quote-disp').textContent = PLAYER_WARLORDS[currentMyWarlordId].quotes.pinch;
-      } else {
-        setOrderMessage(`${pName}公、次なる一手をお決め下され！`, true, 'player');
       }
+      // 即座にプレイヤーの手番タイマーを始動
+      startTurnTimer('PLAYER', pName);
     }
   });
 }
@@ -2640,8 +2836,8 @@ function handleExternalWorkerMessage(e) {
   isAiThinking = false;
   exhibitionAchievedDepth = data.depth || exhibitionAchievedDepth;
   exhibitionTotalNodes = data.nodes || exhibitionTotalNodes;
-  const elapsedSec = ((Date.now() - exhibitionThinkStartTime) / 1000).toFixed(1);
-  stopExhibitionThinkTimer();
+  const elapsedSec = recordTurnTime(turn);
+  stopTurnTimer();
   if (isExhibitionActive) updateExhibitionThinkingDisplay(false);
 
   const bm = data.bestMove;
@@ -2665,10 +2861,7 @@ function handleExternalWorkerMessage(e) {
 function aiTurn() {
   if (isGameOver) return;
   isAiThinking = true;
-  const w = WARLORDS_DATA[currentAiLevel];
-  if (isExhibitionActive) startExhibitionThinkTimer('AI', w ? w.name : '武将');
-
-  const safeLimit = isExhibitionActive ? (EXHIBITION_TIME_LIMITS[exhibitionSpeed] || 5000) : 9000;
+  const safeLimit = isExhibitionActive ? (EXHIBITION_TIME_LIMITS[exhibitionSpeed] || 8500) : 9000;
 
   aiWorker.postMessage({
     board, hands,
@@ -2695,10 +2888,10 @@ function showMasterHint() {
   
   if (isAwakenedNow) {
     awakenedHintCount++;
-    setOrderMessage(`深淵の神算鬼謀を探索中…！`, false, 'hint-awakened');
+    setOrderMessage('深淵の神算鬼謀を探索中…！', false, 'hint-awakened');
     aiWorker.postMessage({ board, hands, level: 10, isHintRequest: true, isAwakened: true, history: moveObjectsHistory, hashHistory: boardHashHistory, targetOwner: 'PLAYER', timeLimit: 5000 });
   } else {
-    setOrderMessage(`局面打開の一手を探索中…`, false, 'hint');
+    setOrderMessage('局面打開の一手を探索中…', false, 'hint');
     aiWorker.postMessage({ board, hands, level: 8, isHintRequest: true, isAwakened: false, history: moveObjectsHistory, hashHistory: boardHashHistory, targetOwner: 'PLAYER', timeLimit: 5000 });
   }
 }
@@ -2730,12 +2923,13 @@ function undoMove() {
   renderBoard(); renderKifu();
   updateTroopsAndSituation();
   updateReviewModeUI();
-  setOrderMessage('局面を戻し候。次なる一手をお決め下され。', true, 'player');
+  startTurnTimer('PLAYER', PLAYER_WARLORDS[currentMyWarlordId].name);
 }
 
 function surrenderGame() {
   if (isGameOver || isExhibitionActive) return;
-  stopAutoReplay(); isGameOver = true; triggerCutin('無念… 降伏いたす…');
+  stopAutoReplay(); stopTurnTimer();
+  isGameOver = true; triggerCutin('無念… 降伏いたす…');
   updateTurnAvatarGlow(null);
   
   const enemy = WARLORDS_DATA[currentAiLevel];
@@ -2756,19 +2950,24 @@ function checkGameOver(nextOwner) {
   if (isKingGone || legalsEmpty) {
     isGameOver = true;
     playVictorySound();
-    stopAutoReplay();
-    if (isExhibitionActive) { stopExhibitionTimer(); stopExhibitionThinkTimer(); }
+    stopAutoReplay(); stopTurnTimer();
+    if (isExhibitionActive) stopExhibitionTimer();
     updateTurnAvatarGlow(null);
     updateTroopsAndSituation();
+
+    const exhModeTxt = (exhibitionSpeed === 'fast') ? '早指し戦' : '通常本将棋';
 
     if (isExhibitionActive) {
       const sData = getTargetAIData(exhibitionSenteTarget);
       const gData = getTargetAIData(exhibitionGoteTarget);
       const winnerName = (nextOwner === 'AI') ? sData.name : gData.name;
       triggerCutin(`【御前試合 決着】${winnerName}の勝利！`, true);
-      setOrderMessage(`御前試合が結びとなりました！ <b>${winnerName}</b>が見事合戦を制しました！<br>［▶自動］や［◀］［▶］で合戦を振り返られよ！`, false, 'settle');
+      setOrderMessage({
+        line1: `御前試合が結びとなりました！ <b>${winnerName}</b>が見事合戦を制しました！`,
+        line2: `［▶自動］や［◀］［▶］で合戦を振り返られよ！`
+      }, false, 'settle');
       
-      saveBattleRecord('exhibition', `御前試合：${winnerName}勝`);
+      saveBattleRecord('exhibition', `御前${exhModeTxt}：${winnerName}勝`);
       updateReviewModeUI();
       return true;
     }
@@ -2783,11 +2982,14 @@ function checkGameOver(nextOwner) {
       if (p && p.quotes.victory) document.getElementById('player-quote-disp').textContent = p.quotes.victory;
 
       const earnedBonus = Math.round((enemy.maxTroops * 0.40) / 500) * 500;
-      const growthNotice = isNewClear ? `<br><span style="color:#76ff03; font-weight:900;">【天下布武】領国平定！ 総動員力 +${earnedBonus.toLocaleString()} 兵 獲得！</span>` : '';
+      const growthNotice = isNewClear ? `【天下布武】領国平定！ 総動員力 +${earnedBonus.toLocaleString()} 兵 獲得！` : '';
 
-      if (currentAiLevel === 11) setOrderMessage(`天下無双・前田慶次を討ち破り、日ノ本に並ぶ者なき最強の覇王となり候！${growthNotice}`, false, 'settle');
-      else if (currentAiLevel === 10) setOrderMessage(`徳川幕府を平定し、日ノ本の覇者となり候！ 誠に見事！${growthNotice}`, false, 'settle');
-      else setOrderMessage(`${enemy.name}を討ち取り、${enemy.province}を平定いたし候！${growthNotice}`, false, 'settle');
+      let victoryMsg1 = '';
+      if (currentAiLevel === 11) victoryMsg1 = `天下無双・前田慶次を討ち破り、日ノ本に並ぶ者なき最強の覇王となり候！`;
+      else if (currentAiLevel === 10) victoryMsg1 = `徳川幕府を平定し、日ノ本の覇者となり候！ 誠に見事！`;
+      else victoryMsg1 = `${enemy.name}を討ち取り、${enemy.province}を平定いたし候！`;
+
+      setOrderMessage({ line1: victoryMsg1, line2: growthNotice || '天下統一の偉業へまた一歩近づき候！' }, false, 'settle');
       saveBattleRecord('win', '大勝利');
     } else {
       triggerCutin('本陣陥落… 敗北に候…');
@@ -3018,7 +3220,7 @@ function renderKifu() {
 }
 
 /* =========================================================
-   【御前試合】ビジュアル選択 ＆ 通常/早指し対局方式制御
+   【御前試合】ビジュアル選択 ＆ 対局方式制御
    ========================================================= */
 const ALL_EXHIBITION_AI_KEYS = [
   'nanban', 'kenshi', 'inja',
@@ -3178,7 +3380,7 @@ function startExhibitionFromModal() {
   closeExhibitionModal();
   stopAutoReplay();
   stopExhibitionTimer();
-  stopExhibitionThinkTimer();
+  stopTurnTimer();
   playUiClickSound();
 
   createNewWorker();
@@ -3186,6 +3388,7 @@ function startExhibitionFromModal() {
 
   if (!isGameOver && moveObjectsHistory.length > 0 && !isExhibitionActive) {
     savedActiveBattle = {
+      isExhibitionActive: false,
       currentMyWarlordId, currentAiLevel,
       board: cloneBoardState(board),
       hands: JSON.parse(JSON.stringify(hands)),
@@ -3196,13 +3399,16 @@ function startExhibitionFromModal() {
       boardHashHistory: JSON.parse(JSON.stringify(boardHashHistory)),
       checkHistory: JSON.parse(JSON.stringify(checkHistory)),
       moveMetricsHistory: JSON.parse(JSON.stringify(moveMetricsHistory)),
-      lastMove, hintUsedCount, awakenedHintCount
+      lastMove, hintUsedCount, awakenedHintCount,
+      totalTimeSpentMs: JSON.parse(JSON.stringify(totalTimeSpentMs)),
+      movesCountBySide: JSON.parse(JSON.stringify(movesCountBySide))
     };
   }
 
   isExhibitionActive = true;
   isPastReplayActive = false;
   turn = 'PLAYER';
+  battleStartTurn = 'PLAYER';
   isGameOver = false;
 
   initBoardState();
@@ -3225,14 +3431,17 @@ function startExhibitionFromModal() {
   renderMainPortraits();
   updateReviewModeUI();
 
-  const modeTxt = (exhibitionSpeed === 'fast') ? '早指し戦' : '本将棋';
-  triggerCutin(`【御前試合（${modeTxt}）】${sData.name} vs ${gData.name}`, true);
+  const modeTxt = (exhibitionSpeed === 'fast') ? '早指し戦' : '通常本将棋';
+  triggerCutin(`【御前${modeTxt}】${sData.name} vs ${gData.name}`, true);
   updateTurnAvatarGlow('PLAYER');
+
+  // ★即座にタイマーを開始し、ラグなく思考時間を刻む
+  startTurnTimer('PLAYER', sData.name);
 
   setTimeout(() => {
     if (!isExhibitionActive || isGameOver) return;
     dispatchExhibitionTurn();
-  }, 400);
+  }, 250);
 }
 
 function dispatchExhibitionTurn() {
@@ -3243,9 +3452,12 @@ function dispatchExhibitionTurn() {
   const targetSide = isSenteTurn ? 'PLAYER' : 'AI';
   const targetData = getTargetAIData(targetKey);
 
-  startExhibitionThinkTimer(targetSide, targetData.name);
+  // タイマーが未稼働の場合確実に起動
+  if (!turnTimerInterval) {
+    startTurnTimer(targetSide, targetData.name);
+  }
 
-  const safeLimit = EXHIBITION_TIME_LIMITS[exhibitionSpeed] || 5000;
+  const safeLimit = EXHIBITION_TIME_LIMITS[exhibitionSpeed] || 8500;
 
   if (['nanban', 'kenshi', 'inja'].includes(targetKey)) {
     const payload = {
@@ -3287,7 +3499,14 @@ function dispatchExhibitionTurn() {
 function scheduleNextExhibitionTurn() {
   if (!isExhibitionActive || isGameOver) return;
   stopExhibitionTimer();
-  const delay = EXHIBITION_DELAYS[exhibitionSpeed] || 1500;
+  const delay = EXHIBITION_DELAYS[exhibitionSpeed] || 1200;
+
+  // 着手直後に次手番のタイマーを即時始動
+  const isSenteTurn = (turn === 'PLAYER');
+  const targetKey = isSenteTurn ? exhibitionSenteTarget : exhibitionGoteTarget;
+  const targetSide = isSenteTurn ? 'PLAYER' : 'AI';
+  const targetData = getTargetAIData(targetKey);
+  startTurnTimer(targetSide, targetData.name);
 
   exhibitionTimer = setTimeout(() => {
     if (!isExhibitionActive || isGameOver) return;
@@ -3298,10 +3517,11 @@ function scheduleNextExhibitionTurn() {
 function stopExhibition() {
   playUiClickSound();
   stopExhibitionTimer();
-  stopExhibitionThinkTimer();
+  stopTurnTimer();
   
-  if (isExhibitionActive && moveObjectsHistory.length > 0 && !isGameOver) {
-    saveBattleRecord('exhibition', '御前試合(観戦終了)');
+  if (isExhibitionActive && moveObjectsHistory.length >= 5 && !isGameOver) {
+    const exhModeTxt = (exhibitionSpeed === 'fast') ? '早指し戦' : '本将棋';
+    saveBattleRecord('exhibition', `御前${exhModeTxt}(観戦終了)`);
   }
   
   isExhibitionActive = false;
@@ -3316,7 +3536,7 @@ function stopExhibitionTimer() {
 }
 
 /* =========================================================
-   合戦絵巻（全棋譜 ＆ 陣地推移）
+   当局・合戦絵巻（全棋譜 ＆ 天下陣地・前線進撃マップ）
    ========================================================= */
 function openKifuModal() {
   initAudio(); playUiClickSound(); stopAutoReplay();
@@ -3372,8 +3592,8 @@ function openKifuModal() {
 
   const chartPlayerTag = document.getElementById('chart-player-name-tag');
   const chartEnemyTag = document.getElementById('chart-enemy-name-tag');
-  if (chartPlayerTag) chartPlayerTag.textContent = `▲ ${p.name} 進撃ライン（優勢）`;
-  if (chartEnemyTag) chartEnemyTag.textContent = `▽ ${e.name} 侵攻ライン（警戒）`;
+  if (chartPlayerTag) chartPlayerTag.textContent = `▲ 我が軍領地（${p.name}：下陣・優勢で上へ進撃）`;
+  if (chartEnemyTag) chartEnemyTag.textContent = `▽ 敵軍領地（${e.name}：上陣）`;
 
   const curSitText = document.getElementById('situation-text')?.textContent || '';
   const modalSit = document.getElementById('kifu-modal-situation-text');
@@ -3430,11 +3650,12 @@ function openKifuModal() {
       };
       l.appendChild(d);
     });
+    l.scrollTop = l.scrollHeight;
   }
 
   const modalEl = document.getElementById('kifu-modal');
   if (modalEl) modalEl.style.display = 'flex';
-  setTimeout(drawEvaluationChart, 50);
+  setTimeout(drawTerritoryChart, 50);
 }
 
 function closeKifuModal() {
@@ -3443,7 +3664,10 @@ function closeKifuModal() {
   if (modalEl) modalEl.style.display = 'none';
 }
 
-function drawEvaluationChart() {
+/* =========================================================
+   天下陣地・前線進撃マップ（直感的領地争奪エリアグラフ）
+   ========================================================= */
+function drawTerritoryChart() {
   const cvs = document.getElementById('chart-canvas');
   if (!cvs) return;
   const dpr = window.devicePixelRatio || 1;
@@ -3456,28 +3680,23 @@ function drawEvaluationChart() {
 
   const midY = h / 2;
 
-  const playerBg = ctx.createLinearGradient(0, 0, 0, midY);
-  playerBg.addColorStop(0, 'rgba(180, 25, 25, 0.45)');
-  playerBg.addColorStop(1, 'rgba(70, 25, 6, 0.15)');
-  ctx.fillStyle = playerBg;
-  ctx.fillRect(0, 0, w, midY);
-
-  const enemyBg = ctx.createLinearGradient(0, midY, 0, h);
-  enemyBg.addColorStop(0, 'rgba(8, 20, 42, 0.15)');
-  enemyBg.addColorStop(1, 'rgba(12, 32, 68, 0.55)');
-  ctx.fillStyle = enemyBg;
-  ctx.fillRect(0, midY, w, midY);
+  const enemyTerritoryGrad = ctx.createLinearGradient(0, 0, 0, h);
+  enemyTerritoryGrad.addColorStop(0, '#040b18');
+  enemyTerritoryGrad.addColorStop(0.5, '#0b1e3c');
+  enemyTerritoryGrad.addColorStop(1, '#16335c');
+  ctx.fillStyle = enemyTerritoryGrad;
+  ctx.fillRect(0, 0, w, h);
 
   ctx.strokeStyle = 'rgba(255, 215, 0, 0.2)';
   ctx.lineWidth = 1 * dpr;
   ctx.setLineDash([3 * dpr, 3 * dpr]);
-  [midY - h * 0.35, midY - h * 0.18, midY + h * 0.35, midY + h * 0.18].forEach(y => {
+  [h * 0.2, h * 0.35, h * 0.65, h * 0.8].forEach(y => {
     ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
   });
 
   ctx.setLineDash([]);
   ctx.strokeStyle = 'rgba(255, 215, 0, 0.85)';
-  ctx.lineWidth = 1.8 * dpr;
+  ctx.lineWidth = 1.5 * dpr;
   ctx.beginPath(); ctx.moveTo(0, midY); ctx.lineTo(w, midY); ctx.stroke();
 
   if (historyStates.length < 2) return;
@@ -3491,26 +3710,31 @@ function drawEvaluationChart() {
     const clampedDiff = Math.max(-75, Math.min(75, diff));
     const y = midY - (clampedDiff / 75) * (midY * 0.85);
     const x = idx * step;
-    return { x, y, diff, idx };
+    return { x, y, pPct, aiPct, diff, idx };
   });
 
   ctx.beginPath();
-  ctx.moveTo(points[0].x, midY);
-  points.forEach(pt => ctx.lineTo(pt.x, pt.y));
-  ctx.lineTo(points[points.length - 1].x, midY);
+  ctx.moveTo(points[0].x, h);
+  ctx.lineTo(points[0].x, points[0].y);
+  for (let i = 1; i < points.length; i++) {
+    ctx.lineTo(points[i].x, points[i].y);
+  }
+  ctx.lineTo(points[points.length - 1].x, h);
   ctx.closePath();
-  const fillGrad = ctx.createLinearGradient(0, 0, 0, h);
-  fillGrad.addColorStop(0, 'rgba(255, 215, 0, 0.65)');
-  fillGrad.addColorStop(0.5, 'rgba(255, 215, 0, 0.12)');
-  fillGrad.addColorStop(1, 'rgba(68, 138, 255, 0.55)');
-  ctx.fillStyle = fillGrad;
+
+  const playerTerritoryGrad = ctx.createLinearGradient(0, 0, 0, h);
+  playerTerritoryGrad.addColorStop(0, 'rgba(255, 215, 0, 0.95)');
+  playerTerritoryGrad.addColorStop(0.2, 'rgba(212, 35, 35, 0.90)');
+  playerTerritoryGrad.addColorStop(0.65, 'rgba(128, 18, 18, 0.95)');
+  playerTerritoryGrad.addColorStop(1, '#300505');
+  ctx.fillStyle = playerTerritoryGrad;
   ctx.fill();
 
   ctx.beginPath();
-  ctx.lineWidth = 2.8 * dpr;
-  ctx.strokeStyle = '#fff089';
+  ctx.lineWidth = 3.0 * dpr;
+  ctx.strokeStyle = '#fff8b3';
   ctx.shadowColor = '#ffd700';
-  ctx.shadowBlur = 6 * dpr;
+  ctx.shadowBlur = 8 * dpr;
   points.forEach((pt, idx) => {
     if (idx === 0) ctx.moveTo(pt.x, pt.y); else ctx.lineTo(pt.x, pt.y);
   });
@@ -3519,25 +3743,23 @@ function drawEvaluationChart() {
 
   const lastPt = points[points.length - 1];
   ctx.beginPath();
-  ctx.arc(lastPt.x, lastPt.y, 4.5 * dpr, 0, Math.PI * 2);
+  ctx.arc(lastPt.x, lastPt.y, 5 * dpr, 0, Math.PI * 2);
   ctx.fillStyle = '#ffffff';
-  ctx.strokeStyle = '#ff9100';
-  ctx.lineWidth = 2.2 * dpr;
+  ctx.strokeStyle = '#ffd700';
+  ctx.lineWidth = 2.5 * dpr;
   ctx.fill();
   ctx.stroke();
 
-  const scaledDiff = Math.round((lastPt.diff / 100) * getPlayerMaxTroops());
   const topEl = document.getElementById('chart-eval-num-top');
   const btmEl = document.getElementById('chart-eval-num-bottom');
 
-  if (topEl && btmEl) {
-    if (scaledDiff >= 0) {
-      topEl.textContent = `+${scaledDiff.toLocaleString()} 兵優勢`;
-      btmEl.textContent = '';
-    } else {
-      topEl.textContent = '';
-      btmEl.textContent = `-${Math.abs(scaledDiff).toLocaleString()} 兵劣勢`;
-    }
+  const playerDominancePct = Math.round(50 + (lastPt.diff / 150) * 100);
+  const enemyDominancePct = 100 - playerDominancePct;
+
+  if (topEl) topEl.textContent = `敵軍支配 ${enemyDominancePct}%`;
+  if (btmEl) {
+    const advNotice = playerDominancePct >= 65 ? '（敵本陣へ肉薄！）' : (playerDominancePct <= 35 ? '（本陣防衛急務！）' : '（互角）');
+    btmEl.textContent = `我が軍支配 ${playerDominancePct}% ${advNotice}`;
   }
 }
 
@@ -3734,12 +3956,18 @@ function selectConquestProvince(lvl) {
   updateConquestMapUI();
 
   const rivalKey = `${currentMyWarlordId}_${currentAiLevel}`;
-  const levelHint = w.tacticsHint ? `<span style="color:#ffe082; font-size:10px;">【${p.strategistShort}の兵法】${w.tacticsHint}</span>` : '';
+  const levelHint = w.tacticsHint ? `【${p.strategistShort}の兵法】${w.tacticsHint}` : '';
 
   if (RIVALRIES[rivalKey]) {
-    setOrderMessage(`${RIVALRIES[rivalKey].title}<br>${levelHint}「対局開始」を押して雌雄を決されよ！`, true, 'alert');
+    setOrderMessage({
+      line1: RIVALRIES[rivalKey].title,
+      line2: `${levelHint} 「対局開始」を押して雌雄を決されよ！`
+    }, true, 'alert');
   } else {
-    setOrderMessage(`${w.province}・「${w.name}」との決戦に候！<br>${levelHint}「対局開始」を押されよ。`, false, 'player');
+    setOrderMessage({
+      line1: `${w.province}・「${w.name}」との決戦に候！`,
+      line2: `${levelHint} 「対局開始」を押されよ。`
+    }, false, 'player');
   }
   updateRivalryButton();
 }
@@ -3778,7 +4006,8 @@ function downloadKifu() {
     const promoteStr = m.promote ? '成' : '';
     const toStr = `${9 - m.to.c}${KANJI_NUMS[m.to.r]}`;
     const fromStr = m.type === 'drop' ? '打' : `(${9 - m.from.c}${9 - m.from.r})`;
-    txt += `${(i + 1).toString().padStart(4, ' ')} ${toStr}${pPiece}${promoteStr}${fromStr}\n`;
+    const metric = moveMetricsHistory[i] || { timeSec: '0.1' };
+    txt += `${(i + 1).toString().padStart(4, ' ')} ${toStr}${pPiece}${promoteStr}${fromStr} ( ${metric.timeSec} / 00:00:00)\n`;
   });
 
   const b = new Blob([txt], { type: 'text/plain;charset=UTF-8' });
@@ -3789,7 +4018,7 @@ function downloadKifu() {
 }
 
 function saveBattleRecord(resultType, resultLabel) {
-  if (moveObjectsHistory.length === 0) return;
+  if (moveObjectsHistory.length < 5) return;
   const now = new Date();
   const dateStr = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
   
@@ -3803,6 +4032,11 @@ function saveBattleRecord(resultType, resultLabel) {
     eName = WARLORDS_DATA[currentAiLevel].name;
     eProvince = WARLORDS_DATA[currentAiLevel].province;
   }
+
+  const pTotalSec = Math.round((totalTimeSpentMs.PLAYER || 0) / 1000);
+  const aiTotalSec = Math.round((totalTimeSpentMs.AI || 0) / 1000);
+  const pAvgSec = movesCountBySide.PLAYER > 0 ? ((pTotalSec / movesCountBySide.PLAYER).toFixed(1)) : '0.0';
+  const aiAvgSec = movesCountBySide.AI > 0 ? ((aiTotalSec / movesCountBySide.AI).toFixed(1)) : '0.0';
 
   const record = {
     id: Date.now(),
@@ -3821,6 +4055,13 @@ function saveBattleRecord(resultType, resultLabel) {
     hintUsed: hintUsedCount,
     awakenedHintUsed: awakenedHintCount,
     isExhibition: !!isExhibitionActive,
+    exhibitionSpeed: isExhibitionActive ? exhibitionSpeed : null,
+    timeStats: {
+      playerTotalSec: pTotalSec,
+      playerAvgSec: pAvgSec,
+      aiTotalSec: aiTotalSec,
+      aiAvgSec: aiAvgSec
+    },
     moveObjectsHistory: JSON.parse(JSON.stringify(moveObjectsHistory)),
     moveMetricsHistory: JSON.parse(JSON.stringify(moveMetricsHistory)),
     exhibitionSenteTarget: isExhibitionActive ? exhibitionSenteTarget : null,
@@ -3829,10 +4070,11 @@ function saveBattleRecord(resultType, resultLabel) {
   };
 
   try {
-    let records = JSON.parse(localStorage.getItem('shogi_battle_records') || '[]');
+    const storageKey = isExhibitionActive ? 'shogi_battle_records_exhibition' : 'shogi_battle_records_player';
+    let records = JSON.parse(localStorage.getItem(storageKey) || '[]');
     records.unshift(record);
     if (records.length > 50) records = records.slice(0, 50);
-    localStorage.setItem('shogi_battle_records', JSON.stringify(records));
+    localStorage.setItem(storageKey, JSON.stringify(records));
   } catch(e) {}
 }
 
@@ -3899,45 +4141,120 @@ function closeHistoryModal() {
   document.getElementById('battle-history-modal').style.display = 'none';
 }
 
+function switchHistoryTab(tab) {
+  playUiClickSound();
+  currentHistoryTab = tab;
+  document.getElementById('tab-btn-history-player').classList.toggle('active', tab === 'player');
+  document.getElementById('tab-btn-history-exhibition').classList.toggle('active', tab === 'exhibition');
+  
+  const hintGroup = document.getElementById('filter-group-hint');
+  const speedGroup = document.getElementById('filter-group-speed');
+  const wLabel = document.getElementById('filter-warlord-label');
+  const eLabel = document.getElementById('filter-enemy-label');
+  const wSelect = document.getElementById('filter-warlord');
+  const eSelect = document.getElementById('filter-level');
+
+  if (tab === 'player') {
+    if (hintGroup) hintGroup.style.display = 'flex';
+    if (speedGroup) speedGroup.style.display = 'none';
+    if (wLabel) wLabel.textContent = '自将:';
+    if (eLabel) eLabel.textContent = '敵将:';
+    if (wSelect) {
+      wSelect.innerHTML = `
+        <option value="all">すべて</option>
+        <option value="sanada">真田幸村</option>
+        <option value="keiji">前田慶次</option>
+        <option value="masamune">伊達政宗</option>
+        <option value="kanetsugu">直江兼続</option>
+        <option value="tadakatsu">本多忠勝</option>
+      `;
+    }
+    if (eSelect) {
+      eSelect.innerHTML = `
+        <option value="all">すべて</option>
+        <option value="1">Lv.1 木下藤吉郎</option>
+        <option value="2">Lv.2 前田利家</option>
+        <option value="3">Lv.3 柴田勝家</option>
+        <option value="4">Lv.4 浅井長政</option>
+        <option value="5">Lv.5 明智光秀</option>
+        <option value="6">Lv.6 上杉謙信</option>
+        <option value="7">Lv.7 武田信玄</option>
+        <option value="8">Lv.8 織田信長</option>
+        <option value="9">Lv.9 豊臣秀吉</option>
+        <option value="10">Lv.10 徳川家康</option>
+        <option value="11">Lv.11 前田慶次 (軍師AI)</option>
+      `;
+    }
+  } else {
+    if (hintGroup) hintGroup.style.display = 'none';
+    if (speedGroup) speedGroup.style.display = 'flex';
+    if (wLabel) wLabel.textContent = '先手陣:';
+    if (eLabel) eLabel.textContent = '後手陣:';
+    if (wSelect) {
+      wSelect.innerHTML = `
+        <option value="all">すべて</option>
+        <optgroup label="── 客分指南役 ──">
+          <option value="nanban">南蛮棋士</option>
+          <option value="kenshi">無双剣士</option>
+          <option value="inja">鬼謀の隠者</option>
+        </optgroup>
+        <optgroup label="── 武将・軍師AI ──">
+          <option value="strategist">軍師AI</option>
+          <option value="lvl_10">徳川家康</option>
+          <option value="lvl_8">織田信長</option>
+        </optgroup>
+      `;
+    }
+    if (eSelect) {
+      eSelect.innerHTML = `
+        <option value="all">すべて</option>
+        <optgroup label="── 客分指南役 ──">
+          <option value="nanban">南蛮棋士</option>
+          <option value="kenshi">無双剣士</option>
+          <option value="inja">鬼謀の隠者</option>
+        </optgroup>
+        <optgroup label="── 武将・軍師AI ──">
+          <option value="10">徳川家康</option>
+          <option value="8">織田信長</option>
+          <option value="11">軍師AI・前田慶次</option>
+        </optgroup>
+      `;
+    }
+  }
+
+  renderBattleHistoryList();
+}
+
 function renderBattleHistoryList() {
+  const isPlayerTab = (currentHistoryTab === 'player');
+  const storageKey = isPlayerTab ? 'shogi_battle_records_player' : 'shogi_battle_records_exhibition';
   let records = [];
-  try { records = JSON.parse(localStorage.getItem('shogi_battle_records') || '[]'); } catch(e) { records = []; }
+  try { records = JSON.parse(localStorage.getItem(storageKey) || '[]'); } catch(e) { records = []; }
+
+  if (records.length === 0 && isPlayerTab) {
+    try {
+      const old = JSON.parse(localStorage.getItem('shogi_battle_records') || '[]');
+      if (old.length > 0) records = old.filter(r => !r.isExhibition);
+    } catch(e) {}
+  }
 
   const resF = document.getElementById('filter-result')?.value || 'all';
   const hintF = document.getElementById('filter-hint')?.value || 'all';
+  const speedF = document.getElementById('filter-speed')?.value || 'all';
   const warF = document.getElementById('filter-warlord')?.value || 'all';
   const lvlF = document.getElementById('filter-level')?.value || 'all';
-
-  const playerRecords = records.filter(r => !r.isExhibition);
-  const pTotal = playerRecords.length;
-  const pWins = playerRecords.filter(r => r.result === 'win').length;
-  const pLoses = playerRecords.filter(r => r.result === 'lose').length;
-  const pDraws = playerRecords.filter(r => r.result === 'draw').length;
-  const pWinRate = pTotal > 0 ? Math.round((pWins / (pTotal - pDraws || 1)) * 100) : 0;
-
-  const exhRecords = records.filter(r => r.isExhibition);
-  const exhTotal = exhRecords.length;
-  let instWins = 0, warlordWins = 0;
-  exhRecords.forEach(r => {
-    if (r.resultLabel && r.resultLabel.includes('勝')) {
-      const match = r.resultLabel.match(/御前試合：(.+)勝/);
-      if (match) {
-        const wName = match[1];
-        if (wName.includes('南蛮') || wName.includes('剣士') || wName.includes('隠者')) instWins++;
-        else warlordWins++;
-      }
-    }
-  });
 
   const stampEl = document.getElementById('history-rank-stamp');
   const descEl = document.getElementById('history-rank-desc');
   const summaryEl = document.getElementById('history-total-summary');
 
-  if (resF === 'exhibition') {
-    if (stampEl) stampEl.textContent = '武芸観戦録';
-    if (descEl) descEl.textContent = '客分指南役と戦国武将による天下の腕比べ。';
-    if (summaryEl) summaryEl.textContent = `御前試合 通算 ${exhTotal}戦 ｜ 客分指南役 ${instWins}勝 vs 戦国武将 ${warlordWins}勝`;
-  } else {
+  if (isPlayerTab) {
+    const pTotal = records.length;
+    const pWins = records.filter(r => r.result === 'win').length;
+    const pLoses = records.filter(r => r.result === 'lose').length;
+    const pDraws = records.filter(r => r.result === 'draw').length;
+    const pWinRate = pTotal > 0 ? Math.round((pWins / (pTotal - pDraws || 1)) * 100) : 0;
+
     let rankTitle = '初陣の若武者';
     let rankDesc = '合戦の道に足を踏み入れたばかりの若き勇士。';
     if (pTotal >= 10 && pWinRate >= 80) { rankTitle = '天下無双'; rankDesc = '数多の猛将を圧倒し、日ノ本に並ぶ者なき最強の覇王！'; }
@@ -3946,19 +4263,38 @@ function renderBattleHistoryList() {
 
     if (stampEl) stampEl.textContent = rankTitle;
     if (descEl) descEl.textContent = rankDesc;
-    if (summaryEl) {
-      const exhSubStr = exhTotal > 0 ? ` ［観戦録 ${exhTotal}戦］` : '';
-      summaryEl.textContent = `我が軍 通算 ${pTotal}戦 ${pWins}勝 ${pLoses}敗 ${pDraws}分 (勝率 ${pWinRate}%)${exhSubStr}`;
-    }
+    if (summaryEl) summaryEl.textContent = `我が軍 通算 ${pTotal}戦 ${pWins}勝 ${pLoses}敗 ${pDraws}分 (勝率 ${pWinRate}%)`;
+  } else {
+    const exhTotal = records.length;
+    let instWins = 0, warlordWins = 0;
+    records.forEach(r => {
+      if (r.resultLabel && r.resultLabel.includes('勝')) {
+        const match = r.resultLabel.match(/：(.+)勝/);
+        if (match) {
+          const wName = match[1];
+          if (wName.includes('南蛮') || wName.includes('剣士') || wName.includes('隠者')) instWins++;
+          else warlordWins++;
+        }
+      }
+    });
+
+    if (stampEl) stampEl.textContent = '御前武芸録';
+    if (descEl) descEl.textContent = '客分指南役と戦国武将による天下の腕比べ。';
+    if (summaryEl) summaryEl.textContent = `御前試合 通算 ${exhTotal}戦 ｜ 客分指南役 ${instWins}勝 vs 戦国武将 ${warlordWins}勝`;
   }
 
   const filtered = records.filter(r => {
-    if (resF === 'exhibition' && !r.isExhibition) return false;
-    if (resF !== 'all' && resF !== 'exhibition' && r.result !== resF) return false;
-    if (hintF === 'none' && r.hintUsed > 0) return false;
-    if (hintF === 'used' && r.hintUsed === 0) return false;
-    if (warF !== 'all' && r.playerWarlordId !== warF) return false;
-    if (lvlF !== 'all' && r.enemyLevel !== parseInt(lvlF, 10)) return false;
+    if (resF !== 'all' && r.result !== resF) return false;
+    if (isPlayerTab) {
+      if (hintF === 'none' && r.hintUsed > 0) return false;
+      if (hintF === 'used' && r.hintUsed === 0) return false;
+      if (warF !== 'all' && r.playerWarlordId !== warF) return false;
+      if (lvlF !== 'all' && r.enemyLevel !== parseInt(lvlF, 10)) return false;
+    } else {
+      if (speedF !== 'all' && r.exhibitionSpeed !== speedF) return false;
+      if (warF !== 'all' && r.playerWarlordId !== warF && r.exhibitionSenteTarget !== warF) return false;
+      if (lvlF !== 'all' && r.enemyLevel !== parseInt(lvlF, 10) && r.exhibitionGoteTarget !== lvlF) return false;
+    }
     return true;
   });
 
@@ -3978,11 +4314,14 @@ function renderBattleHistoryList() {
     let badgeClass = 'badge-lose';
     if (r.result === 'win') badgeClass = 'badge-win';
     else if (r.result === 'draw') badgeClass = 'badge-draw';
-    else if (r.result === 'exhibition') badgeClass = 'badge-exhibition';
+    else if (r.result === 'exhibition') {
+      badgeClass = (r.exhibitionSpeed === 'fast') ? 'badge-exhibition-hayazashi' : 'badge-exhibition-honshogi';
+    }
 
     let hintBadgeHtml = '';
     if (r.isExhibition) {
-      hintBadgeHtml = `<span class="badge-hint-count" style="background:#09254a; color:#8dc4ff; border-color:#72b2ff;">⚔ 御前試合(観戦記録)</span>`;
+      const modeTxt = (r.exhibitionSpeed === 'fast') ? '⚡ 早指し戦' : '⚔ 通常本将棋';
+      hintBadgeHtml = `<span class="badge-hint-count" style="background:#09254a; color:#8dc4ff; border-color:#72b2ff;">${modeTxt}</span>`;
     } else if (r.hintUsed === 0) {
       hintBadgeHtml = `<span class="badge-hint-none">✨ 軍師助言: なし(自力)</span>`;
     } else {
@@ -4015,7 +4354,7 @@ function renderBattleHistoryList() {
       enemyCombatantClass = 'combatant-winner';
     } else if (r.result === 'exhibition') {
       if (r.resultLabel && r.resultLabel.includes('勝')) {
-        const match = r.resultLabel.match(/御前試合：(.+)勝/);
+        const match = r.resultLabel.match(/：(.+)勝/);
         if (match) {
           const winnerName = match[1];
           if (winnerName === r.playerWarlordName) {
@@ -4028,6 +4367,10 @@ function renderBattleHistoryList() {
         }
       }
     }
+
+    const tStats = r.timeStats || { playerTotalSec: 0, playerAvgSec: '0.0', aiTotalSec: 0, aiAvgSec: '0.0' };
+    const pTimeStr = formatTimeMinutesSeconds(tStats.playerTotalSec);
+    const aiTimeStr = formatTimeMinutesSeconds(tStats.aiTotalSec);
 
     card.innerHTML = `
       <div class="history-card-top-row">
@@ -4057,11 +4400,19 @@ function renderBattleHistoryList() {
           </div>
         </div>
       </div>
+      
+      <!-- 消費時間ストリップ -->
+      <div class="history-time-strip">
+        <span class="time-side-txt">▲消費: <b>${pTimeStr}</b> (平均${tStats.playerAvgSec}s)</span>
+        <span class="time-side-txt">▽消費: <b>${aiTimeStr}</b> (平均${tStats.aiAvgSec}s)</span>
+      </div>
+
       <div class="history-details-bottom-row">
         <span>総手数: <b>${r.movesCount}手</b></span>
         ${hintBadgeHtml}
         <div class="history-card-actions">
-          <button class="history-replay-btn btn-3d" onclick="replayFromHistory(${r.id})">盤上再現</button>
+          <button class="history-replay-btn btn-3d" onclick="replayFromHistory(${r.id}, '${storageKey}')">盤上再現</button>
+          <button class="history-delete-single-btn btn-3d" onclick="deleteSingleHistoryRecord(${r.id}, '${storageKey}')" title="この合戦記録を抹消">🗑 抹消</button>
         </div>
       </div>
     `;
@@ -4069,16 +4420,35 @@ function renderBattleHistoryList() {
   });
 }
 
-function replayFromHistory(recordId) {
+function deleteSingleHistoryRecord(recordId, storageKey) {
+  playUiClickSound();
+  try {
+    let records = JSON.parse(localStorage.getItem(storageKey) || '[]');
+    records = records.filter(r => r.id !== recordId);
+    localStorage.setItem(storageKey, JSON.stringify(records));
+    triggerCutin('合戦記録を抹消いたし候');
+    renderBattleHistoryList();
+  } catch(e) {}
+}
+
+function replayFromHistory(recordId, storageKey) {
   let records = [];
-  try { records = JSON.parse(localStorage.getItem('shogi_battle_records') || '[]'); } catch(e) { records = []; }
+  try { records = JSON.parse(localStorage.getItem(storageKey) || '[]'); } catch(e) { records = []; }
   
   const rec = records.find(r => r.id === recordId);
   if (!rec) return;
 
-  if (!isGameOver && moveObjectsHistory.length > 0 && !isExhibitionActive) {
+  if (!isGameOver && moveObjectsHistory.length > 0) {
     savedActiveBattle = {
-      currentMyWarlordId, currentAiLevel,
+      isExhibitionActive: !!isExhibitionActive,
+      exhibitionSenteTarget: isExhibitionActive ? exhibitionSenteTarget : null,
+      exhibitionGoteTarget: isExhibitionActive ? exhibitionGoteTarget : null,
+      exhibitionSpeed: isExhibitionActive ? exhibitionSpeed : 'normal',
+      exhibitionStrategistKey: isExhibitionActive ? exhibitionRandomStrategistWarlordKey : null,
+      exhibitionAchievedDepth,
+      exhibitionTotalNodes,
+      currentMyWarlordId,
+      currentAiLevel,
       board: cloneBoardState(board),
       hands: JSON.parse(JSON.stringify(hands)),
       turn,
@@ -4088,11 +4458,15 @@ function replayFromHistory(recordId) {
       boardHashHistory: JSON.parse(JSON.stringify(boardHashHistory)),
       checkHistory: JSON.parse(JSON.stringify(checkHistory)),
       moveMetricsHistory: JSON.parse(JSON.stringify(moveMetricsHistory)),
-      lastMove, hintUsedCount, awakenedHintCount
+      lastMove,
+      hintUsedCount,
+      awakenedHintCount,
+      totalTimeSpentMs: JSON.parse(JSON.stringify(totalTimeSpentMs)),
+      movesCountBySide: JSON.parse(JSON.stringify(movesCountBySide))
     };
   }
 
-  stopAutoReplay(); stopExhibitionTimer(); stopExhibitionThinkTimer();
+  stopAutoReplay(); stopExhibitionTimer(); stopTurnTimer();
   playUiClickSound(); closeHistoryModal();
 
   isPastReplayActive = true;
@@ -4127,13 +4501,20 @@ function replayFromHistory(recordId) {
   renderBoard(); renderKifu();
   updateTroopsAndSituation(); updateReviewModeUI();
   
-  setOrderMessage(`【${rec.playerWarlordName} vs ${rec.enemyName}の合戦を再現中】<br>［▶自動］で流し見、または［◀］［▶］で一手ずつ合戦を振り返られよ！`, false, 'player');
+  const pauseNotice = savedActiveBattle ? '（※進行中の対戦は一時中断中。［⚔ 対局へ戻る］でいつでも再開できます）' : '';
+  setOrderMessage({
+    line1: `【${rec.playerWarlordName} vs ${rec.enemyName}の合戦を再現中】`,
+    line2: `［▶自動］や［◀］［▶］で一手ずつ鑑賞可能。${pauseNotice}`
+  }, false, 'player');
 }
 
 function clearBattleHistory() {
   playUiClickSound();
-  triggerCutin('勲功録の全記録を消去いたし候');
-  localStorage.removeItem('shogi_battle_records');
+  const isPlayerTab = (currentHistoryTab === 'player');
+  const storageKey = isPlayerTab ? 'shogi_battle_records_player' : 'shogi_battle_records_exhibition';
+  localStorage.removeItem(storageKey);
+  if (isPlayerTab) localStorage.removeItem('shogi_battle_records');
+  triggerCutin(`${isPlayerTab ? '我が合戦録' : '御前試合録'}の全記録を消去いたし候`);
   renderBattleHistoryList();
 }
 
@@ -4144,5 +4525,4 @@ document.addEventListener('touchstart', () => initAudio(), { once: true });
 loadProgress();
 setPlayerWarlord(currentMyWarlordId);
 initBoardState();
-
 

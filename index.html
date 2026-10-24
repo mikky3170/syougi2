@@ -1,9 +1,8 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>将棋王 2026 〜 天下統一・戦国決戦 〜</title>
 <link rel="stylesheet" href="style.css">
 </head>
@@ -13,15 +12,15 @@
 <!-- 状況・武将別BGM（フォールバック付き） -->
 <audio id="bgm-audio" src="nobunaga_song.mp3" loop preload="auto"></audio>
 
-<!-- 最上部：本丸扁額風・金覆輪極彩立体ヘッダー -->
+<!-- 最上部：本丸大扁額・鍛造純金立体プレート＆左右縦2段小判札ヘッダー -->
 <div class="top-header">
-  <div class="header-actions header-left">
-    <button class="header-btn btn-3d btn-guide" onclick="openGuideModal()">📜 指南</button>
-    <!-- 客分指南役との武芸観戦「御前試合」ボタン -->
+  <!-- 左翼：縦2段小判札（指南書 ＆ 御前試合） -->
+  <div class="header-actions-col header-left-col">
+    <button class="header-btn btn-3d btn-guide" onclick="openGuideModal()" title="天下布武・兵法指南絵巻">📜 指南書</button>
     <button class="header-btn btn-3d btn-exhibition" onclick="openExhibitionModal()" title="客分指南役・戦国武将の武芸観戦">⚔ 御前試合</button>
   </div>
   
-  <!-- 独立した本丸扁額タイトルプレート -->
+  <!-- 中央：本丸大扁額・鍛造立体純金金属プレート（漆黒の力強い毛筆文字） -->
   <div class="header-title-plaque">
     <div class="plaque-corner plaque-tl"></div>
     <div class="plaque-corner plaque-tr"></div>
@@ -33,10 +32,10 @@
     </h1>
   </div>
 
-  <div class="header-actions header-right">
-    <!-- 合戦戦歴帳（天下合戦勲功録）を開くボタン ＆ 音響切り替え -->
+  <!-- 右翼：縦2段小判札（勲功録 ＆ 奏楽入/切） -->
+  <div class="header-actions-col header-right-col">
     <button class="header-btn btn-3d btn-history" onclick="openHistoryModal()" title="天下合戦勲功録（対戦戦歴絵巻）">📜 勲功録</button>
-    <button class="header-btn btn-3d btn-snd" id="sound-toggle" onclick="toggleSound()">♪ 音ON</button>
+    <button class="header-btn btn-3d btn-snd" id="sound-toggle" onclick="toggleSound()" title="音響・奏楽の切替">♪ 奏楽入</button>
   </div>
 </div>
 
@@ -101,7 +100,7 @@
       </div>
     </div>
 
-    <!-- カットイン専用スロット（オーバーレイ浮遊表示） -->
+    <!-- カットイン専用スロット（オーバーレイ浮遊表示・ひと回り大きく拡大） -->
     <div class="cutin-slot" id="cutin-slot">
       <div class="cutin-banner" id="cutin-banner">
         <div id="cutin-text" class="cutin-text">合戦開始！ いざ推して参る！</div>
@@ -139,7 +138,7 @@
       <div class="warlord-hand-area" id="player-hand" title="自軍持ち駒"></div>
     </div>
 
-    <!-- 本陣直結・合戦軍令札（1行目・2行目完全固定スロット構造） -->
+    <!-- 本陣直結・合戦軍令札（1行目右端ボタン整流 ＆ 2行目全角1文字字下げ） -->
     <div class="order-message-banner" id="order-message-banner">
       <div class="order-banner-corner banner-c-tl"></div>
       <div class="order-banner-corner banner-c-tr"></div>
@@ -156,16 +155,20 @@
         <div class="strategist-name-tag" id="strategist-face-name-tag">昌幸</div>
       </div>
 
-      <!-- ③ メッセージ・対戦経過本文（上下ブレ防止固定構造） -->
-      <div class="order-message-text" id="order-message-text">
-        <div class="order-line-primary">上下のパネルより「自将」と「進軍先」を選定されよ。</div>
-        <div class="order-line-sub">陣容が定まり次第、「対局開始」にて振り駒を執り行われよ！</div>
+      <!-- ③ メッセージ本文と1行目右端アクションボタンスロット -->
+      <div class="order-message-center" id="order-message-center">
+        <!-- 1行目：主伝令 ＋ 1行目右端アクションボタングループ -->
+        <div class="order-row-primary">
+          <div class="order-line-primary" id="order-line-primary">上下のパネルより「自将」と「進軍先」を選定されよ。</div>
+          <div class="order-actions-slot" id="order-actions-slot">
+            <button class="alt-tactic-btn btn-3d" id="btn-alt-tactic" onclick="cycleNextTacticsHint()" style="display:none;" title="軍師に別の候補策を問う">🪭 別の策</button>
+            <button class="rivalry-story-btn btn-3d" id="btn-rivalry-story" onclick="openRivalryInGuide()" style="display:none;">📜 宿命秘話</button>
+            <button class="btn-exhibition-quit-inline btn-3d" id="btn-exhibition-quit" onclick="stopExhibition()" style="display:none;" title="御前試合を終了して元の対局へ復帰">⚔ 観戦終了</button>
+          </div>
+        </div>
+        <!-- 2行目：補足情報・考慮時間（全角1文字インデント適用） -->
+        <div class="order-line-sub" id="order-line-sub">陣容が定まり次第、「対局開始」にて振り駒を執り行われよ！</div>
       </div>
-
-      <!-- ④ アクションボタン群 -->
-      <button class="alt-tactic-btn btn-3d" id="btn-alt-tactic" onclick="cycleNextTacticsHint()" style="display:none;" title="軍師に別の候補策を問う">🪭 別の策</button>
-      <button class="rivalry-story-btn btn-3d" id="btn-rivalry-story" onclick="openRivalryInGuide()" style="display:none;">📜 宿命秘話</button>
-      <button class="btn-finish-replay btn-3d" id="btn-exhibition-quit" onclick="stopExhibition()" style="display:none;" title="御前試合を終了して元の対局へ復帰">⚔ 観戦終了</button>
     </div>
   </div>
 
@@ -195,7 +198,7 @@
         <button class="kifu-speed-btn btn-3d" id="btn-replay-speed" onclick="cycleReplaySpeed()" title="再生速度切替">1x</button>
       </div>
       <!-- 再現を終了して対局へ戻る朱塗り特大ボタン -->
-      <button class="btn-finish-replay btn-3d" onclick="exitReplayMode()" title="合戦鑑賞を終了して対局画面へ戻る">⚔ 対局へ戻る</button>
+      <button class="btn-finish-replay btn-3d" onclick="exitReplayMode()" title="合戦鑑賞を終了して元の対局へ復帰">⚔ 対局へ戻る</button>
     </div>
 
   </div>
@@ -221,16 +224,21 @@
   </div>
 </div>
 
-<!-- 御前試合（武芸観戦・肖像/家紋ビジュアル選択式）モーダル -->
+<!-- 御前試合モーダル（鍛造立体純金金属プレート × 漆黒毛筆タイトル） -->
 <div id="exhibition-modal" class="modal-overlay" style="display: none;">
   <div class="modal-content exhibition-modal-box">
-    <div class="modal-header-plaque" style="display:flex; justify-content:space-between; align-items:center;">
-      <h3 class="modal-title-txt">⚔ 御前試合・武芸観戦（先手陣・後手陣 選定）</h3>
+    <!-- 【本丸大扁額調・鍛造純金金属プレート × 漆黒毛筆文字】 -->
+    <div class="modal-gold-plaque">
+      <div class="plaque-corner plaque-tl"></div>
+      <div class="plaque-corner plaque-tr"></div>
+      <div class="plaque-corner plaque-bl"></div>
+      <div class="plaque-corner plaque-br"></div>
+      <h3 class="modal-title-shikkoku">⚔ 御前試合・武芸観戦（先手陣・後手陣 選定）</h3>
     </div>
     
     <div class="exhibition-guide-plaque">
       <span>💡</span>
-      <span>武将・指南役の<b>【肖像・家紋】</b>を直接選定して御前試合を開始します。<br>※両軍の読み筋と着手テンポを間近で鑑賞できます。</span>
+      <span>武将・指南役の<b>【肖像・家紋】</b>を直接選定して御前試合を開始します。<br>※両軍の読み筋・思考時間・消費刻を間近で鑑賞できます。</span>
     </div>
 
     <!-- 左右対陣ビジュアルセレクター（先手陣 vs 後手陣） -->
@@ -274,22 +282,22 @@
 
     </div>
 
-    <!-- 設定バー（対局方式：通常 / 早指しの2択） -->
+    <!-- 設定バー（対局方式：通常本将棋 / 早指し戦の2択） -->
     <div class="exhibition-config-row">
       <div class="config-group">
         <span class="config-label">対局方式（思考時間とテンポ）:</span>
         <div style="display:flex; gap:6px;">
-          <button class="btn-speed-choice active" id="btn-speed-normal" onclick="setExhibitionModalSpeed('normal')">通常（じっくり・深慮）</button>
-          <button class="btn-speed-choice" id="btn-speed-fast" onclick="setExhibitionModalSpeed('fast')">早指し（即断・切れ味）</button>
+          <button class="btn-speed-choice active" id="btn-speed-normal" onclick="setExhibitionModalSpeed('normal')">通常本将棋（じっくり・深慮）</button>
+          <button class="btn-speed-choice" id="btn-speed-fast" onclick="setExhibitionModalSpeed('fast')">早指し戦（即断・切れ味）</button>
         </div>
       </div>
       <div class="exhibition-mode-desc-plaque" id="exhibition-mode-desc-plaque">
-        ※<b>通常</b>＝最大5秒考慮（深さ5到達）。高段位・軍師AIが本来の最強棋力を発揮します。<br>
-        ※<b>早指し</b>＝最大2.5秒考慮。即断即決の乱戦となり、AIの読みが浅くなり番狂わせが生まれます。
+        ※<b>通常本将棋</b>＝最大8.5秒考慮（深さ5到達）。高段位・軍師AIが本来の神算鬼謀と最強棋力を発揮します。<br>
+        ※<b>早指し戦</b>＝最大2.5秒考慮。即断即決の乱戦となり、AIの読みが浅くなり番狂わせが生まれます。
       </div>
     </div>
 
-    <!-- 下部ボタングループ：中央にどっしり開始ボタン、右下に閉じるボタン -->
+    <!-- 下部ボタングループ：中央に開始ボタン、右下に閉じるボタン -->
     <div class="modal-buttons exhibition-bottom-buttons">
       <div class="exh-btn-spacer"></div>
       <button class="btn-3d modal-action-btn btn-start-exhibition is-ready-pulse" id="btn-start-exhibition-main" onclick="startExhibitionFromModal()">⚔ 御前試合 開始</button>
@@ -301,9 +309,13 @@
 <!-- 天下統一・国盗り絵巻マップ（大戦略司令部） -->
 <div id="conquest-modal" class="modal-overlay" style="display: none;">
   <div class="modal-content conquest-modal-box">
-    <div class="modal-header-plaque" style="display:flex; justify-content:space-between; align-items:center;">
-      <h3 class="modal-title-txt">🗺 天下統一・国盗り絵巻</h3>
-      <button class="conquest-player-link-btn btn-3d" onclick="openPlayerWarlordModal()">🪭 我が自将を変更</button>
+    <div class="modal-gold-plaque" style="justify-content:space-between;">
+      <div class="plaque-corner plaque-tl"></div>
+      <div class="plaque-corner plaque-tr"></div>
+      <div class="plaque-corner plaque-bl"></div>
+      <div class="plaque-corner plaque-br"></div>
+      <h3 class="modal-title-shikkoku" style="margin-left:auto; margin-right:auto;">🗺 天下統一・国盗り絵巻</h3>
+      <button class="conquest-player-link-btn btn-3d" onclick="openPlayerWarlordModal()" style="z-index:3;">🪭 自将変更</button>
     </div>
     
     <div class="conquest-header-stat">
@@ -366,24 +378,39 @@
 <!-- 自将選択モーダル -->
 <div id="player-warlord-modal" class="modal-overlay" style="display: none;">
   <div class="modal-content my-warlord-modal-box">
-    <div class="modal-header-plaque">
-      <h3 class="modal-title-txt">🪭 我が武将を選択せよ（主役五傑 ＆ 専属軍師）</h3>
+    <div class="modal-gold-plaque">
+      <div class="plaque-corner plaque-tl"></div>
+      <div class="plaque-corner plaque-tr"></div>
+      <div class="plaque-corner plaque-bl"></div>
+      <div class="plaque-corner plaque-br"></div>
+      <h3 class="modal-title-shikkoku">🪭 我が武将を選択せよ（主役五傑 ＆ 専属軍師）</h3>
     </div>
     <div class="warlord-card-list" id="player-warlord-list"></div>
     <div class="modal-buttons"><button class="btn-3d modal-action-btn" onclick="closePlayerWarlordModal()">この武将で出陣</button></div>
   </div>
 </div>
 
-<!-- 合戦戦歴帳モーダル（天下合戦勲功録） -->
+<!-- 合戦戦歴帳モーダル（天下合戦勲功録：二大絵巻タブ分離・消費時間完全記録版） -->
 <div id="battle-history-modal" class="modal-overlay" style="display: none;">
   <div class="modal-content battle-history-modal-box">
     <div class="history-header-box">
-      <div class="modal-header-plaque">
-        <h3 class="modal-title-txt">📜 天下合戦勲功録（歴代合戦絵巻）</h3>
+      <div class="modal-gold-plaque">
+        <div class="plaque-corner plaque-tl"></div>
+        <div class="plaque-corner plaque-tr"></div>
+        <div class="plaque-corner plaque-bl"></div>
+        <div class="plaque-corner plaque-br"></div>
+        <h3 class="modal-title-shikkoku">📜 天下合戦勲功録（対戦戦歴絵巻）</h3>
       </div>
+
+      <!-- 二大絵巻タブバー（自軍合戦録 / 御前試合録） -->
+      <div class="history-tab-bar">
+        <button class="history-tab-btn btn-3d active" id="tab-btn-history-player" onclick="switchHistoryTab('player')">🪭 我が合戦録（天下統一）</button>
+        <button class="history-tab-btn btn-3d" id="tab-btn-history-exhibition" onclick="switchHistoryTab('exhibition')">⚔ 御前試合録（武芸観戦）</button>
+      </div>
+
       <div class="history-guide-plaque">
         <span class="guide-lamp">💡</span>
-        <span class="guide-msg">各合戦カードの<b>［盤上再現］</b>を押すと当時の盤面が蘇り、<b>［▶自動］</b>での流し見や<b>［◀］［▶］</b>のコマ送りで合戦を観戦・研究できます。（※勝者が鮮やかに光り、敗者はセピア調に表示されます）</span>
+        <span class="guide-msg" id="history-guide-msg">各合戦カードの<b>［盤上再現］</b>で当時の布陣が蘇り、<b>［▶自動］</b>やコマ送りで鑑賞可能。<b>消費時間・平均考慮時間</b>も確認できます。不要な記録は<b>［🗑 抹消］</b>で1局単位で整理できます。</span>
       </div>
 
       <div class="history-rank-banner">
@@ -395,7 +422,8 @@
       </div>
     </div>
 
-    <div class="history-filter-grid">
+    <!-- 絞り込みフィルター（タブに応じて動的に項目調整） -->
+    <div class="history-filter-grid" id="history-filter-grid">
       <div class="filter-item-group">
         <span class="filter-label">勝敗:</span>
         <select id="filter-result" class="history-select-input" onchange="renderBattleHistoryList()">
@@ -403,10 +431,9 @@
           <option value="win">大勝利のみ</option>
           <option value="lose">敗戦/投了</option>
           <option value="draw">千日手</option>
-          <option value="exhibition">御前試合のみ</option>
         </select>
       </div>
-      <div class="filter-item-group">
+      <div class="filter-item-group" id="filter-group-hint">
         <span class="filter-label">軍師助言:</span>
         <select id="filter-hint" class="history-select-input" onchange="renderBattleHistoryList()">
           <option value="all">すべて</option>
@@ -414,60 +441,66 @@
           <option value="used">助言あり</option>
         </select>
       </div>
-      <div class="filter-item-group">
-        <span class="filter-label">自将・指南役:</span>
-        <select id="filter-warlord" class="history-select-input" onchange="renderBattleHistoryList()">
+      <div class="filter-item-group" id="filter-group-speed" style="display:none;">
+        <span class="filter-label">対局方式:</span>
+        <select id="filter-speed" class="history-select-input" onchange="renderBattleHistoryList()">
           <option value="all">すべて</option>
-          <optgroup label="── 主役武将 ──">
-            <option value="sanada">真田幸村</option>
-            <option value="keiji">前田慶次</option>
-            <option value="masamune">伊達政宗</option>
-            <option value="kanetsugu">直江兼続</option>
-            <option value="tadakatsu">本多忠勝</option>
-          </optgroup>
-          <optgroup label="── 客分指南役 ──">
-            <option value="nanban">明朝の客分・南蛮棋士</option>
-            <option value="kenshi">指南役・無双剣士</option>
-            <option value="inja">神算鬼謀の隠者</option>
-          </optgroup>
+          <option value="normal">通常本将棋</option>
+          <option value="fast">早指し戦</option>
         </select>
       </div>
       <div class="filter-item-group">
-        <span class="filter-label">敵将:</span>
+        <span class="filter-label" id="filter-warlord-label">自将:</span>
+        <select id="filter-warlord" class="history-select-input" onchange="renderBattleHistoryList()">
+          <option value="all">すべて</option>
+          <option value="sanada">真田幸村</option>
+          <option value="keiji">前田慶次</option>
+          <option value="masamune">伊達政宗</option>
+          <option value="kanetsugu">直江兼続</option>
+          <option value="tadakatsu">本多忠勝</option>
+        </select>
+      </div>
+      <div class="filter-item-group">
+        <span class="filter-label" id="filter-enemy-label">敵将:</span>
         <select id="filter-level" class="history-select-input" onchange="renderBattleHistoryList()">
           <option value="all">すべて</option>
-          <option value="1">Lv.1 木下藤吉郎 (3千兵)</option>
-          <option value="2">Lv.2 前田利家 (8千兵)</option>
-          <option value="3">Lv.3 柴田勝家 (1万5千兵)</option>
-          <option value="4">Lv.4 浅井長政 (2万5千兵)</option>
-          <option value="5">Lv.5 明智光秀 (4万兵)</option>
-          <option value="6">Lv.6 上杉謙信 (6万兵)</option>
-          <option value="7">Lv.7 武田信玄 (8万兵)</option>
-          <option value="8">Lv.8 織田信長 (11万兵)</option>
-          <option value="9">Lv.9 豊臣秀吉 (15万兵)</option>
-          <option value="10">Lv.10 徳川家康 (20万兵)</option>
+          <option value="1">Lv.1 木下藤吉郎</option>
+          <option value="2">Lv.2 前田利家</option>
+          <option value="3">Lv.3 柴田勝家</option>
+          <option value="4">Lv.4 浅井長政</option>
+          <option value="5">Lv.5 明智光秀</option>
+          <option value="6">Lv.6 上杉謙信</option>
+          <option value="7">Lv.7 武田信玄</option>
+          <option value="8">Lv.8 織田信長</option>
+          <option value="9">Lv.9 豊臣秀吉</option>
+          <option value="10">Lv.10 徳川家康</option>
           <option value="11">Lv.11 前田慶次 (軍師AI)</option>
         </select>
       </div>
     </div>
 
+    <!-- 歴代合戦カードスクロールリスト -->
     <div class="history-records-scroll" id="history-records-list">
       <div style="text-align:center; padding:20px; color:#d6be89;">合戦の記録はまだござらぬ。</div>
     </div>
 
     <div class="modal-buttons" style="justify-content:space-between;">
-      <button class="btn-3d btn-history-clear" onclick="clearBattleHistory()">戦歴全消去</button>
+      <button class="btn-3d btn-history-clear" onclick="clearBattleHistory()">絵巻全消去</button>
       <button class="btn-3d modal-close-btn" onclick="closeHistoryModal()">閉じる</button>
     </div>
   </div>
 </div>
 
-<!-- 当局・合戦絵巻モーダル（全棋譜・思考時間・深さ＆陣地争奪推移） -->
+<!-- 当局・合戦絵巻モーダル（全棋譜・思考時間・深さ＆直感的領地争奪エリアグラフ） -->
 <div id="kifu-modal" class="modal-overlay" style="display: none;">
   <div class="modal-content modal-kifu-panorama">
-    <div class="modal-header-plaque" style="display:flex; justify-content:space-between; align-items:center;">
-      <h3 class="modal-title-txt">📖 当局・合戦絵巻（全棋譜 ＆ 陣地争奪推移）</h3>
-      <span id="kifu-modal-status-badge" class="kifu-status-badge">五分五分の総力戦</span>
+    <div class="modal-gold-plaque" style="justify-content:space-between;">
+      <div class="plaque-corner plaque-tl"></div>
+      <div class="plaque-corner plaque-tr"></div>
+      <div class="plaque-corner plaque-bl"></div>
+      <div class="plaque-corner plaque-br"></div>
+      <h3 class="modal-title-shikkoku">📖 当局・合戦絵巻（全棋譜 ＆ 前線進撃マップ）</h3>
+      <span id="kifu-modal-status-badge" class="kifu-status-badge" style="z-index:3;">五分五分の総力戦</span>
     </div>
     
     <div class="kifu-troops-confrontation-bar">
@@ -490,15 +523,16 @@
       <span id="kifu-modal-situation-text">互角の白兵戦。両軍陣容を整え機を伺っております。</span>
     </div>
 
-    <div class="chart-container">
+    <!-- 直感的領地争奪エリアグラフ（上が敵陣、下が自軍：優勢なほど自軍面積が上へ拡大！） -->
+    <div class="chart-container territory-chart-box">
       <div class="chart-legend-top">
-        <span class="chart-tag-player" id="chart-player-name-tag">▲ 我が軍の陣地・進撃ライン（優勢）</span>
-        <span id="chart-eval-num-top" class="chart-eval-troops-txt">+0 兵</span>
+        <span class="chart-tag-enemy" id="chart-enemy-name-tag">▽ 敵軍領地（上陣）</span>
+        <span id="chart-eval-num-top" class="chart-eval-troops-txt">領地支配 50%</span>
       </div>
-      <div class="chart-tag-mid">─ 天下分水嶺（兵力互角・拮抗線） ─</div>
+      <div class="chart-tag-mid">── 中央決戦ライン（天下分水嶺） ──</div>
       <div class="chart-legend-bottom">
-        <span class="chart-tag-enemy" id="chart-enemy-name-tag">▽ 敵軍の陣地・侵攻ライン（警戒）</span>
-        <span id="chart-eval-num-bottom" class="chart-eval-troops-txt">-0 兵</span>
+        <span class="chart-tag-player" id="chart-player-name-tag">▲ 我が軍領地（下陣・優勢で上へ進撃拡大）</span>
+        <span id="chart-eval-num-bottom" class="chart-eval-troops-txt">領地支配 50%</span>
       </div>
       <canvas id="chart-canvas"></canvas>
     </div>
@@ -515,8 +549,12 @@
 <!-- 成りモーダル -->
 <div id="promote-modal" class="modal-overlay" style="display: none;">
   <div class="modal-content promote-modal-box" style="text-align: center; width: auto;">
-    <div class="modal-header-plaque" style="margin-bottom:12px;">
-      <p style="margin: 0; font-weight: 900; font-size: 16px; color: #ffd700;">敵陣突破！ 駒を成りますか？</p>
+    <div class="modal-gold-plaque" style="margin-bottom:12px;">
+      <div class="plaque-corner plaque-tl"></div>
+      <div class="plaque-corner plaque-tr"></div>
+      <div class="plaque-corner plaque-bl"></div>
+      <div class="plaque-corner plaque-br"></div>
+      <p class="modal-title-shikkoku" style="margin: 0; font-size: 15.5px;">敵陣突破！ 駒を成りますか？</p>
     </div>
     <div class="modal-buttons">
       <button class="btn-3d btn-promote-act" id="btn-promote-yes">成る</button>
@@ -529,8 +567,12 @@
 <div id="guide-modal" class="modal-overlay" style="display: none;">
   <div class="modal-content guide-modal-box">
     <div class="guide-modal-header">
-      <div class="modal-header-plaque">
-        <h3 class="guide-modal-title">📜 天下布武・兵法指南絵巻</h3>
+      <div class="modal-gold-plaque">
+        <div class="plaque-corner plaque-tl"></div>
+        <div class="plaque-corner plaque-tr"></div>
+        <div class="plaque-corner plaque-bl"></div>
+        <div class="plaque-corner plaque-br"></div>
+        <h3 class="modal-title-shikkoku">📜 天下布武・兵法指南絵巻</h3>
       </div>
       <div class="guide-narrator-panel">
         <span class="narrator-label">🗣 語り手:</span>
@@ -573,8 +615,8 @@
             <button class="card-speech-btn btn-3d" onclick="toggleCardSpeech('guide-card-step-exhibition')">🔊 朗読</button>
           </div>
           客分指南役や戦国武将たちの武芸観戦「御前試合」では、二つの対局方式を選べます：<br><br>
-          ・<b class="kw-gold">通常（じっくり・深慮）</b>：思考時間の上限は<span class="kw-gold">5.0秒</span>。最強AIが「深さ5」まで確実に読み切るため、軍師AIや隠者が本来の神算鬼謀を遺憾なく発揮します。着手間隔も約1.5秒を確保し、重厚な本将棋を鑑賞できます。<br>
-          ・<b class="kw-crimson">早指し（即断・切れ味）</b>：思考時間の上限は<span class="kw-crimson">2.5秒</span>。即断即決のスピード戦となり、難所で読みが浅くなるため番狂わせや意外な逆転劇が発生します。着手間隔約0.8秒で小気味よく合戦が進みます。
+          ・<b class="kw-gold">通常本将棋（じっくり・深慮）</b>：思考時間の上限は<span class="kw-gold">8.5秒</span>。最強AIが「深さ5」まで確実に読み切るため、軍師AIや隠者が本来の神算鬼謀を遺憾なく発揮します。着手間隔約1.5秒で、重厚な本将棋を鑑賞できます。<br>
+          ・<b class="kw-crimson">早指し戦（即断・切れ味）</b>：思考時間の上限は<span class="kw-crimson">2.5秒</span>。即断即決のスピード戦となり、難所で読みが浅くなるため番狂わせや意外な逆転劇が発生します。着手間隔約0.8秒で小気味よく合戦が進みます。
         </div>
 
         <div class="guide-card-box" id="guide-card-step-2">
@@ -587,7 +629,7 @@
           ・<b class="kw-gold">⚜ 対局開始</b>：振り駒を行い、合戦の火蓋を切って落とします。<br>
           ・<b class="kw-gold">💡 軍師進言 / 🔥 覚醒進言</b>：自将専属の軍師が次の一手を指南。「🪭 別の策」ボタンで王道・強襲・堅陣の策を切り替えられます。<br>
           ・<b class="kw-blue">⚔ 御前試合</b>：先手・後手それぞれに客分指南役・戦国武将・軍師AIを自由に選定し、特等席で観戦できます。<br>
-          ・<b class="kw-gold">📜 勲功録</b>：これまでの全対戦記録を確認・盤上再現できます。<br>
+          ・<b class="kw-gold">📜 勲功録</b>：これまでの全対戦記録を確認・盤上再現できます。「我が合戦録」と「御前試合録」の二大タブで整理可能。<br>
           ・<b class="kw-gold">🗺 天下絵巻</b>：全国平定状況と城郭地図を確認・進軍先を選定。<br>
           ・<b class="kw-gold">📖 合戦絵巻</b>：本局の陣地争奪グラフと全棋譜（思考時間・確定深さ）を確認・KIF保存可能。
         </div>
@@ -770,5 +812,4 @@
 <script src="main.js"></script>
 </body>
 </html>
-
 

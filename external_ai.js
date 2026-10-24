@@ -1,12 +1,11 @@
-
 /* =========================================================
    将棋王 2026 〜 天下統一・戦国決戦 〜
    外部オープンソースAIエンジン統合モジュール (完全成果保証・安全装置完全連動版)
    
    【内蔵する3つの客分指南役】
-   1. nanban : 【明朝の客分・南蛮棋士】 (アマ初段相当 / 深さ3＋静止探索 通常5s・早送り2s安全保証)
-   2. kenshi : 【指南役・無双剣士】     (アマ二段相当 / 深さ4＋PST＋静止探索 通常5s・早送り2s安全保証)
-   3. inja   : 【神算鬼謀の隠者】       (アマ五段相当 / 深さ5＋置換表＋キラー探索 通常5s・早送り2s安全保証)
+   1. nanban : 【明朝の客分・南蛮棋士】 (アマ初段相当 / 深さ3＋静止探索 通常8.5s・早指し2.5s保証)
+   2. kenshi : 【指南役・無双剣士】     (アマ二段相当 / 深さ4＋PST＋静止探索 通常8.5s・早指し2.5s保証)
+   3. inja   : 【神算鬼謀の隠者】       (アマ五段相当 / 深さ5＋置換表＋キラー探索 通常8.5s・早指し2.5s保証)
    ========================================================= */
 
 (function(global) {
@@ -69,7 +68,7 @@
   let kingPosCache = { PLAYER: null, AI: null };
   let pastHashes = [];
   let searchStartTime = 0;
-  let searchTimeLimit = 5000;
+  let searchTimeLimit = 8500;
   let isSearchTimeout = false;
 
   const transpositionTable = new Map();
@@ -572,7 +571,7 @@
       owner = 'PLAYER',
       history = [],
       hashHistory = [],
-      timeLimit = 5000
+      timeLimit = 8500
     } = params;
 
     board = bD;
@@ -582,8 +581,8 @@
     isSearchTimeout = false;
     searchStartTime = Date.now();
     
-    // 安全装置（通常5秒 / 早送り2秒）
-    searchTimeLimit = timeLimit || 5000;
+    // 通常本将棋時は最大8.5秒、早指し時は最大2.5秒
+    searchTimeLimit = timeLimit || 8500;
     updateKingCache();
 
     const legals = genLegalMoves(owner, false, true);
@@ -613,7 +612,6 @@
       for (let d = 1; d <= 3; d++) {
         let alpha = -Infinity, beta = Infinity;
 
-        // 反復深化の最善手を先頭に配置
         if (d > 1 && confirmedBestMove) {
           scoredMoves.sort((a, b) => {
             const isA = (a.move.type === confirmedBestMove.type && a.move.to.r === confirmedBestMove.to.r && a.move.to.c === confirmedBestMove.to.c);
