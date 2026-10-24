@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Klee+One:wght@600;900&family=Shippori+Mincho:wght@700;900&family=Yuji+Boku&display=swap');
 
 :root {
@@ -193,7 +192,7 @@ body {
     0 1px 0 rgba(255, 255, 255, 0.5),
     0 -0.5px 0 rgba(0, 0, 0, 0.8),
     0 0 2px rgba(12, 5, 2, 0.4);
-  filter: drop-shadow(0 1px 1.5px rgba(255, 240, 150, 0.8));
+  filter: drop-shadow(0 1px 1.5px rgba(255, 240, 150, 0.85));
 }
 
 .title-sub-txt {
@@ -274,10 +273,10 @@ body {
 .situation-banner.mode-exhibition .situation-text { color: #fff9e6 !important; font-weight: 900 !important; }
 
 /* =========================================================
-   武将金蒔絵パネル ＆ スマホ全幅駒台・本陣構造
+   武将金蒔絵パネル（情報・アバター・兵力バーに専念）
    ========================================================= */
 .warlord-panel {
-  width: 100%; min-height: clamp(60px, 8.2vh, 72px);
+  width: 100%; min-height: clamp(52px, 7.2vh, 64px);
   background: linear-gradient(180deg, rgba(38, 19, 8, 0.98) 0%, rgba(14, 6, 2, 0.98) 100%);
   border: 1.8px solid #c99832; border-radius: 5px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.95), inset 0 1px 0 rgba(255,235,150,0.4);
@@ -298,8 +297,8 @@ body {
 }
 
 .warlord-avatar {
-  width: clamp(44px, 6.2vh, 56px) !important;
-  height: clamp(50px, 7.0vh, 62px) !important;
+  width: clamp(42px, 6.0vh, 52px) !important;
+  height: clamp(46px, 6.6vh, 58px) !important;
   border-radius: 6px !important;
   border: 2px solid #ffd700 !important;
   background: radial-gradient(circle at 35% 35%, #3d1c0c 0%, #080301 100%);
@@ -340,7 +339,7 @@ body {
 }
 
 /* 武将情報エリア */
-.warlord-info { flex: 1.2; display: flex; flex-direction: column; justify-content: center; min-width: 0; overflow: hidden; }
+.warlord-info { flex: 1; display: flex; flex-direction: column; justify-content: center; min-width: 0; overflow: hidden; }
 .panel-enemy .warlord-info { text-align: right; }
 .panel-player .warlord-info { text-align: left; }
 
@@ -350,7 +349,7 @@ body {
 .panel-enemy .name-right-group { justify-content: flex-end; }
 
 .warlord-name {
-  font-size: 13.5px; font-weight: 900; color: #ffe699; letter-spacing: 0.6px;
+  font-size: 13px; font-weight: 900; color: #ffe699; letter-spacing: 0.6px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-shrink: 1;
 }
 
@@ -416,78 +415,61 @@ body {
   box-shadow: 0 0 6px rgba(255, 215, 0, 0.7);
 }
 
-/* 駒台（PC・タブレット共通） */
+/* =========================================================
+   【完全独立駒台レーン】
+   敵軍駒台＝将棋盤の【すぐ左上】（左寄せ・盤から少し離す）
+   自軍駒台＝将棋盤の【すぐ右下】（右寄せ・盤から少し離す）
+   ========================================================= */
 .warlord-hand-area {
-  flex: 1.1; height: 88%; min-width: 90px;
+  height: 35px; min-height: 35px;
   background: var(--board-wood);
-  border: 1.5px solid #a67c33; border-radius: 4px; padding: 2px 4px;
+  border: 1.5px solid #a67c33; border-radius: 4px; padding: 1.5px 5px;
   display: flex; align-items: center; overflow-x: auto; gap: 4px;
-  box-shadow: inset 0 1px 3px rgba(0,0,0,0.5), inset 0 -1px 2px rgba(255,255,255,0.4), 0 2px 5px rgba(0,0,0,0.85);
-  position: relative;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.5), inset 0 -1px 2px rgba(255,255,255,0.4), 0 2px 6px rgba(0,0,0,0.85);
+  position: relative; flex-shrink: 0; z-index: 10;
+  transition: all 0.3s ease;
 }
 .warlord-hand-area::after {
   content: ''; position: absolute; inset: 0;
   border: 0.8px solid rgba(80, 40, 10, 0.4); pointer-events: none; border-radius: 3px;
 }
-.panel-enemy .warlord-hand-area { justify-content: flex-start; }
-.panel-player .warlord-hand-area { justify-content: flex-end; }
 
-/* =========================================================
-   【スマホ用レスポンシブ最適化：全駒ゆったり一覧・全幅駒台】
-   上段：コンパクト大将バー / 下段：全幅広々木目駒台
-   ========================================================= */
+/* 敵軍駒台：盤のすぐ左上、左寄せ、盤との間にマージン */
+.hand-lane-enemy {
+  width: clamp(170px, 52vw, 220px);
+  max-width: 60%;
+  align-self: flex-start;
+  margin-left: 2px;
+  margin-top: 2px;
+  margin-bottom: 4px; /* 将棋盤から少しだけ離す */
+  justify-content: flex-start;
+}
+
+/* 自軍駒台：盤のすぐ右下、右寄せ、盤との間にマージン */
+.hand-lane-player {
+  width: clamp(170px, 52vw, 220px);
+  max-width: 60%;
+  align-self: flex-end;
+  margin-right: 2px;
+  margin-top: 4px; /* 将棋盤から少しだけ離す */
+  margin-bottom: 2px;
+  justify-content: flex-end;
+}
+
+/* スマホ時（幅480px以下）のパネルと駒台の微調整 */
 @media (max-width: 480px) {
   .warlord-panel {
-    display: flex !important; flex-direction: column !important;
-    min-height: 66px !important; height: auto !important;
-    padding: 2.5px 5px !important; gap: 2px !important;
+    min-height: 50px !important;
+    padding: 2px 5px !important;
   }
-  
-  /* 上段：アバター ＋ 情報 ＋ HPバー を横1行に整然と配置 */
-  .panel-enemy, .panel-player {
-    position: relative;
-  }
-
-  .panel-enemy {
-    flex-direction: column !important;
-  }
-  .panel-player {
-    flex-direction: column !important;
-  }
-
-  .warlord-info {
-    width: 100% !important; flex: none !important;
-    display: flex !important; flex-direction: column !important; gap: 1px !important;
-  }
-
   .warlord-avatar {
-    width: 38px !important; height: 44px !important;
-    position: absolute !important; top: 3px !important;
+    width: 36px !important; height: 42px !important;
   }
-  .panel-enemy .warlord-avatar { right: 5px !important; }
-  .panel-player .warlord-avatar { left: 5px !important; }
-
-  .panel-enemy .warlord-info { padding-right: 44px !important; }
-  .panel-player .warlord-info { padding-left: 44px !important; }
-
   .warlord-name { font-size: 11.5px !important; }
   .warlord-clan { display: none !important; }
   .warlord-quote { font-size: 8px !important; margin: 0 !important; }
   .gauge-group { margin-top: 0 !important; }
-  .gauge-label-row { font-size: 7.5px !important; }
-  .troops-num-txt { font-size: 8px !important; }
   .troops-bar-frame { height: 4px !important; }
-
-  /* 下段：横幅いっぱい（全幅100%）に広がる木目駒台！ 7種全駒が余裕で並ぶ */
-  .warlord-hand-area {
-    width: 100% !important; max-width: 100% !important; min-width: 100% !important;
-    height: 35px !important; min-height: 35px !important;
-    padding: 1px 4px !important; gap: 4px !important;
-    border-radius: 3px !important; margin-top: 1px !important;
-    overflow-x: auto !important;
-  }
-  .panel-enemy .warlord-hand-area { justify-content: flex-start !important; }
-  .panel-player .warlord-hand-area { justify-content: flex-start !important; }
 }
 
 /* =========================================================
@@ -507,8 +489,8 @@ body {
   border: 2px solid #cca135; border-radius: 4px;
   padding: 1px;
   box-shadow: 0 5px 18px rgba(0,0,0,0.98), inset 0 0 10px rgba(0,0,0,0.95);
-  width: min(calc(100vw - 12px), calc(100vh - 330px), 480px);
-  height: min(calc(100vw - 12px), calc(100vh - 330px), 480px);
+  width: min(calc(100vw - 12px), calc(100vh - 335px), 480px);
+  height: min(calc(100vw - 12px), calc(100vh - 335px), 480px);
   max-width: 100%; max-height: 100%;
   flex-shrink: 0; position: relative;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
@@ -516,8 +498,8 @@ body {
 
 @media (min-width: 600px) {
   .shogi-board-frame {
-    width: min(calc(100vw - 40px), calc(100vh - 330px), 520px) !important;
-    height: min(calc(100vw - 40px), calc(100vh - 330px), 520px) !important;
+    width: min(calc(100vw - 40px), calc(100vh - 335px), 520px) !important;
+    height: min(calc(100vw - 40px), calc(100vh - 335px), 520px) !important;
   }
 }
 
@@ -1136,7 +1118,7 @@ body {
   background: linear-gradient(135deg, #fff7b8 0%, #ffd700 22%, #e6a800 48%, #fff099 72%, #cca114 100%) !important;
   border: 1.8px solid #ffe885 !important;
   border-radius: 5px !important;
-  padding: 5px 10px !important;
+  padding: 4px 10px !important;
   margin-bottom: 6px !important;
   box-shadow: 
     0 3px 0 #593c04,
@@ -1167,9 +1149,9 @@ body {
 .modal-title-shikkoku {
   font-family: var(--font-gyosho);
   margin: 0;
-  font-size: clamp(13.5px, 2.2vh, 17px);
+  font-size: clamp(13px, 2.1vh, 16px);
   font-weight: 900;
-  letter-spacing: 1.5px;
+  letter-spacing: 1.2px;
   color: #0c0502;
   text-shadow: 
     0 1px 0 rgba(255, 255, 255, 0.6),
@@ -1179,6 +1161,7 @@ body {
   position: relative;
   z-index: 2;
   text-align: center;
+  line-height: 1.2;
 }
 
 .modal-buttons { margin-top: 8px; display: flex; gap: 8px; justify-content: center; flex-shrink: 0; }
@@ -1467,7 +1450,7 @@ body {
 }
 
 /* =========================================================
-   【天下合戦勲功録】プレイヤー視点・劇的スリム＆三段メリハリ設計
+   【天下合戦勲功録】洗練された金蒔絵デザイン ＆ 絞り込み最適化
    ========================================================= */
 .battle-history-modal-box {
   width: 96vw !important; max-width: 520px !important; height: 90vh !important;
@@ -1492,7 +1475,7 @@ body {
   box-shadow: 0 2.5px 0 #1c0202, 0 0 12px rgba(255, 215, 0, 0.6) !important;
 }
 
-/* 金蒔絵1行サマリーバー（画面上部を圧迫せず格調高く凝縮） */
+/* 金蒔絵1行サマリーバー */
 .history-summary-strip {
   background: linear-gradient(90deg, #2b1305 0%, #4a2108 50%, #2b1305 100%);
   border: 1.2px solid #ffd700; border-radius: 4px;
@@ -1500,28 +1483,37 @@ body {
   box-shadow: 0 2px 5px rgba(0,0,0,0.85); flex-shrink: 0;
 }
 .summary-rank-tag {
-  font-family: var(--font-kaisho); font-size: 12px; font-weight: 900; color: #ffd700;
+  font-family: var(--font-kaisho); font-size: 11.5px; font-weight: 900; color: #ffd700;
   background: #7a1515; border: 1px solid #ffd700; border-radius: 3px;
   padding: 1px 6px; letter-spacing: 0.5px;
 }
 .summary-stats-txt {
-  font-size: 11px; font-weight: 900; color: #fff8e7; letter-spacing: 0.5px;
+  font-size: 10.5px; font-weight: 900; color: #fff8e7; letter-spacing: 0.3px;
 }
 .summary-stats-txt b { color: #ffd700; }
 
-/* 2分割スリムフィルターバー */
-.history-filter-strip {
-  display: flex; gap: 6px; background: rgba(20, 9, 3, 0.9);
-  border: 1px solid #73511f; border-radius: 4px; padding: 3px 6px;
+/* 【見直し版】絞り込みフィルターバー：文字サイズと余白を引き締めた工芸デザイン */
+.history-filter-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 4px; background: rgba(20, 9, 3, 0.95);
+  border: 1.2px solid #73511f; border-radius: 4px; padding: 3px 5px;
   margin-bottom: 4px; flex-shrink: 0;
 }
-.filter-cell-group { display: flex; align-items: center; gap: 4px; flex: 1; min-width: 0; }
-.filter-cell-label { font-size: 9.5px; font-weight: 900; color: #ffd700; white-space: nowrap; }
-.history-select-input {
-  font-family: var(--font-ui); font-size: 9.5px; font-weight: 800;
-  background: #170702; color: #ffe899; border: 1px solid #a67c33;
-  border-radius: 3px; padding: 2px 4px; outline: none; flex: 1; min-width: 0;
+@media (max-width: 480px) {
+  .history-filter-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 3px 5px !important; }
 }
+
+.filter-item-group { display: flex; align-items: center; gap: 3px; min-width: 0; }
+.filter-label {
+  font-size: 8.5px; font-weight: 900; color: #ffd700; white-space: nowrap; letter-spacing: 0.2px; flex-shrink: 0;
+}
+.history-select-input {
+  font-family: var(--font-ui); font-size: 9px; font-weight: 800;
+  background: #170702; color: #ffe899; border: 1px solid #a67c33;
+  border-radius: 3px; padding: 1.5px 3px; outline: none; flex: 1; min-width: 0;
+  height: 22px; cursor: pointer;
+}
+.history-select-input:focus { border-color: #ffd700; }
 
 /* 歴代合戦カードスクロールリスト */
 .history-records-scroll {
@@ -1806,11 +1798,17 @@ body {
 }
 
 /* =========================================================
-   【当局・合戦絵巻】直感的「天下陣地・前線進撃マップ」グラフ
+   【当局・合戦絵巻】直感的「天下陣地・前線進撃マップ」グラフ ＆ カッコ改行調整
    ========================================================= */
 .modal-kifu-panorama {
   width: 96vw; max-width: 540px; height: 88vh; display: flex; flex-direction: column; gap: 5px;
 }
+.kifu-title-sub {
+  font-size: clamp(10.5px, 1.7vh, 12px) !important;
+  display: block; margin-top: 1px; letter-spacing: 0.8px;
+  color: #3b1704; text-shadow: 0 0.8px 0 rgba(255, 255, 255, 0.7);
+}
+
 .kifu-status-badge {
   font-family: var(--font-kaisho); font-size: 11px; font-weight: 900; color: #ffeb3b;
   border: 1.2px solid #ffd700; padding: 2px 8px; border-radius: 4px;
@@ -1900,21 +1898,23 @@ body {
   border: 0.7px solid #b88a32; white-space: nowrap; text-align: center;
 }
 
-/* 指南モーダル */
-.guide-modal-box { width: 96vw; max-width: 540px; height: 90vh; display: flex; flex-direction: column; padding: 10px 12px !important; }
-.guide-modal-header { display: flex; flex-direction: column; gap: 4px; margin-bottom: 6px; flex-shrink: 0; }
-.guide-modal-title { margin: 0; color: #ffd700; font-size: clamp(14px, 2.5vh, 16px); font-weight: 900; text-align: center; letter-spacing: 1px; }
+/* =========================================================
+   【指南モーダル】上品で読みやすい文字サイズ引き締め設計
+   ========================================================= */
+.guide-modal-box { width: 96vw; max-width: 540px; height: 90vh; display: flex; flex-direction: column; padding: 8px 10px !important; }
+.guide-modal-header { display: flex; flex-direction: column; gap: 3px; margin-bottom: 5px; flex-shrink: 0; }
+.guide-modal-title { margin: 0; color: #ffd700; font-size: clamp(13px, 2.2vh, 15px); font-weight: 900; text-align: center; letter-spacing: 1px; }
 
 .guide-narrator-panel {
   display: flex; align-items: center; justify-content: center; gap: 8px;
   background: rgba(20, 8, 3, 0.95); border: 1px solid #73511f;
-  border-radius: 4px; padding: 3px 8px;
+  border-radius: 4px; padding: 2.5px 8px;
 }
-.narrator-label { font-size: 11.5px; font-weight: 900; color: #ffd700; white-space: nowrap; }
+.narrator-label { font-size: 10.5px; font-weight: 900; color: #ffd700; white-space: nowrap; }
 .narrator-btn-group { display: flex; gap: 6px; }
 .narrator-toggle-btn {
-  font-family: var(--font-ui); font-size: 11px; font-weight: 900;
-  padding: 3px 10px; border-radius: 3px; border: 1px solid #a67c33;
+  font-family: var(--font-ui); font-size: 10px; font-weight: 900;
+  padding: 2.5px 8px; border-radius: 3px; border: 1px solid #a67c33;
   background: #241207; color: #ebd4a0; cursor: pointer; transition: all 0.2s ease;
   box-shadow: 0 2px 0 #0d0401, 0 2px 4px rgba(0,0,0,0.8);
 }
@@ -1924,23 +1924,23 @@ body {
   box-shadow: 0 2px 0 #1c0202, 0 0 10px rgba(255, 215, 0, 0.6) !important;
 }
 
-.guide-tab-bar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-bottom: 8px; flex-shrink: 0; }
+.guide-tab-bar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; margin-bottom: 6px; flex-shrink: 0; }
 .guide-tab-btn {
-  font-family: var(--font-ui); font-size: clamp(10px, 1.6vh, 11.5px); font-weight: 900;
-  padding: 7px 2px; border-radius: 4px; border: 1.2px solid #a67c33;
+  font-family: var(--font-ui); font-size: clamp(9.5px, 1.45vh, 11px); font-weight: 900;
+  padding: 5.5px 1px; border-radius: 3px; border: 1.2px solid #a67c33;
   background: linear-gradient(180deg, #2f1607 0%, #150802 100%); color: #ebd4a0; cursor: pointer; text-align: center;
-  white-space: nowrap; line-height: 1.1; box-shadow: 0 2.5px 0 #0f0502, 0 3px 5px rgba(0,0,0,0.8);
+  white-space: nowrap; line-height: 1.1; box-shadow: 0 2px 0 #0f0502, 0 2.5px 4px rgba(0,0,0,0.8);
 }
 .guide-tab-btn.active {
   background: linear-gradient(180deg, #8a1414 0%, #3d0505 100%);
   border-color: #ffd700; color: #ffffff;
-  box-shadow: 0 2.5px 0 #1c0202, 0 0 10px rgba(255,215,0,0.6) !important;
+  box-shadow: 0 2px 0 #1c0202, 0 0 10px rgba(255,215,0,0.6) !important;
 }
 
 .guide-scroll-body {
-  flex: 1; overflow-y: auto; padding-right: 6px;
-  font-size: clamp(13px, 2.1vh, 14.5px); line-height: 1.8;
-  background: rgba(10, 4, 1, 0.85); border: 1.2px solid #8e6c31; border-radius: 4px; padding: 10px 12px;
+  flex: 1; overflow-y: auto; padding-right: 4px;
+  font-size: clamp(11px, 1.6vh, 12.5px); line-height: 1.65;
+  background: rgba(10, 4, 1, 0.85); border: 1.2px solid #8e6c31; border-radius: 4px; padding: 8px 10px;
   box-shadow: inset 0 0 12px rgba(0,0,0,0.9);
 }
 .guide-pane { display: none; }
@@ -1948,26 +1948,26 @@ body {
 
 .guide-card-box {
   background: linear-gradient(180deg, rgba(38, 17, 7, 0.95) 0%, rgba(18, 7, 2, 0.95) 100%);
-  border: 1.4px solid #8e6c31; border-radius: 6px; padding: 10px 12px; margin-bottom: 11px;
-  box-shadow: 0 2px 7px rgba(0,0,0,0.85); transition: all 0.3s ease; position: relative;
+  border: 1.4px solid #8e6c31; border-radius: 5px; padding: 8px 10px; margin-bottom: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.85); transition: all 0.3s ease; position: relative;
 }
 
 .guide-card-header-row {
-  display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  margin-bottom: 8px; border-bottom: 1.2px solid #8c671a; padding-bottom: 4px;
+  display: flex; align-items: center; justify-content: space-between; gap: 6px;
+  margin-bottom: 6px; border-bottom: 1.2px solid #8c671a; padding-bottom: 3px;
 }
 .guide-card-box h4 {
-  margin: 0; color: #ffd700; font-size: clamp(14px, 2.3vh, 16px); font-weight: 900;
-  display: flex; align-items: center; gap: 5px; letter-spacing: 0.5px; flex: 1; min-width: 0;
+  margin: 0; color: #ffd700; font-size: clamp(12.5px, 1.8vh, 13.8px); font-weight: 900;
+  display: flex; align-items: center; gap: 4px; letter-spacing: 0.3px; flex: 1; min-width: 0;
 }
 
 .card-speech-btn {
-  font-family: var(--font-ui); font-size: 11px; font-weight: 900;
-  padding: 3.5px 8px; border-radius: 3px; border: 1.2px solid #ffd700;
+  font-family: var(--font-ui); font-size: 10px; font-weight: 900;
+  padding: 2.5px 7px; border-radius: 3px; border: 1.2px solid #ffd700;
   background: linear-gradient(180deg, #44210c 0%, #1c0a03 100%);
   color: #fff4b8; cursor: pointer; white-space: nowrap; line-height: 1.1;
-  box-shadow: 0 2.5px 0 #100401, 0 3px 4px rgba(0,0,0,0.8); flex-shrink: 0;
-  display: flex; align-items: center; gap: 3px;
+  box-shadow: 0 2px 0 #100401, 0 2px 4px rgba(0,0,0,0.8); flex-shrink: 0;
+  display: flex; align-items: center; gap: 2px;
 }
 .card-speech-btn:hover { background: linear-gradient(180deg, #663212 0%, #290e04 100%); }
 
@@ -1988,9 +1988,9 @@ body {
 }
 
 .beginner-highlight-box {
-  border: 2px solid #ffd700 !important;
+  border: 1.8px solid #ffd700 !important;
   background: linear-gradient(180deg, rgba(64, 25, 8, 0.98) 0%, rgba(26, 8, 2, 0.98) 100%) !important;
-  box-shadow: 0 0 12px rgba(255, 215, 0, 0.45) !important;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.45) !important;
 }
 
 .kw-gold { color: #ffd700; font-weight: 900; }
@@ -2000,34 +2000,34 @@ body {
 
 .enemy-line-item {
   display: flex; justify-content: space-between; align-items: center;
-  border-bottom: 1px dashed rgba(166, 124, 51, 0.35); padding: 4px 0;
-  font-size: clamp(12px, 1.9vh, 13.5px); line-height: 1.5; white-space: nowrap;
+  border-bottom: 1px dashed rgba(166, 124, 51, 0.35); padding: 3px 0;
+  font-size: clamp(10.5px, 1.5vh, 11.5px); line-height: 1.45; white-space: nowrap;
 }
 .enemy-line-left { font-weight: 900; color: #ffe899; }
-.enemy-line-right { color: #d6be89; font-size: clamp(11px, 1.7vh, 12.5px); }
+.enemy-line-right { color: #d6be89; font-size: clamp(9.5px, 1.35vh, 10.5px); }
 
 /* 其の四：宿命録 */
 .rivalry-story-card { border: 1.5px solid #a67c33; transition: all 0.3s ease; position: relative; }
-.rivalry-card-header { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
+.rivalry-card-header { display: flex; align-items: center; gap: 5px; flex: 1; min-width: 0; }
 .rivalry-card-header h4 {
   margin: 0 !important; border-bottom: none !important; padding-bottom: 0 !important;
-  font-size: clamp(14.5px, 2.3vh, 16.5px) !important; color: #ffe699 !important;
+  font-size: clamp(12.5px, 1.8vh, 14px) !important; color: #ffe699 !important;
 }
 .rivalry-badge-tag {
-  font-size: 10px; font-weight: 900; color: #fff3cc;
+  font-size: 9px; font-weight: 900; color: #fff3cc;
   background: linear-gradient(180deg, #8a1414 0%, #420808 100%);
   border: 0.8px solid #ffd700; border-radius: 3px;
-  padding: 1.5px 7px; white-space: nowrap; line-height: 1.1;
+  padding: 1px 6px; white-space: nowrap; line-height: 1.1;
 }
 .rivalry-story-sub {
-  font-size: clamp(11.5px, 1.8vh, 13px); font-weight: 800; color: #ffb74d;
-  margin-bottom: 7px; border-bottom: 1px dashed rgba(255, 215, 0, 0.35); padding-bottom: 4px;
+  font-size: clamp(10.5px, 1.5vh, 11.5px); font-weight: 800; color: #ffb74d;
+  margin-bottom: 5px; border-bottom: 1px dashed rgba(255, 215, 0, 0.35); padding-bottom: 3px;
 }
-.rivalry-story-p { margin: 0 0 7px 0; font-size: clamp(12.5px, 2.0vh, 14px); line-height: 1.8; color: #fcedcb; }
+.rivalry-story-p { margin: 0 0 5px 0; font-size: clamp(10.5px, 1.5vh, 12px); line-height: 1.6; color: #fcedcb; }
 .rivalry-dialogue-box {
   background: rgba(14, 5, 2, 0.9); border: 1px solid #73511f;
-  border-left: 3.5px solid #ff3b30; border-radius: 4px;
-  padding: 6px 10px; margin: 7px 0; font-size: clamp(12.5px, 2.0vh, 14px); line-height: 1.7;
+  border-left: 3px solid #ff3b30; border-radius: 4px;
+  padding: 5px 8px; margin: 5px 0; font-size: clamp(10.5px, 1.5vh, 12px); line-height: 1.5;
 }
 
 @keyframes pulse-rivalry-highlight {
@@ -2040,4 +2040,5 @@ body {
   border: 2px solid #ffffff !important;
   background: linear-gradient(180deg, rgba(64, 25, 8, 0.98) 0%, rgba(26, 8, 2, 0.98) 100%) !important;
 }
+
 
