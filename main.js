@@ -508,22 +508,11 @@ self.onmessage = function(e) {
 `;
 
 /* =========================================================
-   最高峰二重音響エンジン ＆ 全画面（Fullscreen）連動
+   最高峰二重音響エンジン
    ========================================================= */
 let audioCtx = null, soundEnabled = true, isPageHidden = false;
 let realKomaAudioBuffer = null;
 let realKomaAudioElement = null;
-
-function requestAppFullscreen() {
-  try {
-    const de = document.documentElement;
-    if (de.requestFullscreen && !document.fullscreenElement) {
-      de.requestFullscreen().catch(() => {});
-    } else if (de.webkitRequestFullscreen && !document.webkitFullscreenElement) {
-      de.webkitRequestFullscreen().catch(() => {});
-    }
-  } catch(e) {}
-}
 
 function preloadRealKomaSound() {
   try {
@@ -573,7 +562,6 @@ function updateWarlordBGM(level) {
 }
 
 function initAudio() {
-  requestAppFullscreen();
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   if (audioCtx.state === 'suspended' && !isPageHidden) audioCtx.resume();
   if (!isPageHidden) startBgm();
@@ -875,7 +863,7 @@ if ('speechSynthesis' in window) {
 }
 
 /* =========================================================
-   【重要改修】手番思考タイマー ＆ 0秒静止ラグ解消エンジン
+   手番思考タイマー ＆ 0秒静止ラグ解消エンジン
    ========================================================= */
 let turnStartTime = 0;
 let turnTimerInterval = null;
@@ -899,7 +887,6 @@ function startTurnTimer(side, warlordName) {
   turnStartTime = Date.now();
   updateThinkingTimerDisplay();
 
-  // 100msごとにリアルタイム更新（0秒で静止しない）
   turnTimerInterval = setInterval(() => {
     updateThinkingTimerDisplay();
   }, 100);
@@ -1229,6 +1216,7 @@ let isExhibitionActive = false, exhibitionTimer = null, exhibitionSpeed = 'norma
 const EXHIBITION_DELAYS = { normal: 1200, fast: 650 };
 const EXHIBITION_TIME_LIMITS = { normal: 8500, fast: 2500 };
 let exhibitionSenteTarget = 'nanban', exhibitionGoteTarget = 'lvl_10', exhibitionRandomStrategistWarlordKey = 'sanada';
+let exhibitionMobileCurrentTab = 'sente'; // スマホ用タブ切り替え状態 ('sente' | 'gote')
 
 let exhibitionAchievedDepth = 0, exhibitionTotalNodes = 0;
 
@@ -1742,11 +1730,14 @@ function updateTurnAvatarGlow(activeTurn) {
 function updateStrategistUI() {
   const badge = document.getElementById('player-strategist-badge');
   if (isExhibitionActive) {
-    if (badge) badge.textContent = `御前観戦`;
+    if (badge) badge.style.display = 'none'; // 御前試合中は軍師バッジを非表示にして重なり根絶
     return;
   }
   const p = PLAYER_WARLORDS[currentMyWarlordId];
-  if (badge) badge.textContent = `軍師:${p.strategistName}`;
+  if (badge) {
+    badge.style.display = 'inline-block';
+    badge.textContent = `軍師:${p.strategistName}`;
+  }
   const hintBtn = document.getElementById('btn-master-hint');
   if (hintBtn) {
     hintBtn.classList.remove('awakened');
@@ -1775,6 +1766,7 @@ function updateReviewModeUI() {
 
   const pChangeBtn = document.getElementById('btn-player-change');
   const eChangeBtn = document.getElementById('btn-enemy-change');
+  const strategistBadge = document.getElementById('player-strategist-badge');
   const quitExhBtn = document.getElementById('btn-exhibition-quit');
 
   if (wrapper) {
@@ -1785,17 +1777,22 @@ function updateReviewModeUI() {
   if (quitExhBtn) quitExhBtn.style.display = (isExhibitionActive && !isReplay) ? 'inline-block' : 'none';
 
   if (isExhibitionActive) {
+    // 御前試合中は、自軍側軍師バッジを非表示にして長い名前との重なりを完全排除
+    if (strategistBadge) strategistBadge.style.display = 'none';
+
     if (pChangeBtn) {
-      pChangeBtn.innerHTML = '🔒 御前観戦中';
+      pChangeBtn.innerHTML = '⚔ 対陣変更';
       pChangeBtn.className = 'panel-select-btn btn-3d is-locked-exhibition';
       pChangeBtn.onclick = openExhibitionModal;
     }
     if (eChangeBtn) {
-      eChangeBtn.innerHTML = '🔒 対陣変更';
+      eChangeBtn.innerHTML = '⚔ 対陣変更';
       eChangeBtn.className = 'panel-select-btn btn-3d is-locked-exhibition';
       eChangeBtn.onclick = openExhibitionModal;
     }
   } else {
+    if (strategistBadge) strategistBadge.style.display = 'inline-block';
+
     if (pChangeBtn) {
       pChangeBtn.innerHTML = '🪭 自将変更';
       pChangeBtn.className = 'panel-select-btn btn-3d btn-select-player';
@@ -2489,9 +2486,6 @@ function animateAndExecuteMove(m, metric = null, onComplete = null) {
   }, liftTime);
 }
 
-/* =========================================================
-   【重要改修】着手実行 ＆ 合戦絵巻リアルタイム自動追従
-   ========================================================= */
 function executeMove(m, metric = null) {
   if (m.type === 'move' && !m.code && board[m.from.r][m.from.c]) {
     m.code = board[m.from.r][m.from.c].code;
@@ -2534,7 +2528,7 @@ function executeMove(m, metric = null) {
   updateTroopsAndSituation();
   updateReviewModeUI();
 
-  // ★合戦絵巻モーダルが開いている場合はリアルタイムに全自動更新！
+  // 合戦絵巻モーダルが開いている場合はリアルタイムに全自動更新
   const kifuModalEl = document.getElementById('kifu-modal');
   if (kifuModalEl && kifuModalEl.style.display === 'flex') {
     updateKifuModalLive();
@@ -2637,7 +2631,6 @@ function finishTurn() {
   updateTurnAvatarGlow('AI');
   const enemy = WARLORDS_DATA[currentAiLevel];
   
-  // ★手番が移った瞬間から即座にタイマーを開始（0秒静止ラグを完全解消）
   startTurnTimer('AI', enemy.name);
   setTimeout(aiTurn, 450);
 }
@@ -2818,7 +2811,6 @@ function handleWorkerMessage(e) {
         document.getElementById('ai-quote-disp').textContent = WARLORDS_DATA[currentAiLevel].quotes.check;
         document.getElementById('player-quote-disp').textContent = PLAYER_WARLORDS[currentMyWarlordId].quotes.pinch;
       }
-      // 即座にプレイヤーの手番タイマーを始動
       startTurnTimer('PLAYER', pName);
     }
   });
@@ -3220,7 +3212,7 @@ function renderKifu() {
 }
 
 /* =========================================================
-   【御前試合】ビジュアル選択 ＆ 対局方式制御
+   【御前試合】ビジュアル選択 ＆ スマホタブ切替・対局方式制御
    ========================================================= */
 const ALL_EXHIBITION_AI_KEYS = [
   'nanban', 'kenshi', 'inja',
@@ -3229,10 +3221,27 @@ const ALL_EXHIBITION_AI_KEYS = [
   'strategist'
 ];
 
+function switchExhibitionMobileTab(tabSide) {
+  playUiClickSound();
+  exhibitionMobileCurrentTab = tabSide;
+
+  const btnSente = document.getElementById('btn-exh-tab-sente');
+  const btnGote = document.getElementById('btn-exh-tab-gote');
+  const colSente = document.getElementById('exhibition-col-sente');
+  const colGote = document.getElementById('exhibition-col-gote');
+
+  if (btnSente) btnSente.classList.toggle('active', tabSide === 'sente');
+  if (btnGote) btnGote.classList.toggle('active', tabSide === 'gote');
+
+  if (colSente) colSente.classList.toggle('mobile-active-col', tabSide === 'sente');
+  if (colGote) colGote.classList.toggle('mobile-active-col', tabSide === 'gote');
+}
+
 function openExhibitionModal() {
   initAudio(); playUiClickSound(); stopAutoReplay();
   pickRandomStrategistWarlord();
   renderExhibitionVisualPickers();
+  switchExhibitionMobileTab('sente'); // 初期表示は先手タブ
   document.getElementById('exhibition-modal').style.display = 'flex';
 }
 function closeExhibitionModal() {
@@ -3435,7 +3444,6 @@ function startExhibitionFromModal() {
   triggerCutin(`【御前${modeTxt}】${sData.name} vs ${gData.name}`, true);
   updateTurnAvatarGlow('PLAYER');
 
-  // ★即座にタイマーを開始し、ラグなく思考時間を刻む
   startTurnTimer('PLAYER', sData.name);
 
   setTimeout(() => {
@@ -3452,7 +3460,6 @@ function dispatchExhibitionTurn() {
   const targetSide = isSenteTurn ? 'PLAYER' : 'AI';
   const targetData = getTargetAIData(targetKey);
 
-  // タイマーが未稼働の場合確実に起動
   if (!turnTimerInterval) {
     startTurnTimer(targetSide, targetData.name);
   }
@@ -3501,7 +3508,6 @@ function scheduleNextExhibitionTurn() {
   stopExhibitionTimer();
   const delay = EXHIBITION_DELAYS[exhibitionSpeed] || 1200;
 
-  // 着手直後に次手番のタイマーを即時始動
   const isSenteTurn = (turn === 'PLAYER');
   const targetKey = isSenteTurn ? exhibitionSenteTarget : exhibitionGoteTarget;
   const targetSide = isSenteTurn ? 'PLAYER' : 'AI';
@@ -4494,7 +4500,7 @@ function replayFromHistory(recordId, storageKey) {
   const lastSnap = historyStates[reviewingIndex];
   board = cloneBoardState(lastSnap.board);
   hands = JSON.parse(JSON.stringify(lastSnap.hands));
-  lastMove = (reviewingIndex > 0) ? lastSnap.moveObjectsHistory[lastSnap.moveObjectsHistory.length - 1] : null;
+  lastMove = (reviewingIndex > 0) ? lastSnap.moveObjectsHistory[snap.moveObjectsHistory.length - 1] : null;
   isGameOver = true;
 
   updateTurnAvatarGlow(null);
@@ -4525,4 +4531,5 @@ document.addEventListener('touchstart', () => initAudio(), { once: true });
 loadProgress();
 setPlayerWarlord(currentMyWarlordId);
 initBoardState();
+
 

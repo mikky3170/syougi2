@@ -238,14 +238,20 @@
     
     <div class="exhibition-guide-plaque">
       <span>💡</span>
-      <span>武将・指南役の<b>【肖像・家紋】</b>を直接選定して御前試合を開始します。<br>※両軍の読み筋・思考時間・消費刻を間近で鑑賞できます。</span>
+      <span>武将・指南役の<b>【肖像・家紋】</b>を選定して御前試合を開始します。<br>※両軍の読み筋・思考時間・消費刻を間近で鑑賞できます。</span>
     </div>
 
-    <!-- 左右対陣ビジュアルセレクター（先手陣 vs 後手陣） -->
-    <div class="exhibition-vs-container">
+    <!-- スマホ専用：先手陣／後手陣 切替タブバー（幅600px以下で出現） -->
+    <div class="exhibition-mobile-tab-bar" id="exhibition-mobile-tabs">
+      <button class="exhibition-mobile-tab-btn btn-3d active" id="btn-exh-tab-sente" onclick="switchExhibitionMobileTab('sente')">▲ 先手陣を選定</button>
+      <button class="exhibition-mobile-tab-btn btn-3d" id="btn-exh-tab-gote" onclick="switchExhibitionMobileTab('gote')">▽ 後手陣を選定</button>
+    </div>
+
+    <!-- 左右対陣ビジュアルセレクター（タブレット・PC：左右等幅固定2列 / スマホ：1列フルワイド＋タブ切替） -->
+    <div class="exhibition-vs-container" id="exhibition-vs-container">
       
       <!-- 【左陣】先手陣セレクター -->
-      <div class="exhibition-side-col">
+      <div class="exhibition-side-col" id="exhibition-col-sente">
         <div class="exhibition-side-title">【先手陣】出陣AI</div>
         <!-- 選択中のプレビュー表示 -->
         <div class="exhibition-warlord-preview-card" id="exhibition-sente-preview-card">
@@ -263,7 +269,7 @@
       </div>
 
       <!-- 【右陣】後手陣セレクター -->
-      <div class="exhibition-side-col">
+      <div class="exhibition-side-col" id="exhibition-col-gote">
         <div class="exhibition-side-title">【後手陣】出陣AI</div>
         <!-- 選択中のプレビュー表示 -->
         <div class="exhibition-warlord-preview-card" id="exhibition-gote-preview-card">
@@ -812,4 +818,5 @@
 <script src="main.js"></script>
 </body>
 </html>
+
 
