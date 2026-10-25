@@ -45,20 +45,24 @@
 </div>
 
 <div class="main-wrapper" id="main-wrapper">
-  <!-- ① 最上部：戦況評定スリムバー（一目で形勢把握＋短評＋右端に合戦絵巻ボタン） -->
+  <!-- ① 最上部：戦況評定スリムバー（左端に「戦況」明示＋形勢バッジ＋一回り大きい解説文＋右端に合戦絵巻ボタン） -->
   <div class="situation-banner" id="situation-banner">
-    <!-- 左端：一目で五分か優勢かわかる金蒔絵形勢バッジ -->
-    <div class="situation-badge badge-gokaku" id="situation-badge">【互角】</div>
-    <!-- 中央：戦況短評コメント（御前試合中も一貫して局面の形勢を表示） -->
+    <!-- 左端：「戦況」の金文字鑑札 ＆ 形勢バッジ -->
+    <div class="situation-label-group">
+      <span class="situation-tag-title">戦況</span>
+      <div class="situation-badge badge-gokaku" id="situation-badge">【互角】</div>
+    </div>
+    <!-- 中央：戦況短評コメント（一回り大きいフォントで分かりやすく解説） -->
     <div class="situation-text" id="situation-text">両軍ともに布陣堅牢、白兵戦の機を伺っております。</div>
-    <!-- 右端：戦況の詳細がわかる合戦絵巻（KIFU・領地争奪グラフ）ボタン -->
+    <!-- 右端：合戦絵巻ボタン（天下絵巻ボタンと同等サイズで堂々配置） -->
     <button class="btn-situation-kifu btn-3d" id="btn-situation-kifu" onclick="openKifuModal()" title="当局の全棋譜と前線進撃マップを展開">📖 合戦絵巻</button>
   </div>
 
   <!-- =========================================================
        戦闘主ステージ：battle-theatre-layout
-       （将棋の正式ルールに完全準拠した東西布陣）
+       （将棋の正式ルールに完全準拠した東西布陣・完全不動フレーム設計）
        上陣（敵軍）：画面【左】敵駒台 ─── 画面【右】敵将パネル
+       中陣（対局）：将棋盤 ＆ 直下に完全不動再生バースロット
        下陣（自軍）：画面【左】自将パネル ─── 画面【右】自軍駒台
        ========================================================= -->
   <div class="battle-theatre-layout" id="battle-theatre-layout">
@@ -71,7 +75,7 @@
         <div class="warlord-hand-box hand-box-enemy" id="ai-hand"></div>
       </div>
 
-      <!-- 敵将パネル（正式作法：画面向かって右側 / スマホ時は戦況バーに吸着） -->
+      <!-- 敵将パネル（正式作法：画面向かって右側 / 高さ完全固定） -->
       <div class="warlord-panel panel-enemy" id="ai-panel">
         <div class="warlord-avatar" id="ai-avatar-container" onclick="toggleWarlordAvatarView('ai')" title="肖像／家紋切替"></div>
         
@@ -109,7 +113,7 @@
       </div>
     </div>
 
-    <!-- 【中陣セクション：本丸対局場（将棋盤・中央大盤）】 -->
+    <!-- 【中陣セクション：本丸対局場（将棋盤・中央大盤 ＆ 直下再生バースロット）】 -->
     <div class="battle-section-middle">
       <div class="board-wrapper">
         <div class="shogi-board-frame">
@@ -144,24 +148,26 @@
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- 【振り返り・合戦再生バー（リプレイ時出現）】 -->
-    <div class="replay-full-controls" id="replay-full-controls" style="display:none;">
-      <div class="replay-ctrl-left-group">
-        <button class="replay-step-btn btn-3d" onclick="stepReviewToStart()" title="最初（初期配置）へ">⏮</button>
-        <button class="replay-step-btn btn-3d" onclick="stepReview(-1)" title="一手戻る">◀</button>
-        <button class="kifu-auto-btn btn-3d" id="btn-auto-replay" onclick="toggleAutoReplay()" title="自動で一手ずつ合戦を再生">▶ 自動</button>
-        <button class="replay-step-btn btn-3d" onclick="stepReview(1)" title="一手進む">▶</button>
-        <button class="replay-step-btn btn-3d" onclick="stepReviewToEnd()" title="最新（終局）へ">⏭</button>
-        <button class="kifu-speed-btn btn-3d" id="btn-replay-speed" onclick="cycleReplaySpeed()" title="再生速度切替">1x</button>
+      <!-- 【将棋盤の直下：振り返り・合戦再生バースロット（表示切替時も全体不動）】 -->
+      <div class="replay-bar-slot">
+        <div class="replay-full-controls" id="replay-full-controls" style="display:none;">
+          <div class="replay-ctrl-left-group">
+            <button class="replay-step-btn btn-3d" onclick="stepReviewToStart()" title="最初（初期配置）へ">⏮</button>
+            <button class="replay-step-btn btn-3d" onclick="stepReview(-1)" title="一手戻る">◀</button>
+            <button class="kifu-auto-btn btn-3d" id="btn-auto-replay" onclick="toggleAutoReplay()" title="自動で一手ずつ合戦を再生">▶ 自動</button>
+            <button class="replay-step-btn btn-3d" onclick="stepReview(1)" title="一手進む">▶</button>
+            <button class="replay-step-btn btn-3d" onclick="stepReviewToEnd()" title="最新（終局）へ">⏭</button>
+            <button class="kifu-speed-btn btn-3d" id="btn-replay-speed" onclick="cycleReplaySpeed()" title="再生速度切替">1x</button>
+          </div>
+          <button class="btn-finish-replay btn-3d" onclick="exitReplayMode()" title="合戦鑑賞を終了して初期配置へ復帰">⚔ 対局へ戻る</button>
+        </div>
       </div>
-      <button class="btn-finish-replay btn-3d" onclick="exitReplayMode()" title="合戦鑑賞を終了して元の対局へ復帰">⚔ 対局へ戻る</button>
     </div>
 
     <!-- 【下陣セクション：自軍エリア】 -->
     <div class="battle-section-bottom">
-      <!-- 自将パネル（正式作法：画面向かって左側 / スマホ時は軍令高札へ吸着） -->
+      <!-- 自将パネル（正式作法：画面向かって左側 / 高さ完全固定） -->
       <div class="warlord-panel panel-player" id="player-panel">
         <div class="warlord-avatar" id="player-avatar-container" onclick="toggleWarlordAvatarView('player')" title="肖像／家紋切替"></div>
         
@@ -210,7 +216,7 @@
 
   </div>
 
-  <!-- ④ 盤下：大判軍令高札（通常時は軍令・御前試合時は軍師実況解説） -->
+  <!-- ④ 盤下：大判軍令高札（高さ完全固定・セリフ伸縮によるガタつき完全防止） -->
   <div class="order-message-banner" id="order-message-banner">
     <div class="order-banner-corner banner-c-tl"></div>
     <div class="order-banner-corner banner-c-tr"></div>
@@ -834,5 +840,3 @@
 <script src="main.js"></script>
 </body>
 </html>
-
-

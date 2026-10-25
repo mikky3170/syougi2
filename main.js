@@ -1,3 +1,4 @@
+
 /* =========================================================
    将棋王 2026 〜 天下統一・戦国決戦 〜
    メインスクリプト（軍略・演出・思考エンジン・御前試合統合管理）
@@ -1651,7 +1652,7 @@ function calculateTroopsPercentages(bd, hd) {
 }
 
 /* =========================================================
-   【戦況連動型・動的セリフ切り替えシステム（合戦進行段階連動）】
+   【戦況連動型・動的セリフ切り替えシステム】
    ========================================================= */
 function updateWarlordQuotes() {
   if (isReviewingPast()) return;
@@ -2079,7 +2080,6 @@ function isReviewingPast() {
 }
 
 function updateReviewModeUI() {
-  const sitBanner = document.getElementById('situation-banner');
   const sitBadge = document.getElementById('situation-badge');
   const sitText = document.getElementById('situation-text');
   const isReplay = isReviewingPast();
@@ -2089,7 +2089,7 @@ function updateReviewModeUI() {
     repCtrl.style.display = (isReplay || (isExhibitionActive && isGameOver)) ? 'flex' : 'none';
   }
 
-  if (sitBanner && sitBadge && sitText) {
+  if (sitBadge && sitText) {
     if (isReplay) {
       sitBadge.className = 'situation-badge badge-gokaku';
       sitBadge.textContent = '【鑑賞】';
@@ -2104,6 +2104,9 @@ function updateReviewModeUI() {
   }
 }
 
+/* =========================================================
+   【対局へ戻る：初期配置クリア・美しく再配置リセット】
+   ========================================================= */
 function exitReplayMode() {
   playUiClickSound();
   stopAutoReplay(); stopTurnTimer();
@@ -2198,30 +2201,20 @@ function exitReplayMode() {
     }
 
   } else {
+    // 進行中の対局がない場合（鑑賞・過去合戦の再生終了後）：初期配置の駒を整然と並べてリセット
     isPastReplayActive = false;
     isExhibitionActive = false;
+    isGameOver = true;
     
     setPlayerWarlord(currentMyWarlordId);
     selectConquestProvince(currentAiLevel);
 
-    reviewingIndex = historyStates.length - 1;
-    const snap = historyStates[reviewingIndex];
-    if (snap) {
-      board = cloneBoardState(snap.board);
-      hands = JSON.parse(JSON.stringify(snap.hands));
-      lastMove = (reviewingIndex > 0) ? snap.moveObjectsHistory[snap.moveObjectsHistory.length - 1] : null;
-    }
-    renderBoard();
-    updateTurnFocus(isGameOver ? null : turn);
-    updateTroopsAndSituation();
-    updateWarlordQuotes();
-    updateReviewModeUI();
-
-    if (!isGameOver) {
-      startTurnTimer(turn, (turn === 'PLAYER' ? PLAYER_WARLORDS[currentMyWarlordId].name : WARLORDS_DATA[currentAiLevel].name));
-    } else {
-      setOrderMessage('「対局開始」を押して新たな合戦を始められよ！', false, 'player');
-    }
+    initBoardState();
+    triggerCutin('初期布陣へと立ち返り候', false);
+    setOrderMessage({
+      line1: '合戦絵巻の鑑賞が結びとなり候。',
+      line2: '「対局開始」を押して新たな合戦を始められよ！'
+    }, false, 'player');
   }
 }
 
@@ -2677,7 +2670,7 @@ function executeMove(m, metric = null) {
 
   if (m.type === 'drop') {
     hands[m.owner][m.code]--;
-    board[m.to.r][m.to.c] = { code: m.code, owner: m.owner };
+    board[m.to.r][move.to.c] = { code: m.code, owner: m.owner };
   } else {
     const fp = board[m.from.r][m.from.c], tp = board[m.to.r][m.to.c];
     if (tp) {
@@ -3129,7 +3122,7 @@ function checkGameOver(nextOwner) {
 }
 
 /* =========================================================
-   【戦況バーの形勢バッジ ＆ 短評コメント連動ロジック】
+   【戦況バーの形勢バッジ ＆ 平易で分かりやすい戦況解説文】
    ========================================================= */
 function updateTroopsAndSituation() {
   const curBoard = (reviewingIndex >= 0 && historyStates[reviewingIndex]) ? historyStates[reviewingIndex].board : board;
@@ -3199,7 +3192,7 @@ function updateTroopsAndSituation() {
       } else if (diffPct <= -35) {
         badgeText = isExhibitionActive ? '【後手勝勢】' : '【本陣危急】';
         badgeClass = 'situation-badge badge-enemy-win';
-        newSitText = isExhibitionActive ? '後手陣の猛威止まらず！ 先手陣本陣が危急に候！' : '我が本陣危急！ 直ちに防衛陣列を再編せよ！';
+        newSitText = isExhibitionActive ? '後手陣の猛威止まらず！ 先手陣本陣が危急に候！' : '我が本陣危急！ 直ちに王手を凌ぎ、防衛陣列を再編せよ！';
       } else if (diffPct <= -12) {
         badgeText = isExhibitionActive ? '【後手有利】' : '【敵軍有利】';
         badgeClass = 'situation-badge badge-enemy-adv';
@@ -4578,7 +4571,7 @@ function replayFromHistory(recordId, storageKey) {
   const lastSnap = historyStates[reviewingIndex];
   board = cloneBoardState(lastSnap.board);
   hands = JSON.parse(JSON.stringify(lastSnap.hands));
-  lastMove = (reviewingIndex > 0) ? lastSnap.moveObjectsHistory[snap.moveObjectsHistory.length - 1] : null;
+  lastMove = (reviewingIndex > 0) ? lastSnap.moveObjectsHistory[lastSnap.moveObjectsHistory.length - 1] : null;
   isGameOver = true;
 
   updateTurnFocus(null);
@@ -4611,4 +4604,5 @@ document.addEventListener('touchstart', () => initAudio(), { once: true });
 loadProgress();
 setPlayerWarlord(currentMyWarlordId);
 initBoardState();
+
 
