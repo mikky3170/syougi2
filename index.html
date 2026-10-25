@@ -15,7 +15,7 @@
 <canvas id="celebration-canvas"></canvas>
 <audio id="bgm-audio" src="nobunaga_song.mp3" loop preload="auto"></audio>
 
-<!-- 最上部：本丸大扁額・鍛造純金立体プレート ＆ 左右完全対称小判札ヘッダー（案B） -->
+<!-- 最上部：本丸大扁額・鍛造純金立体プレート ＆ 左右完全対称小判札ヘッダー -->
 <div class="top-header">
   <div class="header-actions-col header-left-col">
     <button class="header-btn btn-3d btn-guide" onclick="openGuideModal()" title="天下布武・兵法指南絵巻">📜 指南書</button>
@@ -68,7 +68,6 @@
             <div class="warlord-identity-block">
               <div class="warlord-name-group">
                 <span class="warlord-name" id="ai-name-disp">木下藤吉郎</span>
-                <!-- 勝者・敗者銘板：キャラ名の右横（インライン配置） -->
                 <span class="warlord-result-plaque" id="ai-result-plaque" style="display:none;"></span>
               </div>
               <div class="warlord-desc-line">
@@ -98,7 +97,7 @@
       </div>
     </div>
 
-    <!-- 【中陣：本丸対局場（将棋盤・再生操作バー）】 -->
+    <!-- 【中陣：本丸対局場（将棋盤・タブレット用再生バー）】 -->
     <div class="battle-section-middle">
       <div class="board-wrapper">
         <div class="shogi-board-frame">
@@ -133,24 +132,47 @@
         </div>
       </div>
 
-      <!-- 将棋盤直下：再生操作バースロット（鑑賞・再現時に展開） -->
-      <div class="replay-bar-slot" id="replay-bar-slot">
-        <div class="replay-full-controls" id="replay-full-controls" style="display:none;">
+      <!-- タブレット・PC専用：盤直下横長再生バースロット -->
+      <div class="replay-bar-slot desktop-tablet-only" id="replay-bar-slot-tablet">
+        <div class="replay-full-controls" id="replay-controls-tablet" style="display:none;">
           <div class="replay-ctrl-left-group">
             <button class="replay-step-btn btn-3d" onclick="stepReviewToStart()" title="最初（初期配置）へ">⏮</button>
             <button class="replay-step-btn btn-3d" onclick="stepReview(-1)" title="一手戻る">◀</button>
-            <button class="kifu-auto-btn btn-3d" id="btn-auto-replay" onclick="toggleAutoReplay()" title="自動再生">▶ 自動</button>
+            <button class="kifu-auto-btn btn-3d btn-auto-replay" onclick="toggleAutoReplay()" title="自動再生">▶ 自動</button>
             <button class="replay-step-btn btn-3d" onclick="stepReview(1)" title="一手進む">▶</button>
             <button class="replay-step-btn btn-3d" onclick="stepReviewToEnd()" title="最新（終局）へ">⏭</button>
-            <button class="kifu-speed-btn btn-3d" id="btn-replay-speed" onclick="cycleReplaySpeed()" title="速度切替">1x</button>
+            <button class="kifu-speed-btn btn-3d btn-replay-speed" onclick="cycleReplaySpeed()" title="速度切替">1x</button>
           </div>
           <button class="btn-finish-replay btn-3d" onclick="exitReplayMode()" title="対局へ復帰">⚔ 対局へ戻る</button>
         </div>
       </div>
     </div>
 
-    <!-- 【下陣：自軍／先手陣武将パネル ＆ 自軍持ち駒台】 -->
+    <!-- 【下陣：自軍駒台＆スマホ用左下再生バー ＆ 自軍武将パネル】 -->
     <div class="battle-section-bottom">
+      <div class="player-dock-row" id="player-dock-row">
+        <!-- スマートフォン専用：盤の左下スロット（自軍駒台の左隣にドッキング） -->
+        <div class="replay-bar-slot mobile-only" id="replay-bar-slot-mobile">
+          <div class="replay-full-controls" id="replay-controls-mobile" style="display:none;">
+            <div class="replay-ctrl-left-group">
+              <button class="replay-step-btn btn-3d" onclick="stepReviewToStart()" title="最初へ">⏮</button>
+              <button class="replay-step-btn btn-3d" onclick="stepReview(-1)" title="戻る">◀</button>
+              <button class="kifu-auto-btn btn-3d btn-auto-replay" onclick="toggleAutoReplay()" title="自動">▶ 自動</button>
+              <button class="replay-step-btn btn-3d" onclick="stepReview(1)" title="進む">▶</button>
+              <button class="replay-step-btn btn-3d" onclick="stepReviewToEnd()" title="最新へ">⏭</button>
+              <button class="kifu-speed-btn btn-3d btn-replay-speed" onclick="cycleReplaySpeed()" title="速度">1x</button>
+            </div>
+            <button class="btn-finish-replay btn-3d" onclick="exitReplayMode()" title="対局へ復帰">⚔ 対局へ戻る</button>
+          </div>
+        </div>
+
+        <!-- 自軍持ち駒台 -->
+        <div class="board-hand-dock dock-player" id="dock-player-wrapper" title="下陣持ち駒台">
+          <div class="warlord-hand-box hand-box-player" id="player-hand"></div>
+          <div class="dock-label" id="player-dock-label">☗ 自駒</div>
+        </div>
+      </div>
+
       <div class="warlord-panel panel-player" id="player-panel">
         <div class="warlord-avatar" id="player-avatar-container" onclick="toggleWarlordAvatarView('player')" title="肖像／家紋切替"></div>
 
@@ -160,7 +182,6 @@
               <div class="warlord-name-group">
                 <span class="warlord-name" id="player-name-disp">真田幸村</span>
                 <span class="warlord-strategist-badge" id="player-strategist-badge">軍師:昌幸</span>
-                <!-- 勝者・敗者銘板：キャラ名の右横（インライン配置） -->
                 <span class="warlord-result-plaque" id="player-result-plaque" style="display:none;"></span>
               </div>
               <div class="warlord-desc-line">
@@ -187,11 +208,6 @@
             <div class="warlord-quote" id="player-quote-disp">「不惜身命！ この一手に命を懸ける！」</div>
           </div>
         </div>
-      </div>
-
-      <div class="board-hand-dock dock-player" id="dock-player-wrapper" title="下陣持ち駒台">
-        <div class="warlord-hand-box hand-box-player" id="player-hand"></div>
-        <div class="dock-label" id="player-dock-label">☗ 自駒</div>
       </div>
     </div>
 
@@ -476,7 +492,7 @@
   </div>
 </div>
 
-<!-- 当局・合戦絵巻モーダル（先手後手を整然とブロック化） -->
+<!-- 当局・合戦絵巻モーダル -->
 <div id="kifu-modal" class="modal-overlay" style="display: none;">
   <div class="modal-content modal-kifu-panorama">
     <div class="modal-gold-plaque" style="justify-content:space-between;">
@@ -491,7 +507,6 @@
       <span id="kifu-modal-status-badge" class="kifu-status-badge" style="z-index:3;">五分五分の総力戦</span>
     </div>
     
-    <!-- 先手・後手を縦ブロック化し、スマホでも見やすく整頓 -->
     <div class="kifu-troops-confrontation-bar">
       <div class="kifu-troops-side side-player">
         <span class="side-turn-tag" id="kifu-player-turn-tag">☗ 先手陣</span>
@@ -806,8 +821,11 @@
   </div>
 </div>
 
-<script src="external_ai.js"></script>
+<!-- 分割ロード：①ゲームデータ ➡ ②思考エンジン ➡ ③メインゲーム制御 -->
+<script src="game_data.js"></script>
+<script src="ai_engine.js"></script>
 <script src="main.js"></script>
 </body>
 </html>
+
 
