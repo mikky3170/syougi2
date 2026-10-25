@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Klee+One:wght@600;900&family=Shippori+Mincho:wght@700;900&family=Yuji+Boku&display=swap');
 
 :root {
@@ -152,7 +151,7 @@ body {
 }
 
 /* =========================================================
-   【① 戦況評定スリムバー（左端に「戦況」明示・文字拡大・合戦絵巻ボタン）】
+   【① 戦況評定スリムバー】
    ========================================================= */
 .situation-banner {
   width: 100%;
@@ -164,7 +163,6 @@ body {
   margin-bottom: 0px; transition: all 0.3s ease;
 }
 
-/* 一番左端：「戦況」鑑札ラベル ＆ 形勢バッジ */
 .situation-label-group {
   display: flex; align-items: center; gap: 4px; flex-shrink: 0;
 }
@@ -185,14 +183,12 @@ body {
 .badge-enemy-adv { background: linear-gradient(180deg, #1b283d 0%, #0a1324 100%); color: #ffe6aa; border-color: #a88438; }
 .badge-enemy-win { background: linear-gradient(180deg, #3d0808 0%, #170202 100%); color: #ff9e9e; border-color: #ff4d4d; }
 
-/* 一回り大きく読みやすくなった戦況説明文 */
 .situation-text {
   font-size: clamp(9px, 1.35dvh, 10.5px); font-weight: 900; color: #fffbf0; line-height: 1.25;
   flex: 1; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px;
   text-shadow: 0 1px 2px #000;
 }
 
-/* 戦況バー右端の合戦絵巻ボタン（天下絵巻と同等の堂々たるサイズ・文字） */
 .btn-situation-kifu {
   font-family: var(--font-ui); font-size: clamp(8.5px, 1.25dvh, 10px); font-weight: 900;
   height: clamp(18px, 2.6dvh, 21px);
@@ -274,7 +270,6 @@ body {
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.15;
 }
 
-/* ガタつき完全防止：高さ固定の肩書・思案タイマー表示行 */
 .warlord-desc-line {
   display: flex; align-items: center; gap: 4px; min-width: 0; overflow: hidden;
   height: 17px; min-height: 17px; max-height: 17px; line-height: 17px;
@@ -288,7 +283,6 @@ body {
   border: 0.6px solid #b88a32; border-radius: 2px; padding: 0.5px 3px; white-space: nowrap;
 }
 
-/* 戦国風経過時間タイマー */
 .warlord-thinking-inline {
   font-family: var(--font-kaisho); font-size: clamp(7.5px, 1.05dvh, 8.5px); font-weight: 900;
   height: 15px; min-height: 15px; max-height: 15px; line-height: 15px;
@@ -317,7 +311,6 @@ body {
   display: flex; align-items: center; gap: 4px; flex-shrink: 0;
 }
 
-/* 敵将変更・自将変更ボタン（天下絵巻ボタンと同等のサイズ・文字サイズに統一） */
 .panel-select-btn {
   font-family: var(--font-ui); font-size: clamp(8.5px, 1.25dvh, 10px); font-weight: 900;
   height: clamp(19px, 2.7dvh, 22px);
@@ -334,7 +327,6 @@ body {
   border: 1.3px solid #ff9e9e; color: #ffffff;
 }
 
-/* 兵力ゲージ */
 .gauge-group { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex-shrink: 0; margin-bottom: 1px; }
 .gauge-label-row { display: flex; justify-content: space-between; align-items: center; font-size: 7.5px; line-height: 1.1; }
 .gauge-label-txt { color: #d6be89; font-weight: 700; }
@@ -355,7 +347,6 @@ body {
   box-shadow: 0 0 5px rgba(255, 215, 0, 0.7);
 }
 
-/* 武将セリフ行（完全高さ固定でガタつき防止） */
 .warlord-quote-row {
   flex: 1; min-height: 0;
   display: flex; align-items: flex-start; justify-content: flex-start; overflow: hidden;
@@ -602,12 +593,12 @@ body {
 .cutin-active .cutin-banner { opacity: 1 !important; transform: scale(1) !important; }
 
 /* =========================================================
-   【将棋盤の直下：合戦再生バースロット（完全不動スロット）】
+   【将棋盤の直下：合戦再生バースロット】
    ========================================================= */
 .replay-bar-slot {
   width: 100%; height: clamp(24px, 3.4dvh, 27px); min-height: 24px; max-height: 27px;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; margin-top: 2px; position: relative;
+  display: flex; align-items: center; justify-content: flex-start;
+  flex-shrink: 0; position: relative;
 }
 .replay-full-controls {
   width: 100%; height: 100%;
@@ -792,97 +783,116 @@ body {
 }
 
 /* =========================================================================
-   【レスポンシブ布陣切り替え：タブレット vs スマートフォン】
-   将棋正式ルール準拠：
-   敵軍（上）：画面【左】が敵駒台 ── 画面【右】が敵将パネル
-   自軍（下）：画面【左】が自将パネル ── 画面【右】が自軍駒台
+   【レスポンシブ布陣設計：タブレット vs スマートフォン】
    ========================================================================= */
 
-/* ---------------------------------------------------------
-   A. タブレット（幅640px以上）：均一な約2〜3px隙間 ＆ 完全不動フレーム
-   --------------------------------------------------------- */
+/* -------------------------------------------------------------------------
+   A. タブレット（幅640px以上）：吸着・突き当たり陣形
+   ・敵軍：【左】に敵持ち駒台（盤の左上くっつき）、【右】に敵将ゾーン（戦況ゾーンくっつき）
+   ・自軍：【左】に自将ゾーン（軍師助言ゾーンくっつき）、【右】に自軍持ち駒台（盤の右下くっつき）
+   ・再生バー：将棋盤の【左下】にくっつき、右へ自軍持ち駒台にぶつかるまで配置
+   ------------------------------------------------------------------------- */
 @media (min-width: 640px) {
   .battle-theatre-layout {
-    gap: 3px; justify-content: center;
+    gap: 0px; justify-content: space-between; width: 100%; flex: 1 1 auto;
   }
 
-  /* 上陣セクション：【左】敵軍駒台 ── 【右】敵将パネル */
+  /* 上陣セクション：戦況ゾーン直下に吸着 */
   .battle-section-top {
     width: 100%; display: flex; flex-direction: row; align-items: stretch; gap: 6px;
-    height: clamp(66px, 9.0dvh, 78px); flex-shrink: 0;
-    margin-top: 2.5px; margin-bottom: 2.5px;
+    height: clamp(62px, 8.8dvh, 74px); flex-shrink: 0;
+    margin-top: 0px; margin-bottom: 2px;
   }
+  /* 【左】敵軍持ち駒台（将棋盤の左上にくっつく） */
   .battle-section-top .dock-enemy {
-    width: clamp(140px, 24vw, 180px); height: 100%; margin: 0; flex-shrink: 0;
+    width: clamp(150px, 24vw, 190px); height: 100%; margin: 0; flex-shrink: 0;
     align-self: flex-start; justify-content: flex-start;
   }
   .battle-section-top .dock-enemy .warlord-hand-box {
     width: 100%; height: 100%; max-width: 100%;
   }
+  /* 【右】敵将武将ゾーン（戦況ゾーンにピタッと吸着） */
   .battle-section-top #ai-panel {
     flex: 1; min-width: 0; height: 100%; margin: 0; align-self: stretch;
   }
 
-  /* 中陣（将棋盤 ＆ 直下再生バースロット） */
+  /* 中陣（将棋盤 ＆ 再生バースロット） */
   .battle-section-middle {
     width: 100%; flex: 0 0 auto;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    margin: 0; padding: 0;
+    margin: 0; padding: 0; position: relative;
   }
   .shogi-board-frame {
-    width: min(calc(100vw - 20px), calc(100dvh - 330px), 550px);
-    height: min(calc(100vw - 20px), calc(100dvh - 330px), 550px);
+    width: min(calc(100vw - 20px), calc(100dvh - 320px), 530px);
+    height: min(calc(100vw - 20px), calc(100dvh - 320px), 530px);
     max-width: 100%; max-height: 100%;
   }
 
-  /* 下陣セクション：【左】自将パネル ── 【右】自軍駒台 */
+  /* 下陣セクション：軍師助言ゾーン直上に吸着 */
   .battle-section-bottom {
     width: 100%; display: flex; flex-direction: row; align-items: stretch; gap: 6px;
-    height: clamp(66px, 9.0dvh, 78px); flex-shrink: 0;
-    margin-top: 2.5px; margin-bottom: 2.5px;
+    height: clamp(62px, 8.8dvh, 74px); flex-shrink: 0;
+    margin-top: 2px; margin-bottom: 0px;
   }
+  /* 【左】自将武将ゾーン（軍師助言ゾーンにピタッと吸着） */
   .battle-section-bottom #player-panel {
     flex: 1; min-width: 0; height: 100%; margin: 0; align-self: stretch;
   }
+  /* 【右】自軍持ち駒台（将棋盤の右下にくっつく） */
   .battle-section-bottom .dock-player {
-    width: clamp(140px, 24vw, 180px); height: 100%; margin: 0; flex-shrink: 0;
+    width: clamp(150px, 24vw, 190px); height: 100%; margin: 0; flex-shrink: 0;
     align-self: flex-end; justify-content: flex-end;
   }
   .battle-section-bottom .dock-player .warlord-hand-box {
     width: 100%; height: 100%; max-width: 100%;
   }
+
+  /* 再生バー：将棋盤の左下にくっつき、右へ自軍持ち駒台にぶつかるまで伸びる */
+  .replay-bar-slot {
+    width: min(calc(100vw - 20px), calc(100dvh - 320px), 530px);
+    display: flex; justify-content: flex-start;
+  }
+  .replay-full-controls {
+    width: calc(100% - clamp(150px, 24vw, 190px) + 6px) !important;
+  }
 }
 
-/* ---------------------------------------------------------
-   B. スマートフォン（幅639px以下）：完全不動フレーム化
-   --------------------------------------------------------- */
+/* -------------------------------------------------------------------------
+   B. スマートフォン（幅639px以下）：完全吸着・突き当たり陣形
+   ・自軍持ち駒台：将棋盤の【右下】にくっつく
+   ・再生バー：将棋盤の【左下】にくっつき、右へ自軍持ち駒台までに配置（ぶつかる）
+   ・敵将ゾーン：戦況バー直下に吸着
+   ・自将ゾーン：軍師助言ゾーン直上に吸着
+   ------------------------------------------------------------------------- */
 @media (max-width: 639px) {
   .battle-theatre-layout {
-    gap: 0px; justify-content: space-between; flex: 1 1 auto;
+    gap: 0px; justify-content: space-between; flex: 1 1 auto; width: 100%;
   }
 
-  /* 上陣セクション（スマホ：縦積み順序を order で制御） */
+  /* 上陣セクション */
   .battle-section-top {
     width: 100%; display: flex; flex-direction: column; gap: 0px; flex-shrink: 0; margin-bottom: 0px;
   }
+  /* 敵将ゾーン：上の戦況バー直下に密着 */
   .battle-section-top #ai-panel {
-    order: 1; width: 100%; height: clamp(62px, 8.8dvh, 74px); min-height: 60px;
+    order: 1; width: 100%; height: clamp(60px, 8.6dvh, 72px); min-height: 58px;
     margin: 0; border-top: none; border-radius: 0 0 5px 5px;
   }
+  /* 敵軍持ち駒台：将棋盤の左上にくっつく */
   .battle-section-top #dock-enemy-wrapper {
-    order: 2; width: 100%; height: clamp(44px, 6.2dvh, 52px); min-height: 44px;
+    order: 2; width: 100%; height: clamp(42px, 6.0dvh, 50px); min-height: 42px;
     display: flex; justify-content: flex-start; align-self: flex-start;
-    margin-top: clamp(2px, 0.6dvh, 4px); margin-bottom: 0px; padding: 0;
+    margin-top: 2px; margin-bottom: 0px; padding: 0;
   }
   .battle-section-top #dock-enemy-wrapper .warlord-hand-box {
-    height: 100%; min-width: 140px; max-width: 85%;
+    height: 100%; min-width: 140px; max-width: 75%;
   }
 
-  /* 中陣（将棋盤 ＆ 直下再生バースロット） */
+  /* 中陣（将棋盤） */
   .battle-section-middle {
     width: 100%; flex: 0 0 auto;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 0; margin: 0px 0;
+    padding: 0; margin: 0px 0; position: relative;
   }
   .shogi-board-frame {
     width: min(calc(100vw - 8px), calc(100dvh - 315px), 520px);
@@ -890,22 +900,40 @@ body {
     max-width: 100%; max-height: 100%;
   }
 
-  /* 下陣セクション（スマホ：縦積み順序を order で制御） */
+  /* 下陣セクション */
   .battle-section-bottom {
-    width: 100%; display: flex; flex-direction: column; gap: 0px; flex-shrink: 0; margin-top: 0px;
+    width: 100%; display: flex; flex-direction: column; gap: 0px; flex-shrink: 0; margin-top: 0px; position: relative;
   }
+  /* 自軍持ち駒台：将棋盤の【右下】にくっつく */
   .battle-section-bottom #dock-player-wrapper {
-    order: 1; width: 100%; height: clamp(44px, 6.2dvh, 52px); min-height: 44px;
+    order: 1; width: 100%; height: clamp(42px, 6.0dvh, 50px); min-height: 42px;
     display: flex; justify-content: flex-end; align-self: flex-end;
-    margin-top: 0px; margin-bottom: clamp(2px, 0.6dvh, 4px); padding: 0;
+    margin-top: 2px; margin-bottom: 2px; padding: 0;
   }
   .battle-section-bottom #dock-player-wrapper .warlord-hand-box {
-    height: 100%; min-width: 140px; max-width: 85%;
+    height: 100%; min-width: 140px; max-width: 55%;
   }
+  /* 自将ゾーン：下の軍師助言ゾーン直上に密着 */
   .battle-section-bottom #player-panel {
-    order: 2; width: 100%; height: clamp(62px, 8.8dvh, 74px); min-height: 60px;
+    order: 2; width: 100%; height: clamp(60px, 8.6dvh, 72px); min-height: 58px;
     margin: 0; border-bottom: none; border-radius: 5px 5px 0 0;
   }
+
+  /* 再生バー：将棋盤の左下にくっつき、右へ自軍持ち駒台にぶつかるまで配置 */
+  .replay-bar-slot {
+    position: absolute;
+    bottom: -44px; left: 4px;
+    width: calc(100% - 150px) !important;
+    height: clamp(38px, 5.5dvh, 46px); min-height: 38px;
+    z-index: 25; pointer-events: auto;
+  }
+  .replay-full-controls {
+    width: 100%; height: 100%; padding: 2px 4px; gap: 2px;
+  }
+  .replay-ctrl-left-group { gap: 2px; }
+  .replay-step-btn { padding: 2px 4px; font-size: 8px; }
+  .kifu-auto-btn { padding: 2px 5px; font-size: 8px; }
+  .btn-finish-replay { padding: 2px 5px; font-size: 8px; }
 
   .order-message-banner {
     border-top: 1px solid #73511f !important; border-radius: 0 0 5px 5px !important;
@@ -982,7 +1010,9 @@ body {
   border: 1.5px solid #ff9e9e; color: #ffffff; padding: 5px 14px; border-radius: 4px; font-size: 10.5px; font-weight: 900;
 }
 
-/* 御前試合モーダル */
+/* =========================================================
+   【御前試合モーダル ＆ 武将選択ハイライト強調】
+   ========================================================= */
 .exhibition-modal-box {
   width: 96vw !important; max-width: 640px !important; height: 90dvh !important;
   display: flex; flex-direction: column; justify-content: space-between;
@@ -1036,7 +1066,19 @@ body {
   border: 1.2px solid #6b4d1b; border-radius: 4px; padding: 4px 6px; cursor: pointer; transition: all 0.15s ease; width: 100%; min-width: 0; flex-shrink: 0;
 }
 .pick-avatar-item:hover { background: linear-gradient(90deg, #3d1c07 0%, #59280a 100%); border-color: #ffd700; }
-.pick-avatar-item.active { border-color: #ffd700 !important; background: linear-gradient(90deg, #1b283d 0%, #2a3c5a 100%) !important; }
+
+/* 選択中状態の劇的視覚的強調（純金立体枠＋真紅漆喰＋黄金発光） */
+.pick-avatar-item.active {
+  border: 2px solid #ffd700 !important;
+  background: linear-gradient(90deg, #6e1919 0%, #3d0505 100%) !important;
+  box-shadow: 0 0 14px rgba(255, 215, 0, 0.85), inset 0 0 10px rgba(255, 215, 0, 0.35) !important;
+  transform: scale(1.015);
+}
+.pick-avatar-item.active .pick-thumb-box {
+  border: 2px solid #ffffff !important;
+  box-shadow: 0 0 8px #ffd700 !important;
+}
+
 .pick-thumb-box { width: 36px; height: 44px; border-radius: 3px; border: 1.2px solid #ffd700; overflow: hidden; flex-shrink: 0; background: #0c0401; }
 .pick-info-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1.5px; overflow: hidden; }
 .pick-name-row { display: flex; align-items: center; justify-content: space-between; gap: 3px; min-width: 0; }
@@ -1048,7 +1090,15 @@ body {
 .badge-ai-troops { background: #2b0e04; color: #ffd700; border: 0.6px solid #b88a32; border-radius: 2px; padding: 0.5px 3px; }
 .badge-ai-depth { background: #101c2e; color: #ffd700; border: 0.6px solid #a88438; border-radius: 2px; padding: 0.5px 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pick-desc-txt { font-size: 7.5px; color: #c4b08f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.badge-active-stamp { font-size: 7px; font-weight: 900; color: #ffd700; background: #1c2e47; border: 0.8px solid #ffd700; border-radius: 2px; padding: 0.5px 3px; }
+
+/* 出陣中ステッカーの立体強調 */
+.badge-active-stamp {
+  font-family: var(--font-kaisho); font-size: 8px; font-weight: 900;
+  color: #0b0502; background: linear-gradient(135deg, #fff7b8 0%, #ffd700 50%, #cca114 100%);
+  border: 1.2px solid #ffffff; border-radius: 3px; padding: 1px 5px;
+  box-shadow: 0 0 8px #ffd700, 0 1px 3px rgba(0,0,0,0.8);
+  animation: timer-gold-pulse 1.4s infinite ease-in-out;
+}
 
 .exhibition-config-row {
   display: flex; flex-direction: column; gap: 4px; background: rgba(22, 10, 4, 0.95);
@@ -1351,5 +1401,4 @@ body {
 .rivalry-story-p { margin: 0 0 4px 0; font-size: 10px; line-height: 1.55; color: #fcedcb; }
 .rivalry-dialogue-box { background: rgba(14, 5, 2, 0.9); border: 1px solid #73511f; border-left: 3px solid #ff3b30; border-radius: 4px; padding: 4px 7px; margin: 4px 0; font-size: 10px; }
 .highlight-rivalry-card { border: 2px solid #ffffff !important; background: linear-gradient(180deg, rgba(64, 25, 8, 0.98) 0%, rgba(26, 8, 2, 0.98) 100%) !important; }
-
 

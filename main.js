@@ -1,4 +1,3 @@
-
 /* =========================================================
    将棋王 2026 〜 天下統一・戦国決戦 〜
    メインスクリプト（軍略・演出・思考エンジン・御前試合統合管理）
@@ -1389,7 +1388,7 @@ const WARLORDS_DATA = {
     id: 'enemy_11', province: '天下無双', name: '前田慶次', clan: '天下無双｜軍師AI：奥村助右衛門', maxTroops: 180000, depthSpec: '深さ5＋神算鬼謀',
     featureShort: '軍師AI搭載。豪快傾奇と神算鬼謀の極み。', tacticsHint: '助右衛門の神算が仕組む罠に警戒し、守りを固めてから挑まれよ！',
     customImg: 'images/keiji',
-    portraitSvg: `<rect width="100" height="100" rx="6" fill="#301404"/><path d="M 20,80 L 80,20" stroke="#d41313" stroke-width="6" stroke-linecap="round"/><path d="M 32,45 Q 50,22 68,45 L 72,72 Q 50,80 28,72 Z" fill="#613808" stroke="#ffd700" stroke-width="2"/><circle cx="50" cy="45" r="9" fill="#ffd700"/><circle cx="50" cy="26" r="6" fill="#ffd700"/><circle cx="68" cy="38" r="6" fill="#ffd700"/><circle cx="62" cy="62" r="6" fill="#ffd700"/><circle cx="38" cy="62" r="6" fill="#ffd700"/><circle cx="32" cy="38" r="6" fill="#ffd700"/>`,
+    portraitSvg: `<rect width="100" height="100" rx="6" fill="#301404"/><path d="M 20,80 L 80,20" stroke="#d41313" stroke-width="6" stroke-linecap="round"/><path d="M 32,45 Q 50,22 68,45 L 72,72 Q 50,80 28,72 Z" fill="#613808" stroke="#ffd700" stroke-width="2"/><circle cx="50" cy="45" r="9" fill="#ffd700"/><circle cx="50" cy="26" r="6" fill="#ffd700"/><circle cx="68" cy="38" r="6" fill="#ffd700"/><circle cx="62" cy="62" r="10" fill="#ffd700"/><circle cx="38" cy="62" r="10" fill="#ffd700"/><circle cx="32" cy="38" r="6" fill="#ffd700"/>`,
     quotes: {
       default: '「軍師・助右衛門の策と俺の槍！ 天下を傾け尽くしてくれるわ！」',
       opening: '「助右衛門、面白い陣形を頼むぜ！ ど派手に傾こうじゃねえか！」',
@@ -1439,7 +1438,7 @@ let isPastReplayActive = false, savedActiveBattle = null;
 let isExhibitionActive = false, exhibitionTimer = null, exhibitionSpeed = 'normal';
 const EXHIBITION_DELAYS = { normal: 1200, fast: 650 };
 const EXHIBITION_TIME_LIMITS = { normal: 8500, fast: 2500 };
-let exhibitionSenteTarget = 'nanban', exhibitionGoteTarget = 'lvl_10', exhibitionRandomStrategistWarlordKey = 'sanada';
+let exhibitionSenteTarget = 'lvl_1', exhibitionGoteTarget = 'lvl_10', exhibitionRandomStrategistWarlordKey = 'sanada';
 let exhibitionMobileCurrentTab = 'sente';
 
 let exhibitionAchievedDepth = 0, exhibitionTotalNodes = 0;
@@ -1494,7 +1493,7 @@ function updateExhibitionThinkingDisplay(isThinking = true) {
     }
   }
 
-  // 下の軍令高札：思考時間の重複を廃し、軍師の臨場感あふれる実況解説に特化
+  // 軍令高札：軍師の臨場感あふれる実況解説
   const sData = getTargetAIData(exhibitionSenteTarget);
   const gData = getTargetAIData(exhibitionGoteTarget);
   const curBoard = board;
@@ -2104,9 +2103,6 @@ function updateReviewModeUI() {
   }
 }
 
-/* =========================================================
-   【対局へ戻る：初期配置クリア・美しく再配置リセット】
-   ========================================================= */
 function exitReplayMode() {
   playUiClickSound();
   stopAutoReplay(); stopTurnTimer();
@@ -2201,7 +2197,6 @@ function exitReplayMode() {
     }
 
   } else {
-    // 進行中の対局がない場合（鑑賞・過去合戦の再生終了後）：初期配置の駒を整然と並べてリセット
     isPastReplayActive = false;
     isExhibitionActive = false;
     isGameOver = true;
@@ -2268,7 +2263,6 @@ function setOrderMessage(msgData, isMyTurn = false, category = 'player') {
     }
   }
 
-  // 軍師進言時、および御前試合実況時に軍師肖像画を誇り高く掲出
   if (faceEl) {
     if ((isHintMode || isExhibitionActive) && !isReviewingPast()) {
       faceEl.style.display = 'flex';
@@ -2316,9 +2310,6 @@ function openRivalryInGuide(targetKey = null) {
   }, 100);
 }
 
-/* =========================================================
-   【振り駒の儀：5枚一斉連続3D回転＆決着アニメーション】
-   ========================================================= */
 function openFurigomaModal() {
   initAudio(); playUiClickSound(); stopAutoReplay(); stopTurnTimer();
   savedActiveBattle = null;
@@ -2654,6 +2645,9 @@ function animateAndExecuteMove(m, metric = null, onComplete = null) {
   }, flyTime);
 }
 
+/* =========================================================
+   【駒移動実行関数：駒打ちバグ完全解消版】
+   ========================================================= */
 function executeMove(m, metric = null) {
   if (m.type === 'move' && !m.code && board[m.from.r][m.from.c]) {
     m.code = board[m.from.r][m.from.c].code;
@@ -2670,7 +2664,8 @@ function executeMove(m, metric = null) {
 
   if (m.type === 'drop') {
     hands[m.owner][m.code]--;
-    board[m.to.r][move.to.c] = { code: m.code, owner: m.owner };
+    // 【重要修正】move.to.c の誤記を m.to.c に修正して例外停止を根絶
+    board[m.to.r][m.to.c] = { code: m.code, owner: m.owner };
   } else {
     const fp = board[m.from.r][m.from.c], tp = board[m.to.r][m.to.c];
     if (tp) {
@@ -2732,9 +2727,6 @@ function createNewWorker() {
 }
 createNewWorker();
 
-/* =========================================================
-   【軍師助言メッセージの洗練・情報の引き算エンジン】
-   ========================================================= */
 function analyzeTacticsIntent(bm) {
   const targetPiece = board[bm.to.r][bm.to.c];
   const movingPieceCode = (bm.type === 'move') ? (board[bm.from.r][bm.from.c]?.code || bm.code) : bm.code;
@@ -3121,9 +3113,6 @@ function checkGameOver(nextOwner) {
   return false;
 }
 
-/* =========================================================
-   【戦況バーの形勢バッジ ＆ 平易で分かりやすい戦況解説文】
-   ========================================================= */
 function updateTroopsAndSituation() {
   const curBoard = (reviewingIndex >= 0 && historyStates[reviewingIndex]) ? historyStates[reviewingIndex].board : board;
   const curHands = (reviewingIndex >= 0 && historyStates[reviewingIndex]) ? historyStates[reviewingIndex].hands : hands;
@@ -3327,12 +3316,12 @@ function cycleReplaySpeed() {
 }
 
 /* =========================================================
-   【御前試合】ビジュアル選択 ＆ 対局方式制御
+   【御前試合】並び順（Lv1〜10 → 外部AI3種 → 軍師AI）
    ========================================================= */
 const ALL_EXHIBITION_AI_KEYS = [
-  'nanban', 'kenshi', 'inja',
   'lvl_1', 'lvl_2', 'lvl_3', 'lvl_4', 'lvl_5',
   'lvl_6', 'lvl_7', 'lvl_8', 'lvl_9', 'lvl_10',
+  'nanban', 'kenshi', 'inja',
   'strategist'
 ];
 
@@ -3378,6 +3367,7 @@ function getAiBadgeHtml(k, data) {
   return `<span class="badge-ai-level">武将</span>`;
 }
 
+/* 武将選択画面レンダリング（選択中カードのハイライト強調対応） */
 function renderExhibitionVisualPickers() {
   const senteListEl = document.getElementById('exhibition-sente-pick-list');
   const goteListEl = document.getElementById('exhibition-gote-pick-list');
@@ -3401,7 +3391,7 @@ function renderExhibitionVisualPickers() {
       <div class="pick-info-col">
         <div class="pick-name-row">
           <span class="pick-name-txt">${data.name}</span>
-          ${isSenteActive ? '<span class="badge-active-stamp">✔ 出陣中</span>' : ''}
+          ${isSenteActive ? '<span class="badge-active-stamp">✔ 出陣決定</span>' : ''}
           ${badgeHtml}
         </div>
         <div class="pick-stats-row">
@@ -3426,7 +3416,7 @@ function renderExhibitionVisualPickers() {
       <div class="pick-info-col">
         <div class="pick-name-row">
           <span class="pick-name-txt">${data.name}</span>
-          ${isGoteActive ? '<span class="badge-active-stamp">✔ 出陣中</span>' : ''}
+          ${isGoteActive ? '<span class="badge-active-stamp">✔ 出陣決定</span>' : ''}
           ${badgeHtml}
         </div>
         <div class="pick-stats-row">
@@ -3656,9 +3646,6 @@ function stopExhibitionTimer() {
   }
 }
 
-/* =========================================================
-   当局・合戦絵巻（全棋譜 ＆ 天下陣地・前線進撃マップ）
-   ========================================================= */
 function openKifuModal() {
   initAudio(); playUiClickSound(); stopAutoReplay();
 
@@ -3729,7 +3716,7 @@ function openKifuModal() {
       const rawCode = m.code || 'FU';
       const pPiece = m.type === 'drop' ? PIECES[m.code] : PIECES[rawCode];
       const mark = m.owner === 'PLAYER' ? '▲' : '△';
-      const moveStr = `${idx + 1}手目：${mark} ${9 - m.to.c}${KANJI_NUMS[m.to.r]} ${pPiece}${m.promote ? '成' : ''}`;
+      const moveStr = `${idx + 1}手目：${mark} ${9 - m.to.c}${KANJI_NUMS[bm ? bm.to.r : m.to.r]} ${pPiece}${m.promote ? '成' : ''}`;
 
       const metric = moveMetricsHistory[idx] || { timeSec: '0.1', depth: 1 };
       const metricHtml = `<span class="kifu-metric-pill">⏱ ${metric.timeSec}秒 ｜ 深さ${metric.depth}</span>`;
@@ -3750,7 +3737,7 @@ function openKifuModal() {
       }
 
       d.innerHTML = `
-        <span class="kifu-move-txt">${moveStr}</span>
+        <span class="kifu-move-txt">${idx + 1}手目：${mark} ${9 - m.to.c}${KANJI_NUMS[m.to.r]} ${pPiece}${m.promote ? '成' : ''}</span>
         <div class="kifu-row-right-group">
           ${badgeHtml}
           ${metricHtml}
@@ -3785,9 +3772,6 @@ function closeKifuModal() {
   if (modalEl) modalEl.style.display = 'none';
 }
 
-/* =========================================================
-   天下陣地・前線進撃マップ
-   ========================================================= */
 function drawTerritoryChart() {
   const cvs = document.getElementById('chart-canvas');
   if (!cvs) return;
@@ -4302,12 +4286,20 @@ function switchHistoryTab(tab) {
     if (wSelect) {
       wSelect.innerHTML = `
         <option value="all">すべての対陣</option>
+        <option value="lvl_1">Lv.1 木下藤吉郎</option>
+        <option value="lvl_2">Lv.2 前田利家</option>
+        <option value="lvl_3">Lv.3 柴田勝家</option>
+        <option value="lvl_4">Lv.4 浅井長政</option>
+        <option value="lvl_5">Lv.5 明智光秀</option>
+        <option value="lvl_6">Lv.6 上杉謙信</option>
+        <option value="lvl_7">Lv.7 武田信玄</option>
+        <option value="lvl_8">Lv.8 織田信長</option>
+        <option value="lvl_9">Lv.9 豊臣秀吉</option>
+        <option value="lvl_10">Lv.10 徳川家康</option>
         <option value="nanban">南蛮棋士</option>
         <option value="kenshi">無双剣士</option>
         <option value="inja">鬼謀の隠者</option>
         <option value="strategist">軍師AI</option>
-        <option value="lvl_10">徳川家康</option>
-        <option value="lvl_8">織田信長</option>
       `;
     }
     if (eSelect) {
@@ -4322,9 +4314,6 @@ function switchHistoryTab(tab) {
   renderBattleHistoryList();
 }
 
-/* =========================================================
-   【戦績画面（勲功録）UI】
-   ========================================================= */
 function renderBattleHistoryList() {
   const isPlayerTab = (currentHistoryTab === 'player');
   const storageKey = isPlayerTab ? 'shogi_battle_records_player' : 'shogi_battle_records_exhibition';
