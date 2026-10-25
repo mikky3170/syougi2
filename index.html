@@ -17,12 +17,12 @@
 <!-- 状況・武将別BGM -->
 <audio id="bgm-audio" src="nobunaga_song.mp3" loop preload="auto"></audio>
 
-<!-- 最上部：本丸大扁額・鍛造純金立体プレート＆左右小判札ヘッダー -->
+<!-- 最上部：本丸大扁額・鍛造純金立体プレート ＆ 左右完全対称小判札ヘッダー -->
 <div class="top-header">
-  <!-- 左翼：縦2段小判札（兵法指南書 ＆ 天下絵巻） -->
+  <!-- 左翼：縦2段小判札（上段：兵法指南書 ＆ 下段：奏楽・音響） -->
   <div class="header-actions-col header-left-col">
     <button class="header-btn btn-3d btn-guide" onclick="openGuideModal()" title="天下布武・兵法指南絵巻">📜 指南書</button>
-    <button class="header-btn btn-3d btn-book" id="btn-header-conquest" onclick="openConquestMapModal()" title="全国地図・国盗り進軍先">🗺 天下絵巻</button>
+    <button class="header-btn btn-3d btn-snd" id="sound-toggle" onclick="toggleSound()" title="音響・奏楽の切替">♪ 奏楽入</button>
   </div>
   
   <!-- 中央：本丸大扁額・鍛造立体純金金属プレート -->
@@ -37,44 +37,52 @@
     </h1>
   </div>
 
-  <!-- 右翼：縦2段小判札（御前試合 ＆ 勲功録） ＋ 音響ボタン -->
+  <!-- 右翼：縦2段小判札（上段：天下絵巻 ＆ 下段：勲功録） -->
   <div class="header-actions-col header-right-col">
-    <button class="header-btn btn-3d btn-exhibition" onclick="openExhibitionModal()" title="客分指南役・戦国武将の武芸観戦">⚔ 御前試合</button>
-    <div class="header-right-subrow">
-      <button class="header-btn btn-3d btn-history" onclick="openHistoryModal()" title="天下合戦勲功録（対戦戦歴絵巻）">📜 勲功録</button>
-      <button class="header-btn btn-3d btn-snd" id="sound-toggle" onclick="toggleSound()" title="音響・奏楽の切替">♪ 奏楽入</button>
-    </div>
+    <button class="header-btn btn-3d btn-book" id="btn-header-conquest" onclick="openConquestMapModal()" title="全国地図・国盗り進軍先">🗺 天下絵巻</button>
+    <button class="header-btn btn-3d btn-history" onclick="openHistoryModal()" title="天下合戦勲功録（対戦戦歴絵巻）">📜 勲功録</button>
   </div>
 </div>
 
 <div class="main-wrapper" id="main-wrapper">
-  <!-- ① 最上部：戦況評定スリムバー（全体の大局観に特化・更新時フラッシュ演出） -->
+  <!-- ① 最上部：戦況評定スリムバー（一目で形勢把握＋短評＋右端に合戦絵巻ボタン） -->
   <div class="situation-banner" id="situation-banner">
-    <div class="situation-title" id="situation-title">戦況</div>
-    <div class="situation-text" id="situation-text">互角の白兵戦。両軍ともに布陣を整え、緊迫の機を伺っております。</div>
+    <!-- 左端：一目で五分か優勢かわかる金蒔絵形勢バッジ -->
+    <div class="situation-badge badge-gokaku" id="situation-badge">【互角】</div>
+    <!-- 中央：戦況短評コメント（御前試合中も一貫して局面の形勢を表示） -->
+    <div class="situation-text" id="situation-text">両軍ともに布陣堅牢、白兵戦の機を伺っております。</div>
+    <!-- 右端：戦況の詳細がわかる合戦絵巻（KIFU・領地争奪グラフ）ボタン -->
+    <button class="btn-situation-kifu btn-3d" id="btn-situation-kifu" onclick="openKifuModal()" title="当局の全棋譜と前線進撃マップを展開">📖 合戦絵巻</button>
   </div>
 
   <!-- =========================================================
        戦闘主ステージ：battle-theatre-layout
-       （スマホ：戦況バーに敵将吸着 ── 敵駒台 ── 盤 ── 自駒台 ── 自将に軍令吸着）
-       （タブレット：上段横並び・中段大盤・下段横並び布陣）
+       （将棋の正式ルールに完全準拠した東西布陣）
+       上陣（敵軍）：画面【左】敵駒台 ─── 画面【右】敵将パネル
+       下陣（自軍）：画面【左】自将パネル ─── 画面【右】自軍駒台
        ========================================================= -->
   <div class="battle-theatre-layout" id="battle-theatre-layout">
     
     <!-- 【上陣セクション：敵軍エリア】 -->
     <div class="battle-section-top">
-      <!-- 敵将パネル（スマホ時は戦況バーに隙間なく吸着） -->
+      <!-- 敵軍持ち駒台（正式作法：画面向かって左側 / スマホ時は上段吸着） -->
+      <div class="board-hand-dock dock-enemy" id="dock-enemy-wrapper" title="敵軍持ち駒台（2行）">
+        <div class="dock-label">▽敵駒</div>
+        <div class="warlord-hand-box hand-box-enemy" id="ai-hand"></div>
+      </div>
+
+      <!-- 敵将パネル（正式作法：画面向かって右側 / スマホ時は戦況バーに吸着） -->
       <div class="warlord-panel panel-enemy" id="ai-panel">
         <div class="warlord-avatar" id="ai-avatar-container" onclick="toggleWarlordAvatarView('ai')" title="肖像／家紋切替"></div>
         
         <div class="warlord-info-col">
-          <!-- 上段：名前、肩書＋手番思案中+経過時間、敵将変更ボタン -->
+          <!-- 上段：名前、肩書＋戦国風経過時間タイマー＋敵将変更ボタン -->
           <div class="warlord-header-row">
             <div class="warlord-identity-block">
               <span class="warlord-name" id="ai-name-disp">木下藤吉郎</span>
               <div class="warlord-desc-line">
                 <span class="warlord-desc" id="ai-clan-disp">尾張国｜織田足軽隊</span>
-                <span class="warlord-thinking-inline time-enemy" id="ai-thinking-disp" style="display:none;"></span>
+                <span class="warlord-thinking-inline timer-gold-box" id="ai-thinking-disp" style="display:none;"></span>
               </div>
             </div>
             <div class="warlord-time-action-block">
@@ -93,17 +101,11 @@
             </div>
           </div>
 
-          <!-- 下段：兵力バー直下のセリフ（上詰めで端正に書き出し） -->
+          <!-- 下段：兵力バー直下のセリフ（上詰めで端正に書き出し・局面連動変化） -->
           <div class="warlord-quote-row">
             <div class="warlord-quote" id="ai-quote-disp">「草履取りとて天下を夢見候！ 足軽の意地、見せてくれよう！」</div>
           </div>
         </div>
-      </div>
-
-      <!-- 敵軍持ち駒台（2行構成・上下ゆったり設計） -->
-      <div class="board-hand-dock dock-enemy" id="dock-enemy-wrapper" title="敵軍持ち駒台（2行）">
-        <div class="dock-label">▽敵駒</div>
-        <div class="warlord-hand-box hand-box-enemy" id="ai-hand"></div>
       </div>
     </div>
 
@@ -159,18 +161,12 @@
 
     <!-- 【下陣セクション：自軍エリア】 -->
     <div class="battle-section-bottom">
-      <!-- 自軍持ち駒台（2行構成・上下ゆったり設計） -->
-      <div class="board-hand-dock dock-player" id="dock-player-wrapper" title="自軍持ち駒台（2行）">
-        <div class="warlord-hand-box hand-box-player" id="player-hand"></div>
-        <div class="dock-label">▲自駒</div>
-      </div>
-
-      <!-- 自将パネル（スマホ時は軍令高札へ隙間なく吸着） -->
+      <!-- 自将パネル（正式作法：画面向かって左側 / スマホ時は軍令高札へ吸着） -->
       <div class="warlord-panel panel-player" id="player-panel">
         <div class="warlord-avatar" id="player-avatar-container" onclick="toggleWarlordAvatarView('player')" title="肖像／家紋切替"></div>
         
         <div class="warlord-info-col">
-          <!-- 上段：名前、肩書＋手番思案中+経過時間、自将変更ボタン -->
+          <!-- 上段：名前、肩書＋戦国風経過時間タイマー＋自将変更ボタン -->
           <div class="warlord-header-row">
             <div class="warlord-identity-block">
               <div class="warlord-name-group">
@@ -179,7 +175,7 @@
               </div>
               <div class="warlord-desc-line">
                 <span class="warlord-desc" id="player-clan-disp">信濃国 ｜ 真田赤備隊</span>
-                <span class="warlord-thinking-inline time-player" id="player-thinking-disp" style="display:none;"></span>
+                <span class="warlord-thinking-inline timer-gold-box" id="player-thinking-disp" style="display:none;"></span>
               </div>
             </div>
             <div class="warlord-time-action-block">
@@ -198,17 +194,23 @@
             </div>
           </div>
 
-          <!-- 下段：兵力バー直下のセリフ（上詰めで端正に書き出し） -->
+          <!-- 下段：兵力バー直下のセリフ（上詰めで端正に書き出し・局面連動変化） -->
           <div class="warlord-quote-row">
             <div class="warlord-quote" id="player-quote-disp">「不惜身命！ この一手に命を懸ける！」</div>
           </div>
         </div>
       </div>
+
+      <!-- 自軍持ち駒台（正式作法：画面向かって右側 / スマホ時は下段吸着） -->
+      <div class="board-hand-dock dock-player" id="dock-player-wrapper" title="自軍持ち駒台（2行）">
+        <div class="warlord-hand-box hand-box-player" id="player-hand"></div>
+        <div class="dock-label">▲自駒</div>
+      </div>
     </div>
 
   </div>
 
-  <!-- ④ 盤下：大判軍令高札（スマホ時は自将パネルの直下に吸着） -->
+  <!-- ④ 盤下：大判軍令高札（通常時は軍令・御前試合時は軍師実況解説） -->
   <div class="order-message-banner" id="order-message-banner">
     <div class="order-banner-corner banner-c-tl"></div>
     <div class="order-banner-corner banner-c-tr"></div>
@@ -219,7 +221,7 @@
       <span class="tag-badge-row" id="tag-badge-row2">手番</span>
     </div>
 
-    <!-- 軍師進言時のみ出現する軍師肖像札 -->
+    <!-- 軍師進言時および御前試合解説時に登場する軍師肖像札 -->
     <div class="order-strategist-face" id="order-strategist-face" style="display:none;" title="専属軍師参陣">
       <div class="strategist-face-img-box" id="strategist-face-img-box"></div>
       <div class="strategist-name-tag" id="strategist-face-name-tag">昌幸</div>
@@ -243,17 +245,17 @@
 
 </div>
 
-<!-- 最下部コマンドバー（戦場5大采配ボタン・中央特大黄金対局開始・誤爆防止配置） -->
+<!-- 最下部コマンドバー（5大采配ボタン：進言／待った／対局開始／御前試合／投了） -->
 <div class="bottom-command-bar" id="bottom-command-bar">
-  <!-- 左端：待った（自陣側操作） -->
-  <button class="cmd-btn btn-3d btn-undo" id="btn-cmd-undo" onclick="undoMove()" title="局面を二手前まで巻き戻す">🪭 待った</button>
-  <!-- 左中：当局の全棋譜・前線進撃マップを展開 -->
-  <button class="cmd-btn btn-3d btn-kifu-launcher" onclick="openKifuModal()" title="当局の全棋譜と前線進撃絵巻を展開">📖 合戦絵巻</button>
-  <!-- 中央：主役・特大立体黄金ボタン「対局開始」 -->
-  <button class="cmd-btn btn-3d btn-start-hero" id="furigoma-btn" onclick="openFurigomaModal()" title="振り駒の儀を執り行い合戦を開始">⚜ 対局開始</button>
-  <!-- 右中：軍師進言（局面打開の妙手を指南） -->
+  <!-- 1. 軍師進言（局面打開の妙手を指南） -->
   <button class="cmd-btn btn-3d btn-hint" id="btn-master-hint" onclick="showMasterHint()" title="専属軍師に次の一手を問う">💡 軍師進言</button>
-  <!-- 右端：投了（誤タップ防止のため待ったから最も遠い右端へ独立配置） -->
+  <!-- 2. 待った（自陣側操作） -->
+  <button class="cmd-btn btn-3d btn-undo" id="btn-cmd-undo" onclick="undoMove()" title="局面を二手前まで巻き戻す">🪭 待った</button>
+  <!-- 3. 中央主役：特大立体黄金ボタン「対局開始」 -->
+  <button class="cmd-btn btn-3d btn-start-hero" id="furigoma-btn" onclick="openFurigomaModal()" title="振り駒の儀を執り行い合戦を開始">⚜ 対局開始</button>
+  <!-- 4. 御前試合（客分指南役・戦国武将の武芸観戦モード） -->
+  <button class="cmd-btn btn-3d btn-exhibition-cmd" id="btn-cmd-exhibition" onclick="openExhibitionModal()" title="客分指南役・戦国武将の武芸観戦">⚔ 御前試合</button>
+  <!-- 5. 投了（右端・誤爆防止配置） -->
   <button class="cmd-btn btn-3d btn-surrender" id="btn-cmd-surrender" onclick="surrenderGame()" title="形勢覆し難きとき潔く負けを認める">🏳 投了</button>
 </div>
 
@@ -280,7 +282,7 @@
     
     <div class="exhibition-guide-plaque">
       <span>💡</span>
-      <span>武将・指南役の<b>【肖像・家紋】</b>を選定して御前試合を開始します。<br>※両軍の読み筋・思考時間・消費刻を間近で鑑賞できます。</span>
+      <span>武将・指南役の<b>【肖像・家紋】</b>を選定して御前試合を開始します。<br>※両軍の読み筋・軍師の実況解説を間近で鑑賞できます。</span>
     </div>
 
     <!-- スマホ専用：先手陣／後手陣 切替タブバー -->
@@ -637,8 +639,8 @@
             <button class="card-speech-btn btn-3d" onclick="toggleCardSpeech('guide-card-step-exhibition')">🔊 朗読</button>
           </div>
           客分指南役や戦国武将たちの武芸観戦「御前試合」では、二つの対局方式を選べます：<br><br>
-          ・<b class="kw-gold">通常本将棋（じっくり・深慮）</b>：思考時間の上限は<span class="kw-gold">8.5秒</span>。最強AIが「深さ5」まで確実に読み切るため、軍師AIや隠者が本来の神算鬼謀を遺憾なく発揮します。着手間隔約1.5秒で、重厚な本将棋を鑑賞できます。<br>
-          ・<b class="kw-crimson">早指し戦（即断・切れ味）</b>：思考時間の上限は<span class="kw-crimson">2.5秒</span>。即断即決のスピード戦となり、難所で読みが浅くなるため番狂わせや意外な逆転劇が発生します。着手間隔約0.8秒で小気味よく合戦が進みます。
+          ・<b class="kw-gold">通常本将棋（じっくり・深慮）</b>：思考時間の上限は<span class="kw-gold">8.5秒</span>。最強AIが「深さ5」まで確実に読み切るため、軍師AIや隠者が本来の神算鬼謀を遺憾なく発揮します。着手間隔約1.2秒で、重厚な本将棋を鑑賞できます。<br>
+          ・<b class="kw-crimson">早指し戦（即断・切れ味）</b>：思考時間の上限は<span class="kw-crimson">2.5秒</span>。即断即決のスピード戦となり、難所で読みが浅くなるため番狂わせや意外な逆転劇が発生します。着手間隔約0.65秒で小気味よく合戦が進みます。
         </div>
 
         <div class="guide-card-box" id="guide-card-step-2">
@@ -646,14 +648,14 @@
             <h4>🪭 二、采配ボタンの解説</h4>
             <button class="card-speech-btn btn-3d" onclick="toggleCardSpeech('guide-card-step-2')">🔊 朗読</button>
           </div>
-          ・<b class="kw-gold">🪭 待った</b>：局面を二手前まで巻き戻す秘技。<br>
-          ・<b class="kw-gold">🏳 投了</b>：形勢覆し難きとき、潔く負けを認めて陣を引きます。<br>
-          ・<b class="kw-gold">⚜ 対局開始</b>：振り駒を行い、合戦の火蓋を切って落とします。<br>
           ・<b class="kw-gold">💡 軍師進言 / 🔥 覚醒進言</b>：自将専属の軍師が次の一手を指南。「🪭 別の策」ボタンで王道・強襲・堅陣の策を切り替えられます。<br>
+          ・<b class="kw-gold">🪭 待った</b>：局面を二手前まで巻き戻す秘技。<br>
+          ・<b class="kw-gold">⚜ 対局開始</b>：振り駒を行い、合戦の火蓋を切って落とします。<br>
           ・<b class="kw-blue">⚔ 御前試合</b>：先手・後手それぞれに客分指南役・戦国武将・軍師AIを自由に選定し、特等席で観戦できます。<br>
+          ・<b class="kw-gold">🏳 投了</b>：形勢覆し難きとき、潔く負けを認めて陣を引きます。<br>
           ・<b class="kw-gold">📜 勲功録</b>：これまでの全対戦記録を確認・盤上再現できます。「我が合戦録」と「御前試合録」の二大タブで整理可能。<br>
           ・<b class="kw-gold">🗺 天下絵巻</b>：全国平定状況と城郭地図を確認・進軍先を選定。<br>
-          ・<b class="kw-gold">📖 合戦絵巻</b>：本局の陣地争奪グラフと全棋譜（思考時間・確定深さ）を確認・KIF保存可能。
+          ・<b class="kw-gold">📖 合戦絵巻</b>：戦況バー右端より開き、陣地争奪グラフと全棋譜（思考時間・確定深さ）を確認・KIF保存可能。
         </div>
 
         <div class="guide-card-box beginner-highlight-box" id="guide-card-step-replay">

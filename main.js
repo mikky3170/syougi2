@@ -865,7 +865,7 @@ if ('speechSynthesis' in window) {
 }
 
 /* =========================================================
-   【視線誘導 ＆ 手番・思考タイマー管理エンジン】
+   【視線誘導 ＆ 手番・思考タイマー管理エンジン（戦国風秒刻・ガタつき完全防止）】
    ========================================================= */
 let turnStartTime = 0;
 let turnTimerInterval = null;
@@ -932,13 +932,13 @@ function updateThinkingTimerDisplay() {
   if (isPlayer) {
     if (pThinkDisp) {
       pThinkDisp.style.display = 'inline-flex';
-      pThinkDisp.innerHTML = `手番思案中 ⏱ <b>${elapsedSec}s</b>`;
+      pThinkDisp.innerHTML = `🪭 采配思案 <b>${elapsedSec}秒</b>`;
     }
     if (aiThinkDisp) aiThinkDisp.style.display = 'none';
   } else {
     if (aiThinkDisp) {
       aiThinkDisp.style.display = 'inline-flex';
-      aiThinkDisp.innerHTML = `手番思案中 ⏱ <b>${elapsedSec}s</b>`;
+      aiThinkDisp.innerHTML = `⚔ 敵将熟慮 <b>${elapsedSec}秒</b>`;
     }
     if (pThinkDisp) pThinkDisp.style.display = 'none';
   }
@@ -1096,8 +1096,11 @@ const INSTRUCTORS_DATA = {
     depthSpec: '深さ3＋静止探索',
     quotes: {
       default: '「異国の盤上戦法、日ノ本の武士道に通用するか試させてもらおう。」',
-      check: '「チェック… いや、王手に候！ 異国の筋を見切れるか！」',
-      pinch: '「ム… 日ノ本の将棋、侮りがたし！ 陣を組み直す！」',
+      opening: '「まずは手堅く陣形を構築いたす。西洋のチェスとは一味違うな。」',
+      midgame: '「駒がぶつかり合うてこそ真骨頂！ 異国の筋を見切れるか！」',
+      endgame: '「寄せの段階に入ったようだな。油断なく包囲網を狭めよう。」',
+      check: '「チェック… いや、王手に候！ 逃げ道を塞がせてもらうぞ！」',
+      pinch: '「ム… 日ノ本の将棋、侮りがたし！ 陣を組み直さねば！」',
       adv: '「我が優勢は揺るがぬ。異国の秘策、見せて進ぜよう！」'
     },
     defeatQuote: '「参りました…！ 日ノ本の将棋の奥深さ、敬服いたしました！」',
@@ -1110,6 +1113,9 @@ const INSTRUCTORS_DATA = {
     depthSpec: '深さ4＋PST＋静止探索',
     quotes: {
       default: '「基本に忠実、陣形に乱れなし。我が剣筋、見切ってみせよ。」',
+      opening: '「隙のない構えこそ不敗の基本。陣を整えて機を待つべし。」',
+      midgame: '「刃と刃の切り結び！ ここからが真剣勝負の本番ぞ！」',
+      endgame: '「太刀筋は完全に定まった！ 必殺の一刀を叩き込む！」',
       check: '「一刀両断！ 王手！ 逃れられると思うなよ！」',
       pinch: '「ぬうっ… 刃を交えて初めて知る貴殿の気迫、受けて立とう！」',
       adv: '「太刀筋は定まった！ 我が指南の妙技、味わうがよい！」'
@@ -1124,6 +1130,9 @@ const INSTRUCTORS_DATA = {
     depthSpec: '深さ5＋置換表＋キラー探索',
     quotes: {
       default: '「盤上の千変万化、すでに結末は見えておる… 一手を指すがよい。」',
+      opening: '「盤上は静かなる深淵。布石の一手ひとつが勝敗を分かつぞ。」',
+      midgame: '「ほほう、仕掛けてきたか。すべては我が手のひらの上よ。」',
+      endgame: '「天網恢恢疎にして漏らさず。これにて逃げ場はなくなったぞ。」',
       check: '「これぞ深遠なる詰めろ！ 逃げ道はすべて塞がれておるぞ。」',
       pinch: '「ほほう… この老骨の裏をかくか。面白い、一手興じようぞ。」',
       adv: '「天網恢恢疎にして漏らさず。神算鬼謀の網からは逃れられぬ。」'
@@ -1142,6 +1151,9 @@ const PLAYER_WARLORDS = {
     bgGrad: 'radial-gradient(circle at 35% 35%, #6a0b0b 0%, #180202 100%)',
     quotes: {
       default: '「不惜身命！ この一手に命を懸ける！」',
+      opening: '「六文銭の旗の下、まずは陣容を堅固に組み上げん！」',
+      midgame: '「ここが天下の分水嶺！ 赤備え、敵陣の喉首を狙え！」',
+      endgame: '「いざ敵本陣へ突入！ 一手も引かずに押し通る！」',
       check: '「真田が突撃！ ここが敵本陣の喉首ぞ！」',
       pinch: '「六文銭を胸に… まだだ、ここからが真田の戦よ！」',
       adv: '「好機至る！ 赤備え、全軍突撃せよ！」',
@@ -1156,6 +1168,9 @@ const PLAYER_WARLORDS = {
     bgGrad: 'radial-gradient(circle at 35% 35%, #4a2800 0%, #140500 100%)',
     quotes: {
       default: '「大ふへん者とは大武辺者のことよ！ いざ参る！」',
+      opening: '「陣立てなんぞ堅苦しいぜ！ 派手に傾いて盤面を賑やかにしようや！」',
+      midgame: '「いいねえ、白兵戦だ！ 松風、ここ一番の槍働きを見せてやれ！」',
+      endgame: '「これにて幕引きといくかい！ 天下一の傾奇槍を受けてみろ！」',
       check: '「よっしゃあ！ これぞ天下無双の傾奇の一手よ！」',
       pinch: '「窮地ほど面白え！ 松風、もう一跳ねするぜ！」',
       adv: '「ハハハ！ 派手に行こうぜ、天下を傾けてみせろ！」',
@@ -1170,6 +1185,9 @@ const PLAYER_WARLORDS = {
     bgGrad: 'radial-gradient(circle at 35% 35%, #0d2847 0%, #030a14 100%)',
     quotes: {
       default: '「天下の隙、この独眼竜が見逃さぬ！ 派手に行こうぜ！」',
+      opening: '「まずは右目の小十郎と陣を敷く。奥州の竜は静かに爪を研ぐぜ。」',
+      midgame: '「喰らいつけ！ 竜の牙で敵の中央陣地を食いちぎってやれ！」',
+      endgame: '「チェックメイトだ！ 独眼竜の前にひれ伏すがいい！」',
       check: '「竜の牙が届いたぜ！ 逃げられると思うなよ！」',
       pinch: '「チッ、手痛い一撃だな… だが独眼竜の牙は折れねえ！」',
       adv: '「好機到来！ 一気に盤上を制圧するぜ！」',
@@ -1184,6 +1202,9 @@ const PLAYER_WARLORDS = {
     bgGrad: 'radial-gradient(circle at 35% 35%, #2a0836 0%, #0b0110 100%)',
     quotes: {
       default: '「義を見てせざるは勇なきなり！ 義の刃を受けてみよ！」',
+      opening: '「愛の一文字を前立に掲げ、礼節正しく陣容を整えん。」',
+      midgame: '「不義の駒運びには鉄槌を下す！ これぞ越後流・愛の采配！」',
+      endgame: '「大義はすでに定まれり！ 義理を通し、敵本陣を包囲せん！」',
       check: '「義理を通し、不義を断つ！ これぞ愛の一手！」',
       pinch: '「義の旗印、決して倒れはせぬ！ 陣形を立て直すぞ！」',
       adv: '「大義は我が軍にあり！ 正道を以て制さん！」',
@@ -1198,6 +1219,9 @@ const PLAYER_WARLORDS = {
     bgGrad: 'radial-gradient(circle at 35% 35%, #3d2406 0%, #0f0701 100%)',
     quotes: {
       default: '「我が蜻蛉切に切れぬものなし！ 迎え撃ってくれよう！」',
+      opening: '「名槍・蜻蛉切を構え、三河武士の不動の陣を築く！」',
+      midgame: '「五十七度傷なしの武名、伊達ではないわ！ 突き破れ！」',
+      endgame: '「敵将、観念せい！ 蜻蛉切の射程から逃れる術はなし！」',
       check: '「天下無双の槍撃！ 敵将、そこを動くな！」',
       pinch: '「五十七度の合戦、一度の傷も負わぬ儂が退くものか！」',
       adv: '「我が槍の前に敵なし！ 押し通るぞ！」',
@@ -1210,22 +1234,170 @@ const PLAYER_WARLORDS = {
 
 /* 対戦武将十一人 */
 const WARLORDS_DATA = {
-  1: { id: 'enemy_1', province: '尾張国', name: '木下藤吉郎', clan: '尾張国｜織田足軽隊', maxTroops: 3000, depthSpec: '深さ1＋足軽速攻', featureShort: '足軽戦法。前進重視。', tacticsHint: '駒にヒモをつけ、角・飛車の道を開いて突入されよ！', portraitSvg: `<rect width="100" height="100" rx="6" fill="#140d06"/><path d="M50 20 Q56 28 50 36 Q44 28 50 20 Z M50 36 Q62 50 50 68 Q38 50 50 36 Z M50 68 Q68 85 50 94 Q32 85 50 68 Z" fill="#ffd700"/>`, quotes: { default: '「草履取りとて天下を夢見候！ 足軽の意地、見せてくれよう！」', check: '「猿の一撃、侮りめさるな！」', pinch: '「あわわ…！ 信長様にお叱りを受けてしまう！」', adv: '「出世の足音が聞こえてき申した！」' }, defeatQuote: '「参り申した…！ されど猿は何度でも木を登り候！」', victoryQuote: '「勝ったぞ！ 信長様、藤吉郎やりましたぞ！」' },
-  2: { id: 'enemy_2', province: '加賀国', name: '前田利家', clan: '加賀国｜槍の又左', maxTroops: 8000, depthSpec: '深さ1＋槍の突破', featureShort: '中央5筋から飛車で突進。', tacticsHint: '真ん中に金銀を配して防壁を築き、飛車の突撃を跳ね返されよ！', portraitSvg: `<rect width="100" height="100" rx="6" fill="#180707"/><circle cx="50" cy="50" r="10" fill="#ffd700"/><circle cx="50" cy="24" r="8" fill="#ffd700"/><circle cx="75" cy="42" r="8" fill="#ffd700"/><circle cx="65" cy="74" r="8" fill="#ffd700"/><circle cx="35" cy="74" r="8" fill="#ffd700"/><circle cx="25" cy="42" r="8" fill="#ffd700"/>`, quotes: { default: '「我が槍に迷いなし！ 槍の又左が一撃、盤上に受けてみよ！」', check: '「槍の又左、一騎当千の突撃ぞ！」', pinch: '「ぬう…！ 前田の槍衾を崩されるとは！」', adv: '「槍を引くな！ この利家が押し通る！」' }, defeatQuote: '「見事な槍さばき… 前田の当主として完敗を認めよう！」', victoryQuote: '「槍の又左の前に敵なし！ 百万石の礎となれ！」' },
-  3: { id: 'enemy_3', province: '越前国', name: '柴田勝家', clan: '越前国｜鬼柴田', maxTroops: 15000, depthSpec: '深さ2＋瓶割り突進', featureShort: '歩と銀で正面突破。', tacticsHint: '横から飛車・角の射線で銀の首を狙い撃たれよ！', portraitSvg: `<rect width="100" height="100" rx="6" fill="#150a04"/><path d="M30 40 Q50 25 70 40 Q50 48 30 40 Z M30 65 Q50 50 70 65 Q50 73 30 65 Z" fill="#ffd700"/>`, quotes: { default: '「かかれ柴田の突進力、小細工など粉砕してくれるわ！」', check: '「鬼柴田の剛腕、いざ受けてみよ！」', pinch: '「ぐぬ… 瓶割り柴田、退路を断って迎え撃つ！」', adv: '「かかれ！ かかれ柴田の猛進を止められるか！」' }, defeatQuote: '「無念…！ 瓶を割れども、貴殿の策を砕けなんだか…！」', victoryQuote: '「ガハハ！ 鬼柴田の突進を止められる者などおらぬわ！」' },
-  4: { id: 'enemy_4', province: '近江国', name: '浅井長政', clan: '近江国｜浅井軍総帥', maxTroops: 25000, depthSpec: '深さ2＋三間飛車', featureShort: '三間飛車の持久戦。', tacticsHint: '自玉を美濃囲い等に囲ってからじっくり攻略されよ。', portraitSvg: `<rect width="100" height="100" rx="6" fill="#0d1824"/><g fill="none" stroke="#ffd700" stroke-width="3"><polygon points="50,18 64,26 64,42 50,50 36,42 36,26"/><polygon points="36,44 50,52 50,68 36,76 22,68 22,52"/><polygon points="64,44 78,52 78,68 64,76 50,68 50,52"/></g>`, quotes: { default: '「信義を重んじ、我が陣を進めん！ 浅井の誇り、見よ！」', check: '「信義の一撃、ここを退くわけにはいかぬ！」', pinch: '「信義を貫く刻… お市、すまぬ…」', adv: '「我が陣容に乱れなし！ 義の勝利を！」' }, defeatQuote: '「浅井の誇り、盤上に散る… お市、許せよ…」', victoryQuote: '「信義は勝てり！ 近江の誇りは揺るぎなし！」' },
-  5: { id: 'enemy_5', province: '美濃国', name: '明智光秀', clan: '美濃国｜智謀の軍総帥', maxTroops: 40000, depthSpec: '深さ3＋静止探索', featureShort: '隙を突く知謀。', tacticsHint: '自陣の駒同士を常に連結させ、隙を作らぬよう戦われよ。', portraitSvg: `<rect width="100" height="100" rx="6" fill="#09141c"/><polygon points="50,18 60,38 82,38 65,52 72,74 50,60 28,74 35,52 18,38 40,38" fill="#ffd700"/>`, quotes: { default: '「時は今、天が下知る五月哉。我が智謀、見切れるか！」', check: '「敵は本能寺に… いや、貴殿の本陣にあり！」', pinch: '「天運は我を見放すというのか…！ まだだ！」', adv: '「盤上の全て、我が掌の上にて動いておる。」' }, defeatQuote: '「我が天運の尽きる刻… 貴殿の軍略、誠にお見事…」', victoryQuote: '「時は今！ 天下を統べるは、この光秀よ！」' },
-  6: { id: 'enemy_6', province: '越後国', name: '上杉謙信', clan: '越後国｜越後の龍・軍神', maxTroops: 60000, depthSpec: '深さ3＋車懸り射線', featureShort: '角行と龍馬の遠距離砲撃。', tacticsHint: '斜めの射線上に自軍の大事な駒を置かぬよう注意されよ。', portraitSvg: `<rect width="100" height="100" rx="6" fill="#14061a"/><path d="M 26,45 Q 50,18 74,45 L 76,78 Q 50,86 24,78 Z" fill="#e8e8e8" stroke="#ffd700" stroke-width="1.8"/><circle cx="50" cy="46" r="16" fill="#1c0a24"/><text x="50" y="52" font-size="14" font-weight="900" fill="#ffd700" text-anchor="middle">毘</text>`, quotes: { default: '「毘沙門天の御加護、我が軍にあり！ 車懸りの陣、進めよ！」', check: '「龍の爪牙、敵本陣を裂く！」', pinch: '「運は天にあり、鎧は胸にあり！ 毘沙門天よ！」', adv: '「車懸り、休むこと莫れ！ 義戦を完遂せん！」' }, defeatQuote: '「極楽も地獄も先は有明の… 義戦を尽くし、悔いはなし！」', victoryQuote: '「毘沙門天の御前、悪は滅び義は輝かん！」' },
-  7: { id: 'enemy_7', province: '甲斐国', name: '武田信玄', clan: '甲斐国｜甲斐の虎', maxTroops: 80000, depthSpec: '深さ4＋風林火山要塞', featureShort: '金銀要塞の風林火山。', tacticsHint: '端攻め（1筋や9筋）から崩すのが妙手。', portraitSvg: `<rect width="100" height="100" rx="6" fill="#1f0303"/><path d="M 22,34 Q 50,10 78,34 Q 90,60 76,76 Q 50,88 24,76 Q 10,60 22,34 Z" fill="#e0d6c3" stroke="#ffd700" stroke-width="1.8"/><polygon points="50,30 60,42 50,54 40,42" fill="#ffd700"/><polygon points="40,44 50,56 40,68 30,56" fill="#ffd700"/><polygon points="60,44 70,56 60,68 50,56" fill="#ffd700"/>`, quotes: { default: '「疾きこと風の如く、動かざること山の如し！ 蹂躙してくれる！」', check: '「侵略すること火の如し！ 虎の牙、受けてみよ！」', pinch: '「人は城、人は石垣… 崩れるな、耐えよ！」', adv: '「風林火山の旗の下、天下を呑み込まん！」' }, defeatQuote: '「人は城、人は石垣… 儂の石垣が崩れるとは… 見事！」', victoryQuote: '「風林火山の旗靡くところ、天下平定の道あり！」' },
-  8: { id: 'enemy_8', province: '近江安土', name: '織田信長', clan: '近江安土｜第六天魔王', maxTroops: 110000, depthSpec: '深さ4＋成駒電撃戦', featureShort: '龍王・龍馬の電撃速攻。', tacticsHint: '自玉を深く囲い、成駒の突入に耐え反撃せよ。', portraitSvg: `<rect width="100" height="100" rx="6" fill="#140606"/><path d="M 28,42 Q 50,20 72,42 L 76,76 Q 50,86 24,76 Z" fill="#3b0808" stroke="#ffd700" stroke-width="2"/><circle cx="50" cy="27" r="10" fill="#ffd700"/><circle cx="68" cy="40" r="10" fill="#ffd700"/><circle cx="62" cy="62" r="10" fill="#ffd700"/><circle cx="38" cy="62" r="10" fill="#ffd700"/><circle cx="32" cy="40" r="10" fill="#ffd700"/><circle cx="50" cy="48" r="11" fill="#9b111e" stroke="#ffd700" stroke-width="1.5"/>`, quotes: { default: '「是非に及ばず。この信長に挑む愚かさ、骨身に刻め。」', check: '「三段撃ち！ 鉄砲の前に灰燼と帰すがよい！」', pinch: '「人間五十年、下天の内をくらぶれば… まだ死せぬ！」', adv: '「天下布武！ 我が前にひれ伏せ！」' }, defeatQuote: '「是非に及ばず…！ 新たなる天下人よ、乱世を束ねよ！」', victoryQuote: '「天下布武！ 我が覇道に従わぬ者に明日はない！」' },
-  9: { id: 'enemy_9', province: '摂津大坂', name: '豊臣秀吉', clan: '摂津大坂｜天下人・太閤', maxTroops: 150000, depthSpec: '深さ5＋持ち駒包囲網', featureShort: '持ち駒包囲戦。', tacticsHint: '無駄な駒交換を避けて盤上を制圧せよ。', portraitSvg: `<rect width="100" height="100" rx="6" fill="#241904"/><g stroke="#ffd700" stroke-width="2"><line x1="50" y1="45" x2="50" y2="8"/><line x1="50" y1="45" x2="25" y2="15"/><line x1="50" y1="45" x2="75" y2="15"/><line x1="50" y1="45" x2="10" y2="30"/><line x1="50" y1="45" x2="90" y2="30"/></g><path d="M 30,46 Q 50,30 70,46 L 74,75 Q 50,84 26,75 Z" fill="#694a08" stroke="#ffd700" stroke-width="2"/><circle cx="50" cy="56" r="10" fill="#ffd700"/>`, quotes: { default: '「天下は我が手中にある！ 太閤の前に跪くがよい！」', check: '「黄金の茶室ならぬ、黄金の王手を喰らいなされ！」', pinch: '「露と落ち、露と消えにし我が身かな… なにを！」', adv: '「日輪の如く、全てを照らし尽くして見せよう！」' }, defeatQuote: '「露と落ち露と消えにし我が身かな… 天下の夢、託し申す！」', victoryQuote: '「天下人はこの秀吉よ！ 日輪の光、誰にも遮れぬ！」' },
-  10: { id: 'enemy_10', province: '武蔵江戸', name: '徳川家康', clan: '武蔵江戸｜天下の覇者', maxTroops: 200000, depthSpec: '深さ5＋鉄壁探索', featureShort: '最深探索の鉄壁。', tacticsHint: '軍師の【覚醒進言】と連携し神算鬼謀の一撃を狙うべし。', portraitSvg: `<rect width="100" height="100" rx="6" fill="#080f1f"/><path d="M 32,24 Q 50,14 68,24 Q 80,38 74,62 Q 50,78 26,62 Q 20,38 32,24 Z" fill="#1b2a47" stroke="#ffd700" stroke-width="2"/><circle cx="50" cy="50" r="18" fill="none" stroke="#ffd700" stroke-width="2.5"/><path d="M50 48 C44 32, 36 24, 50 18 C64 24, 56 32, 50 48 Z" fill="#ffd700"/><path d="M49 52 C33 50, 24 60, 26 74 C38 74, 46 64, 49 52 Z" fill="#ffd700"/><path d="M51 52 C67 50, 76 60, 74 74 C62 74, 54 64, 51 52 Z" fill="#ffd700"/>`, quotes: { default: '「人の一生は重荷を負うて… 焦るでない、勝機は此処にあり。」', check: '「忍耐の刻は過ぎた！ 我が天下の礎となられよ！」', pinch: '「ぐぬぬ…！ 爪を噛むほどの焦燥よ… だが儂の天下は揺るがぬ！」', adv: '「鳴くまで待った甲斐があったわ。天下泰平の刻ぞ！」' }, defeatQuote: '「見事なり… 乱世を鎮むる真の器、確かに見届けた…！」', victoryQuote: '「忍耐の末に泰平あり。天下は徳川の掌中にあり！」' },
+  1: {
+    id: 'enemy_1', province: '尾張国', name: '木下藤吉郎', clan: '尾張国｜織田足軽隊', maxTroops: 3000, depthSpec: '深さ1＋足軽速攻',
+    featureShort: '足軽戦法。前進重視。', tacticsHint: '駒にヒモをつけ、角・飛車の道を開いて突入されよ！',
+    portraitSvg: `<rect width="100" height="100" rx="6" fill="#140d06"/><path d="M50 20 Q56 28 50 36 Q44 28 50 20 Z M50 36 Q62 50 50 68 Q38 50 50 36 Z M50 68 Q68 85 50 94 Q32 85 50 68 Z" fill="#ffd700"/>`,
+    quotes: {
+      default: '「草履取りとて天下を夢見候！ 足軽の意地、見せてくれよう！」',
+      opening: '「まずは歩を一歩前へ！ 出世の道も一歩からでござる！」',
+      midgame: '「わ、わ、混戦でござる！ 足軽隊、踏みとどまれ！」',
+      endgame: '「ここまできたら一歩も引けぬ！ 猿の底力、喰らいなされ！」',
+      check: '「猿の一撃、侮りめさるな！」',
+      pinch: '「あわわ…！ 信長様にお叱りを受けてしまう！」',
+      adv: '「出世の足音が聞こえてき申した！」'
+    },
+    defeatQuote: '「参り申した…！ されど猿は何度でも木を登り候！」', victoryQuote: '「勝ったぞ！ 信長様、藤吉郎やりましたぞ！」'
+  },
+  2: {
+    id: 'enemy_2', province: '加賀国', name: '前田利家', clan: '加賀国｜槍の又左', maxTroops: 8000, depthSpec: '深さ1＋槍の突破',
+    featureShort: '中央5筋から飛車で突進。', tacticsHint: '真ん中に金銀を配して防壁を築き、飛車の突撃を跳ね返されよ！',
+    portraitSvg: `<rect width="100" height="100" rx="6" fill="#180707"/><circle cx="50" cy="50" r="10" fill="#ffd700"/><circle cx="50" cy="24" r="8" fill="#ffd700"/><circle cx="75" cy="42" r="8" fill="#ffd700"/><circle cx="65" cy="74" r="8" fill="#ffd700"/><circle cx="35" cy="74" r="8" fill="#ffd700"/><circle cx="25" cy="42" r="8" fill="#ffd700"/>`,
+    quotes: {
+      default: '「我が槍に迷いなし！ 槍の又左が一撃、盤上に受けてみよ！」',
+      opening: '「前田の槍衾、まずは陣形を整え、中央を睨むぞ！」',
+      midgame: '「中央突破！ 槍の穂先で敵の守りをこじ開けてくれる！」',
+      endgame: '「勝負は此処に極まれり！ 又左の槍を喰らえ！」',
+      check: '「槍の又左、一騎当千の突撃ぞ！」',
+      pinch: '「ぬう…！ 前田の槍衾を崩されるとは！」',
+      adv: '「槍を引くな！ この利家が押し通る！」'
+    },
+    defeatQuote: '「見事な槍さばき… 前田の当主として完敗を認めよう！」', victoryQuote: '「槍の又左の前に敵なし！ 百万石の礎となれ！」'
+  },
+  3: {
+    id: 'enemy_3', province: '越前国', name: '柴田勝家', clan: '越前国｜鬼柴田', maxTroops: 15000, depthSpec: '深さ2＋瓶割り突進',
+    featureShort: '歩と銀で正面突破。', tacticsHint: '横から飛車・角の射線で銀の首を狙い撃たれよ！',
+    portraitSvg: `<rect width="100" height="100" rx="6" fill="#150a04"/><path d="M30 40 Q50 25 70 40 Q50 48 30 40 Z M30 65 Q50 50 70 65 Q50 73 30 65 Z" fill="#ffd700"/>`,
+    quotes: {
+      default: '「かかれ柴田の突進力、小細工など粉砕してくれるわ！」',
+      opening: '「退路の瓶は割った！ 前進あるのみ、陣を進めよ！」',
+      midgame: '「銀をぶち込め！ 鬼柴田の猛進は誰にも止められぬぞ！」',
+      endgame: '「城もろとも叩き潰す！ 覚悟いたせ！」',
+      check: '「鬼柴田の剛腕、いざ受けてみよ！」',
+      pinch: '「ぐぬ… 瓶割り柴田、退路を断って迎え撃つ！」',
+      adv: '「かかれ！ かかれ柴田の猛進を止められるか！」'
+    },
+    defeatQuote: '「無念…！ 瓶を割れども、貴殿の策を砕けなんだか…！」', victoryQuote: '「ガハハ！ 鬼柴田の突進を止められる者などおらぬわ！」'
+  },
+  4: {
+    id: 'enemy_4', province: '近江国', name: '浅井長政', clan: '近江国｜浅井軍総帥', maxTroops: 25000, depthSpec: '深さ2＋三間飛車',
+    featureShort: '三間飛車の持久戦。', tacticsHint: '自玉を美濃囲い等に囲ってからじっくり攻略されよ。',
+    portraitSvg: `<rect width="100" height="100" rx="6" fill="#0d1824"/><g fill="none" stroke="#ffd700" stroke-width="3"><polygon points="50,18 64,26 64,42 50,50 36,42 36,26"/><polygon points="36,44 50,52 50,68 36,76 22,68 22,52"/><polygon points="64,44 78,52 78,68 64,76 50,68 50,52"/></g>`,
+    quotes: {
+      default: '「信義を重んじ、我が陣を進めん！ 浅井の誇り、見よ！」',
+      opening: '「三間に飛車を振り、堅牢な美濃囲いを築く。隙は見せぬ。」',
+      midgame: '「義理と信義の一撃！ 盤上の不義を打ち払わん！」',
+      endgame: '「お市、見ていてくれ… 浅井の武門、ここに示さん！」',
+      check: '「信義の一撃、ここを退くわけにはいかぬ！」',
+      pinch: '「信義を貫く刻… お市、すまぬ…」',
+      adv: '「我が陣容に乱れなし！ 義の勝利を！」'
+    },
+    defeatQuote: '「浅井の誇り、盤上に散る… お市、許せよ…」', victoryQuote: '「信義は勝てり！ 近江の誇りは揺るぎなし！」'
+  },
+  5: {
+    id: 'enemy_5', province: '美濃国', name: '明智光秀', clan: '美濃国｜智謀の軍総帥', maxTroops: 40000, depthSpec: '深さ3＋静止探索',
+    featureShort: '隙を突く知謀。', tacticsHint: '自陣の駒同士を常に連結させ、隙を作らぬよう戦われよ。',
+    portraitSvg: `<rect width="100" height="100" rx="6" fill="#09141c"/><polygon points="50,18 60,38 82,38 65,52 72,74 50,60 28,74 35,52 18,38 40,38" fill="#ffd700"/>`,
+    quotes: {
+      default: '「時は今、天が下知る五月哉。我が智謀、見切れるか！」',
+      opening: '「綿密なる計算こそ勝利の母。静かに布陣を敷く。」',
+      midgame: '「貴殿の駒の乱れ、すでに計算に入っておる。」',
+      endgame: '「時満ちたれり。これより本陣急襲を仕掛ける！」',
+      check: '「敵は本能寺に… いや、貴殿の本陣にあり！」',
+      pinch: '「天運は我を見放すというのか…！ まだだ！」',
+      adv: '「盤上の全て、我が掌の上にて動いておる。」'
+    },
+    defeatQuote: '「我が天運の尽きる刻… 貴殿の軍略、誠にお見事…」', victoryQuote: '「時は今！ 天下を統べるは、この光秀よ！」'
+  },
+  6: {
+    id: 'enemy_6', province: '越後国', name: '上杉謙信', clan: '越後国｜越後の龍・軍神', maxTroops: 60000, depthSpec: '深さ3＋車懸り射線',
+    featureShort: '角行と龍馬の遠距離砲撃。', tacticsHint: '斜めの射線上に自軍の大事な駒を置かぬよう注意されよ。',
+    portraitSvg: `<rect width="100" height="100" rx="6" fill="#14061a"/><path d="M 26,45 Q 50,18 74,45 L 76,78 Q 50,86 24,78 Z" fill="#e8e8e8" stroke="#ffd700" stroke-width="1.8"/><circle cx="50" cy="46" r="16" fill="#1c0a24"/><text x="50" y="52" font-size="14" font-weight="900" fill="#ffd700" text-anchor="middle">毘</text>`,
+    quotes: {
+      default: '「毘沙門天の御加護、我が軍にあり！ 車懸りの陣、進めよ！」',
+      opening: '「大義なき戦に勝利なし。毘沙門天の旗を掲げよ。」',
+      midgame: '「車懸りの陣！ 龍の射線で敵陣を断ち割ってくれよう！」',
+      endgame: '「天命ここに定まる！ 義の刃、いざ振り下ろさん！」',
+      check: '「龍の爪牙、敵本陣を裂く！」',
+      pinch: '「運は天にあり、鎧は胸にあり！ 毘沙門天よ！」',
+      adv: '「車懸り、休むこと莫れ！ 義戦を完遂せん！」'
+    },
+    defeatQuote: '「極楽も地獄も先は有明の… 義戦を尽くし、悔いはなし！」', victoryQuote: '「毘沙門天の御前、悪は滅び義は輝かん！」'
+  },
+  7: {
+    id: 'enemy_7', province: '甲斐国', name: '武田信玄', clan: '甲斐国｜甲斐の虎', maxTroops: 80000, depthSpec: '深さ4＋風林火山要塞',
+    featureShort: '金銀要塞の風林火山。', tacticsHint: '端攻め（1筋や9筋）から崩すのが妙手。',
+    portraitSvg: `<rect width="100" height="100" rx="6" fill="#1f0303"/><path d="M 22,34 Q 50,10 78,34 Q 90,60 76,76 Q 50,88 24,76 Q 10,60 22,34 Z" fill="#e0d6c3" stroke="#ffd700" stroke-width="1.8"/><polygon points="50,30 60,42 50,54 40,42" fill="#ffd700"/><polygon points="40,44 50,56 40,68 30,56" fill="#ffd700"/><polygon points="60,44 70,56 60,68 50,56" fill="#ffd700"/>`,
+    quotes: {
+      default: '「疾きこと風の如く、動かざること山の如し！ 蹂躙してくれる！」',
+      opening: '「動かざること山の如し。金銀の石垣を築いて迎え撃つ。」',
+      midgame: '「侵略すること火の如し！ 虎の牙、敵陣を焼き尽くせ！」',
+      endgame: '「疾きこと風の如し！ 一気に勝負を決めてくれるわ！」',
+      check: '「侵略すること火の如し！ 虎の牙、受けてみよ！」',
+      pinch: '「人は城、人は石垣… 崩れるな、耐えよ！」',
+      adv: '「風林火山の旗の下、天下を呑み込まん！」'
+    },
+    defeatQuote: '「人は城、人は石垣… 儂の石垣が崩れるとは… 見事！」', victoryQuote: '「風林火山の旗靡くところ、天下平定の道あり！」'
+  },
+  8: {
+    id: 'enemy_8', province: '近江安土', name: '織田信長', clan: '近江安土｜第六天魔王', maxTroops: 110000, depthSpec: '深さ4＋成駒電撃戦',
+    featureShort: '龍王・龍馬の電撃速攻。', tacticsHint: '自玉を深く囲い、成駒の突入に耐え反撃せよ。',
+    portraitSvg: `<rect width="100" height="100" rx="6" fill="#140606"/><path d="M 28,42 Q 50,20 72,42 L 76,76 Q 50,86 24,76 Z" fill="#3b0808" stroke="#ffd700" stroke-width="2"/><circle cx="50" cy="27" r="10" fill="#ffd700"/><circle cx="68" cy="40" r="10" fill="#ffd700"/><circle cx="62" cy="62" r="10" fill="#ffd700"/><circle cx="38" cy="62" r="10" fill="#ffd700"/><circle cx="32" cy="40" r="10" fill="#ffd700"/><circle cx="50" cy="48" r="11" fill="#9b111e" stroke="#ffd700" stroke-width="1.5"/>`,
+    quotes: {
+      default: '「是非に及ばず。この信長に挑む愚かさ、骨身に刻め。」',
+      opening: '「古い兵法など焼き捨てよ！ 新しき駒組みで蹂躙する！」',
+      midgame: '「三段撃ちの如く、間断なき攻めを浴びせかけてくれよう！」',
+      endgame: '「天下布武の前に立ちはだかる者は、灰燼に帰すのみ！」',
+      check: '「三段撃ち！ 鉄砲の前に灰燼と帰すがよい！」',
+      pinch: '「人間五十年、下天の内をくらぶれば… まだ死せぬ！」',
+      adv: '「天下布武！ 我が前にひれ伏せ！」'
+    },
+    defeatQuote: '「是非に及ばず…！ 新たなる天下人よ、乱世を束ねよ！」', victoryQuote: '「天下布武！ 我が覇道に従わぬ者に明日はない！」'
+  },
+  9: {
+    id: 'enemy_9', province: '摂津大坂', name: '豊臣秀吉', clan: '摂津大坂｜天下人・太閤', maxTroops: 150000, depthSpec: '深さ5＋持ち駒包囲網',
+    featureShort: '持ち駒包囲戦。', tacticsHint: '無駄な駒交換を避けて盤上を制圧せよ。',
+    portraitSvg: `<rect width="100" height="100" rx="6" fill="#241904"/><g stroke="#ffd700" stroke-width="2"><line x1="50" y1="45" x2="50" y2="8"/><line x1="50" y1="45" x2="25" y2="15"/><line x1="50" y1="45" x2="75" y2="15"/><line x1="50" y1="45" x2="10" y2="30"/><line x1="50" y1="45" x2="90" y2="30"/></g><path d="M 30,46 Q 50,30 70,46 L 74,75 Q 50,84 26,75 Z" fill="#694a08" stroke="#ffd700" stroke-width="2"/><circle cx="50" cy="56" r="10" fill="#ffd700"/>`,
+    quotes: {
+      default: '「天下は我が手中にある！ 太閤の前に跪くがよい！」',
+      opening: '「太閤の財力と動員力、まずはじっくり見せて進ぜよう！」',
+      midgame: '「大坂城の金蔵の如く、持ち駒を集めて包囲網を築くぞ！」',
+      endgame: '「日輪の光は遮れぬ！ 天下人の底力、思い知れ！」',
+      check: '「黄金の茶室ならぬ、黄金の王手を喰らいなされ！」',
+      pinch: '「露と落ち、露と消えにし我が身かな… なにを！」',
+      adv: '「日輪の如く、全てを照らし尽くして見せよう！」'
+    },
+    defeatQuote: '「露と落ち露と消えにし我が身かな… 天下の夢、託し申す！」', victoryQuote: '「天下人はこの秀吉よ！ 日輪の光、誰にも遮れぬ！」'
+  },
+  10: {
+    id: 'enemy_10', province: '武蔵江戸', name: '徳川家康', clan: '武蔵江戸｜天下の覇者', maxTroops: 200000, depthSpec: '深さ5＋鉄壁探索',
+    featureShort: '最深探索の鉄壁。', tacticsHint: '軍師の【覚醒進言】と連携し神算鬼謀の一撃を狙うべし。',
+    portraitSvg: `<rect width="100" height="100" rx="6" fill="#080f1f"/><path d="M 32,24 Q 50,14 68,24 Q 80,38 74,62 Q 50,78 26,62 Q 20,38 32,24 Z" fill="#1b2a47" stroke="#ffd700" stroke-width="2"/><circle cx="50" cy="50" r="18" fill="none" stroke="#ffd700" stroke-width="2.5"/><path d="M50 48 C44 32, 36 24, 50 18 C64 24, 56 32, 50 48 Z" fill="#ffd700"/><path d="M49 52 C33 50, 24 60, 26 74 C38 74, 46 64, 49 52 Z" fill="#ffd700"/><path d="M51 52 C67 50, 76 60, 74 74 C62 74, 54 64, 51 52 Z" fill="#ffd700"/>`,
+    quotes: {
+      default: '「人の一生は重荷を負うて… 焦るでない、勝機は此処にあり。」',
+      opening: '「重荷を負いて遠き道を行くが如し。まずは鉄壁の布陣。」',
+      midgame: '「耐えてこそ勝機あり。鳴かぬなら鳴くまで待とうホトトギス。」',
+      endgame: '「機は熟した！ 徳川三百年泰平の礎、盤上に築かん！」',
+      check: '「忍耐の刻は過ぎた！ 我が天下の礎となられよ！」',
+      pinch: '「ぐぬぬ…！ 爪を噛むほどの焦燥よ… だが儂の天下は揺るがぬ！」',
+      adv: '「鳴くまで待った甲斐があったわ。天下泰平の刻ぞ！」'
+    },
+    defeatQuote: '「見事なり… 乱世を鎮むる真の器、確かに見届けた…！」', victoryQuote: '「忍耐の末に泰平あり。天下は徳川の掌中にあり！」'
+  },
   11: {
     id: 'enemy_11', province: '天下無双', name: '前田慶次', clan: '天下無双｜軍師AI：奥村助右衛門', maxTroops: 180000, depthSpec: '深さ5＋神算鬼謀',
     featureShort: '軍師AI搭載。豪快傾奇と神算鬼謀の極み。', tacticsHint: '助右衛門の神算が仕組む罠に警戒し、守りを固めてから挑まれよ！',
     customImg: 'images/keiji',
     portraitSvg: `<rect width="100" height="100" rx="6" fill="#301404"/><path d="M 20,80 L 80,20" stroke="#d41313" stroke-width="6" stroke-linecap="round"/><path d="M 32,45 Q 50,22 68,45 L 72,72 Q 50,80 28,72 Z" fill="#613808" stroke="#ffd700" stroke-width="2"/><circle cx="50" cy="45" r="9" fill="#ffd700"/><circle cx="50" cy="26" r="6" fill="#ffd700"/><circle cx="68" cy="38" r="6" fill="#ffd700"/><circle cx="62" cy="62" r="6" fill="#ffd700"/><circle cx="38" cy="62" r="6" fill="#ffd700"/><circle cx="32" cy="38" r="6" fill="#ffd700"/>`,
-    quotes: { default: '「軍師・助右衛門の策と俺の槍！ 天下を傾け尽くしてくれるわ！」', check: '「助右衛門、一手もらったぜ！ これぞ傾奇王手！」', pinch: '「ハハハ！ 窮地ほど血が滾るわ！ ここからが本番よ！」', adv: '「松風、駆け抜けろ！ 助右衛門、一気に仕留めるぞ！」' },
+    quotes: {
+      default: '「軍師・助右衛門の策と俺の槍！ 天下を傾け尽くしてくれるわ！」',
+      opening: '「助右衛門、面白い陣形を頼むぜ！ ど派手に傾こうじゃねえか！」',
+      midgame: '「天下無双の傾奇戦！ 助右衛門の読みと俺の突進を止められるか！」',
+      endgame: '「いよっ、大詰めだ！ 派手に散るか派手に勝つか、勝負勝負！」',
+      check: '「助右衛門、一手もらったぜ！ これぞ傾奇王手！」',
+      pinch: '「ハハハ！ 窮地ほど血が滾るわ！ ここからが本番よ！」',
+      adv: '「松風、駆け抜けろ！ 助右衛門、一気に仕留めるぞ！」'
+    },
     defeatQuote: '「見事だ！ 天下一の傾きを見せてもらったぜ、完敗よ！」', victoryQuote: '「大武辺者の勝ちよ！ 助右衛門、美味い酒を呑もうぜ！」'
   }
 };
@@ -1298,13 +1470,14 @@ function pickRandomStrategistWarlord() {
   exhibitionRandomStrategistWarlordKey = keys[Math.floor(Math.random() * keys.length)];
 }
 
+/* =========================================================
+   【御前試合：戦国風タイマー ＆ 軍師実況解説エンジン】
+   ========================================================= */
 function updateExhibitionThinkingDisplay(isThinking = true) {
   if (!isExhibitionActive) return;
   const elapsedSec = Math.max(0.1, (Date.now() - turnStartTime) / 1000).toFixed(1);
   const currentStep = moveObjectsHistory.length + 1;
-  const nodesStr = exhibitionTotalNodes > 0 ? ` ｜ ${exhibitionTotalNodes.toLocaleString()}局面` : '';
   const tagSide = (currentThinkingSide === 'PLAYER') ? '先手' : '後手';
-  const modeTitle = (exhibitionSpeed === 'fast') ? '早指し戦' : '通常本将棋';
   
   const isPlayerSide = (currentThinkingSide === 'PLAYER');
   const targetThinkingDisp = isPlayerSide
@@ -1314,21 +1487,36 @@ function updateExhibitionThinkingDisplay(isThinking = true) {
   if (targetThinkingDisp) {
     if (isThinking) {
       targetThinkingDisp.style.display = 'inline-flex';
-      targetThinkingDisp.innerHTML = `手番思案中 ⏱ <b>${elapsedSec}s</b> (深さ${exhibitionAchievedDepth})`;
+      targetThinkingDisp.innerHTML = `🧠 神算熟慮 <b>${elapsedSec}秒</b> (深さ${exhibitionAchievedDepth})`;
     } else {
       targetThinkingDisp.style.display = 'none';
     }
   }
 
-  const linePrimary = isThinking 
-    ? `【${modeTitle} 第${currentStep}手】<b>${currentThinkingName}（${tagSide}）</b>が思考中…`
-    : `【${modeTitle} 第${currentStep}手】<b>${currentThinkingName}（${tagSide}）</b>が着手いたし候！`;
+  // 下の軍令高札：思考時間の重複を廃し、軍師の臨場感あふれる実況解説に特化
+  const sData = getTargetAIData(exhibitionSenteTarget);
+  const gData = getTargetAIData(exhibitionGoteTarget);
+  const curBoard = board;
+  const inCheck = isCheckState(turn, curBoard);
+  
+  let commentatorLine1 = '';
+  let commentatorLine2 = '';
 
-  const lineSub = isThinking
-    ? `考慮時間: <b>${elapsedSec}秒</b> ｜ 探索深度: 深さ${exhibitionAchievedDepth}${nodesStr}`
-    : `着手完了 ｜ 次の手番へと陣を進めております`;
+  if (inCheck) {
+    commentatorLine1 = `第${currentStep}手 ── <b>【急転直下】王手の一撃が放たれましたぞ！</b>`;
+    commentatorLine2 = `「本陣に迫る刃をどう凌ぐか、${currentThinkingName}の受けの妙手に刮目めされよ！」`;
+  } else if (currentStep <= 12) {
+    commentatorLine1 = `第${currentStep}手 ── <b>【序盤戦】両雄、堂々たる陣形構築の刻</b>`;
+    commentatorLine2 = `「▲${sData.name}と▽${gData.name}、互いに隙のない布陣を敷き機を伺っております。」`;
+  } else if (currentStep <= 30) {
+    commentatorLine1 = `第${currentStep}手 ── <b>【中盤戦】前線にて火花散る白兵戦！</b>`;
+    commentatorLine2 = `「駒の利きが交錯する天下分水嶺。${currentThinkingName}（${tagSide}）が急所を睨んでおります。」`;
+  } else {
+    commentatorLine1 = `第${currentStep}手 ── <b>【終盤決戦】敵玉を包囲する寄せ合い！</b>`;
+    commentatorLine2 = `「一手の遅れが命取りとなる大激戦！ 一挙に勝負を決する神算の一撃や如何に！」`;
+  }
 
-  setOrderMessage({ line1: linePrimary, line2: lineSub }, isThinking, 'exhibition');
+  setOrderMessage({ line1: commentatorLine1, line2: commentatorLine2 }, isThinking, 'exhibition');
 }
 
 const PIECE_WEIGHTS = { FU: 1.5, KY: 4.0, KE: 4.0, GI: 8.0, KI: 9.0, KA: 15.0, HI: 17.0, TO: 6.0, NY: 6.0, NK: 6.0, NG: 9.0, UM: 19.0, RY: 22.0 };
@@ -1463,7 +1651,7 @@ function calculateTroopsPercentages(bd, hd) {
 }
 
 /* =========================================================
-   【戦況連動型・動的セリフ切り替えシステム】
+   【戦況連動型・動的セリフ切り替えシステム（合戦進行段階連動）】
    ========================================================= */
 function updateWarlordQuotes() {
   if (isReviewingPast()) return;
@@ -1478,6 +1666,7 @@ function updateWarlordQuotes() {
 
   const playerInCheck = isCheckState('PLAYER', curBoard);
   const aiInCheck = isCheckState('AI', curBoard);
+  const totalMoves = moveObjectsHistory.length;
 
   if (isExhibitionActive) {
     const sData = getTargetAIData(exhibitionSenteTarget);
@@ -1486,20 +1675,26 @@ function updateWarlordQuotes() {
     const gQuotes = gData.quotes || {};
 
     if (aiInCheck) {
-      pQuoteEl.textContent = sQuotes.check || sQuotes.default || '「先手の一撃、王手に候！」';
-      aiQuoteEl.textContent = gQuotes.pinch || gQuotes.default || '「後手陣、この窮地を凌ぎ切る！」';
+      pQuoteEl.textContent = sQuotes.check || '「先手陣より王手！ 逃れられると思うなよ！」';
+      aiQuoteEl.textContent = gQuotes.pinch || '「後手陣、この窮地を凌ぎ切る！」';
     } else if (playerInCheck) {
-      aiQuoteEl.textContent = gQuotes.check || gQuotes.default || '「後手陣より王手！ 覚悟めされよ！」';
-      pQuoteEl.textContent = sQuotes.pinch || sQuotes.default || '「先手陣、ここからが正念場ぞ！」';
-    } else if (pPct >= 70 && aiPct <= 45) {
-      pQuoteEl.textContent = sQuotes.adv || sQuotes.default || '「我が軍の優勢は盤石なり！」';
-      aiQuoteEl.textContent = gQuotes.pinch || gQuotes.default || '「この劣勢、覆してみせる！」';
-    } else if (aiPct >= 70 && pPct <= 45) {
-      aiQuoteEl.textContent = gQuotes.adv || gQuotes.default || '「後手陣の勝機、ここに極まれり！」';
-      pQuoteEl.textContent = sQuotes.pinch || sQuotes.default || '「焦るな、陣形を立て直すのだ！」';
+      aiQuoteEl.textContent = gQuotes.check || '「後手陣より王手！ 覚悟めされよ！」';
+      pQuoteEl.textContent = sQuotes.pinch || '「先手陣、ここからが正念場ぞ！」';
+    } else if (pPct >= 65 && aiPct <= 45) {
+      pQuoteEl.textContent = sQuotes.adv || '「我が軍の優勢は盤石なり！」';
+      aiQuoteEl.textContent = gQuotes.pinch || '「この劣勢、覆してみせる！」';
+    } else if (aiPct >= 65 && pPct <= 45) {
+      aiQuoteEl.textContent = gQuotes.adv || '「後手陣の勝機、ここに極まれり！」';
+      pQuoteEl.textContent = sQuotes.pinch || '「焦るな、陣形を立て直すのだ！」';
+    } else if (totalMoves >= 31) {
+      pQuoteEl.textContent = sQuotes.endgame || sQuotes.default;
+      aiQuoteEl.textContent = gQuotes.endgame || gQuotes.default;
+    } else if (totalMoves >= 11) {
+      pQuoteEl.textContent = sQuotes.midgame || sQuotes.default;
+      aiQuoteEl.textContent = gQuotes.midgame || gQuotes.default;
     } else {
-      pQuoteEl.textContent = sQuotes.default || '「先手陣、堂々たる進撃を見せてくれよう！」';
-      aiQuoteEl.textContent = gQuotes.default || '「後手陣、一歩も退かぬ鉄壁の陣を敷く！」';
+      pQuoteEl.textContent = sQuotes.opening || sQuotes.default;
+      aiQuoteEl.textContent = gQuotes.opening || gQuotes.default;
     }
     return;
   }
@@ -1515,15 +1710,21 @@ function updateWarlordQuotes() {
   } else if (playerInCheck) {
     aiQuoteEl.textContent = wQuotes.check || wQuotes.default;
     pQuoteEl.textContent = pQuotes.pinch || pQuotes.default;
-  } else if (pPct >= 70 && aiPct <= 45) {
+  } else if (pPct >= 65 && aiPct <= 45) {
     pQuoteEl.textContent = pQuotes.adv || pQuotes.default;
     aiQuoteEl.textContent = wQuotes.pinch || wQuotes.default;
-  } else if (aiPct >= 70 && pPct <= 45) {
+  } else if (aiPct >= 65 && pPct <= 45) {
     aiQuoteEl.textContent = wQuotes.adv || wQuotes.default;
     pQuoteEl.textContent = pQuotes.pinch || pQuotes.default;
+  } else if (totalMoves >= 31) {
+    pQuoteEl.textContent = pQuotes.endgame || pQuotes.default;
+    aiQuoteEl.textContent = wQuotes.endgame || wQuotes.default;
+  } else if (totalMoves >= 11) {
+    pQuoteEl.textContent = pQuotes.midgame || pQuotes.default;
+    aiQuoteEl.textContent = wQuotes.midgame || wQuotes.default;
   } else {
-    pQuoteEl.textContent = pQuotes.default;
-    aiQuoteEl.textContent = wQuotes.default;
+    pQuoteEl.textContent = pQuotes.opening || pQuotes.default;
+    aiQuoteEl.textContent = wQuotes.opening || wQuotes.default;
   }
 }
 
@@ -1879,7 +2080,7 @@ function isReviewingPast() {
 
 function updateReviewModeUI() {
   const sitBanner = document.getElementById('situation-banner');
-  const sitTitle = document.getElementById('situation-title');
+  const sitBadge = document.getElementById('situation-badge');
   const sitText = document.getElementById('situation-text');
   const isReplay = isReviewingPast();
   const repCtrl = document.getElementById('replay-full-controls');
@@ -1888,21 +2089,17 @@ function updateReviewModeUI() {
     repCtrl.style.display = (isReplay || (isExhibitionActive && isGameOver)) ? 'flex' : 'none';
   }
 
-  if (sitBanner && sitTitle && sitText) {
-    if (isExhibitionActive && !isReplay) {
-      const modeTxt = (exhibitionSpeed === 'fast') ? '⚡ 観戦（早指し）' : '⚔ 観戦（本将棋）';
-      sitTitle.textContent = modeTxt;
-    } else if (isReplay) {
-      sitTitle.textContent = '🎞 鑑賞';
+  if (sitBanner && sitBadge && sitText) {
+    if (isReplay) {
+      sitBadge.className = 'situation-badge badge-gokaku';
+      sitBadge.textContent = '【鑑賞】';
       const curStep = (reviewingIndex >= 0) ? reviewingIndex : (historyStates.length - 1);
       const curBoard = (reviewingIndex >= 0 && historyStates[reviewingIndex]) ? historyStates[reviewingIndex].board : board;
       const curHands = (reviewingIndex >= 0 && historyStates[reviewingIndex]) ? historyStates[reviewingIndex].hands : hands;
       const { pPct, aiPct } = calculateTroopsPercentages(curBoard, curHands);
       const pCur = Math.round(getPlayerMaxTroops() * (pPct / 100));
       const aiCur = Math.round(getAiMaxTroops() * (aiPct / 100));
-      sitText.textContent = `【合戦絵巻再現中】第 ${curStep} 手目 ［残存 兵力：我が軍 ${pCur.toLocaleString()} 兵 vs 敵軍 ${aiCur.toLocaleString()} 兵］`;
-    } else {
-      sitTitle.textContent = '戦況';
+      sitText.textContent = `第${curStep}手 ［残存兵力：我が軍 ${pCur.toLocaleString()} 兵 vs 敵軍 ${aiCur.toLocaleString()} 兵］`;
     }
   }
 }
@@ -2061,7 +2258,7 @@ function setOrderMessage(msgData, isMyTurn = false, category = 'player') {
     badgeEl.className = 'order-tag-badge';
     if (isExhibitionActive) {
       badgeEl.classList.add('badge-tag-exhibition');
-      r1El.textContent = '御前'; r2El.textContent = '試合';
+      r1El.textContent = '御前'; r2El.textContent = '実況';
     } else if (isReviewingPast()) {
       badgeEl.classList.add('badge-tag-replay');
       r1El.textContent = '合戦'; r2El.textContent = '再現';
@@ -2078,13 +2275,18 @@ function setOrderMessage(msgData, isMyTurn = false, category = 'player') {
     }
   }
 
+  // 軍師進言時、および御前試合実況時に軍師肖像画を誇り高く掲出
   if (faceEl) {
-    if (isHintMode && !isReviewingPast() && !isExhibitionActive) {
-      const p = PLAYER_WARLORDS[currentMyWarlordId];
+    if ((isHintMode || isExhibitionActive) && !isReviewingPast()) {
       faceEl.style.display = 'flex';
       const fBox = document.getElementById('strategist-face-img-box');
-      if (fBox) fBox.innerHTML = getStrategistFaceHtml(p.strategistImgId);
       const nTag = document.getElementById('strategist-face-name-tag');
+      
+      const p = isExhibitionActive 
+        ? (PLAYER_WARLORDS[exhibitionRandomStrategistWarlordKey] || PLAYER_WARLORDS['sanada'])
+        : (PLAYER_WARLORDS[currentMyWarlordId] || PLAYER_WARLORDS['sanada']);
+
+      if (fBox) fBox.innerHTML = getStrategistFaceHtml(p.strategistImgId);
       if (nTag) nTag.textContent = p.strategistShort;
     } else {
       faceEl.style.display = 'none';
@@ -2202,8 +2404,8 @@ function startBattle() {
     document.getElementById('ai-quote-disp').textContent = rivalry.eQuote;
   } else {
     triggerCutin('合戦開始！ いざ推して参る！');
-    document.getElementById('player-quote-disp').textContent = p.quotes.default;
-    document.getElementById('ai-quote-disp').textContent = enemy.quotes.default;
+    document.getElementById('player-quote-disp').textContent = p.quotes.opening || p.quotes.default;
+    document.getElementById('ai-quote-disp').textContent = enemy.quotes.opening || enemy.quotes.default;
   }
 
   if (turn === 'PLAYER') {
@@ -2475,7 +2677,7 @@ function executeMove(m, metric = null) {
 
   if (m.type === 'drop') {
     hands[m.owner][m.code]--;
-    board[m.to.r][move.to.c] = { code: m.code, owner: m.owner };
+    board[m.to.r][m.to.c] = { code: m.code, owner: m.owner };
   } else {
     const fp = board[m.from.r][m.from.c], tp = board[m.to.r][m.to.c];
     if (tp) {
@@ -2926,6 +3128,9 @@ function checkGameOver(nextOwner) {
   return false;
 }
 
+/* =========================================================
+   【戦況バーの形勢バッジ ＆ 短評コメント連動ロジック】
+   ========================================================= */
 function updateTroopsAndSituation() {
   const curBoard = (reviewingIndex >= 0 && historyStates[reviewingIndex]) ? historyStates[reviewingIndex].board : board;
   const curHands = (reviewingIndex >= 0 && historyStates[reviewingIndex]) ? historyStates[reviewingIndex].hands : hands;
@@ -2963,20 +3168,51 @@ function updateTroopsAndSituation() {
     }
   }
 
+  const sitBadge = document.getElementById('situation-badge');
   const sit = document.getElementById('situation-text');
   const sitBanner = document.getElementById('situation-banner');
 
-  if (sit && !isReviewingPast()) {
+  if (sit && sitBadge && !isReviewingPast()) {
+    let badgeText = '【互角】';
+    let badgeClass = 'situation-badge badge-gokaku';
     let newSitText = '';
+
     if (isGameOver) {
-      newSitText = (pPct > aiPct) ? '我が軍の大勝利！ 敵本陣を陥落せり！' : '本陣陥落… 敵の猛攻に屈し候。';
-    } else if (pPct >= 80 && aiPct <= 50) {
-      newSitText = '我が軍怒涛の進撃！ 敵本陣を包囲中！';
-    } else if (aiPct >= 80 && pPct <= 50) {
-      newSitText = '我が本陣危急！ 防衛陣列を再編せよ！';
+      if (pPct > aiPct) {
+        badgeText = isExhibitionActive ? '【決着】' : '【完全勝利】';
+        badgeClass = 'situation-badge badge-player-win';
+        newSitText = isExhibitionActive ? '先手陣が見事敵本陣を陥落せしめ候！' : '我が軍の大勝利！ 敵本陣を陥落せり！';
+      } else {
+        badgeText = isExhibitionActive ? '【決着】' : '【本陣陥落】';
+        badgeClass = 'situation-badge badge-enemy-win';
+        newSitText = isExhibitionActive ? '後手陣の鉄壁の陣勢、見事に勝利を収め候。' : '本陣陥落… 敵の猛攻に屈し候。';
+      }
     } else {
-      newSitText = '白熱の激戦！ 両軍の主力隊が盤上で激しく激突中。';
+      if (diffPct >= 35) {
+        badgeText = isExhibitionActive ? '【先手勝勢】' : '【我が軍 勝勢】';
+        badgeClass = 'situation-badge badge-player-win';
+        newSitText = isExhibitionActive ? '先手陣怒涛の進撃！ 敵本陣を完全に包囲中！' : '我が軍怒涛の進撃！ 敵本陣を完全に包囲中！';
+      } else if (diffPct >= 12) {
+        badgeText = isExhibitionActive ? '【先手有利】' : '【我が軍 有利】';
+        badgeClass = 'situation-badge badge-player-adv';
+        newSitText = isExhibitionActive ? '先手陣が主導権を握り、敵陣へ圧力を強めております。' : '敵陣に突破口を開き、優位に軍を進めております！';
+      } else if (diffPct <= -35) {
+        badgeText = isExhibitionActive ? '【後手勝勢】' : '【本陣危急】';
+        badgeClass = 'situation-badge badge-enemy-win';
+        newSitText = isExhibitionActive ? '後手陣の猛威止まらず！ 先手陣本陣が危急に候！' : '我が本陣危急！ 直ちに防衛陣列を再編せよ！';
+      } else if (diffPct <= -12) {
+        badgeText = isExhibitionActive ? '【後手有利】' : '【敵軍有利】';
+        badgeClass = 'situation-badge badge-enemy-adv';
+        newSitText = isExhibitionActive ? '後手陣が駒得を重ね、着実に包囲網を狭めております。' : '敵将の鋭い攻勢。受けの態勢を整える刻に候。';
+      } else {
+        badgeText = '【互角】';
+        badgeClass = 'situation-badge badge-gokaku';
+        newSitText = '両軍ともに布陣堅牢、白兵戦の機を伺っております。';
+      }
     }
+
+    sitBadge.className = badgeClass;
+    sitBadge.textContent = badgeText;
 
     if (sit.textContent !== newSitText) {
       sit.textContent = newSitText;
@@ -3315,12 +3551,12 @@ function startExhibitionFromModal() {
 
   document.getElementById('player-name-disp').textContent = `▲ ${sData.name}`;
   document.getElementById('player-clan-disp').textContent = sData.clan;
-  document.getElementById('player-quote-disp').textContent = sData.quotes ? sData.quotes.default : '「先手陣、堂々たる進撃を見せてくれよう！」';
+  document.getElementById('player-quote-disp').textContent = sData.quotes ? (sData.quotes.opening || sData.quotes.default) : '「先手陣、堂々たる進撃を見せてくれよう！」';
   document.getElementById('player-troops-disp').textContent = `${sTroops.toLocaleString()} / ${sTroops.toLocaleString()} 兵`;
 
   document.getElementById('ai-name-disp').textContent = `▽ ${gData.name}`;
   document.getElementById('ai-clan-disp').textContent = gData.clan;
-  document.getElementById('ai-quote-disp').textContent = gData.quotes ? gData.quotes.default : '「後手陣、一歩も退かぬ鉄壁の陣を敷く！」';
+  document.getElementById('ai-quote-disp').textContent = gData.quotes ? (gData.quotes.opening || gData.quotes.default) : '「後手陣、一歩も退かぬ鉄壁の陣を敷く！」';
   document.getElementById('ai-troops-disp').textContent = `${gTroops.toLocaleString()} / ${gTroops.toLocaleString()} 兵`;
 
   renderMainPortraits();
@@ -3503,7 +3739,7 @@ function openKifuModal() {
       const moveStr = `${idx + 1}手目：${mark} ${9 - m.to.c}${KANJI_NUMS[m.to.r]} ${pPiece}${m.promote ? '成' : ''}`;
 
       const metric = moveMetricsHistory[idx] || { timeSec: '0.1', depth: 1 };
-      const metricHtml = `<span class="kifu-metric-pill">⏱ ${metric.timeSec}s ｜ 深さ${metric.depth}</span>`;
+      const metricHtml = `<span class="kifu-metric-pill">⏱ ${metric.timeSec}秒 ｜ 深さ${metric.depth}</span>`;
 
       let badgeHtml = '';
       if (m.isCap) {
@@ -3834,14 +4070,13 @@ function selectConquestProvince(lvl) {
 
   document.getElementById('ai-name-disp').textContent = w.name;
   document.getElementById('ai-clan-disp').textContent = `${w.clan} (Lv.${lvl})`;
-  document.getElementById('ai-quote-disp').textContent = w.quotes.default;
+  document.getElementById('ai-quote-disp').textContent = w.quotes.opening || w.quotes.default;
   document.getElementById('ai-troops-disp').textContent = `${w.maxTroops.toLocaleString()} / ${w.maxTroops.toLocaleString()} 兵`;
   document.getElementById('player-troops-disp').textContent = `${pMax.toLocaleString()} / ${pMax.toLocaleString()} 兵`;
 
   const aiBox = document.getElementById('ai-avatar-container');
   if (aiBox) aiBox.innerHTML = getWarlordPortraitHtml(w, true, 'ai');
 
-  // 自将変更と対になるよう、常に「⚔ 敵将変更」に完全統一
   const enemyChangeBtn = document.getElementById('btn-enemy-change');
   if (enemyChangeBtn && !isExhibitionActive) enemyChangeBtn.textContent = '⚔ 敵将変更';
   
@@ -3874,7 +4109,7 @@ function setPlayerWarlord(k) {
   document.documentElement.style.setProperty('--player-theme-color', p.themeColor);
   document.getElementById('player-name-disp').textContent = p.name;
   document.getElementById('player-clan-disp').textContent = p.clan;
-  document.getElementById('player-quote-disp').textContent = p.quotes.default;
+  document.getElementById('player-quote-disp').textContent = p.quotes.opening || p.quotes.default;
   document.getElementById('player-troops-disp').textContent = `${pMax.toLocaleString()} / ${pMax.toLocaleString()} 兵`;
   
   const pBox = document.getElementById('player-avatar-container');
@@ -4343,7 +4578,7 @@ function replayFromHistory(recordId, storageKey) {
   const lastSnap = historyStates[reviewingIndex];
   board = cloneBoardState(lastSnap.board);
   hands = JSON.parse(JSON.stringify(lastSnap.hands));
-  lastMove = (reviewingIndex > 0) ? lastSnap.moveObjectsHistory[lastSnap.moveObjectsHistory.length - 1] : null;
+  lastMove = (reviewingIndex > 0) ? lastSnap.moveObjectsHistory[snap.moveObjectsHistory.length - 1] : null;
   isGameOver = true;
 
   updateTurnFocus(null);
@@ -4376,3 +4611,4 @@ document.addEventListener('touchstart', () => initAudio(), { once: true });
 loadProgress();
 setPlayerWarlord(currentMyWarlordId);
 initBoardState();
+
