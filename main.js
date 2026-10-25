@@ -445,7 +445,6 @@ self.onmessage = function(e) {
   let achievedDepth = 1;
 
   for (let d = 1; d <= cfg.depth; d++) {
-    // 探索開始時にも進捗を通知（UI即時連動）
     self.postMessage({ type: 'progress', depth: d, targetDepth: cfg.depth, nodes: nodeCount, evalScore: confirmedBestScore });
 
     let alpha = -Infinity, beta = Infinity;
@@ -513,7 +512,6 @@ self.onmessage = function(e) {
 
 /* =========================================================
    安土桃山・黄金工芸 立体五角形将棋駒アイコン 生成エンジン
-   【完全インライン絶対拘束サイズ：レイアウト崩壊100%防止設計】
    ========================================================= */
 function getKomaMarkHtml(isSente, sizeType = 'normal') {
   let w = 12, h = 13, vAlign = '-1.5px', mRight = '3px';
@@ -1072,9 +1070,10 @@ function getWarlordPortraitHtml(warlordData, isInteractive = false, side = null)
 
   if (warlordData.id) candidates.push(`images/${warlordData.id}`);
   if (warlordData.id === 'enemy_11') candidates.push('images/keiji');
-  if (warlordData.id === 'inst_nanban') candidates.push('images/nanban');
-  if (warlordData.id === 'inst_kenshi') candidates.push('images/kenshi');
-  if (warlordData.id === 'inst_inja')   candidates.push('images/inja');
+  if (warlordData.id === 'inst_nanban') { candidates.push('images/ujisato'); candidates.push('images/nanban'); }
+  if (warlordData.id === 'inst_kenshi') { candidates.push('images/yagyu'); candidates.push('images/kenshi'); }
+  if (warlordData.id === 'inst_inja')   { candidates.push('images/josui'); candidates.push('images/inja'); }
+  if (warlordData.id === 'inst_sokei')  { candidates.push('images/sokei'); candidates.push('images/meijin'); }
 
   const uniqueCandidates = [...new Set(candidates)];
   const primarySrc = `${uniqueCandidates[0]}.png`;
@@ -1159,61 +1158,85 @@ function getGunbaiIconHtml() {
   `;
 }
 
-/* 客分指南役データ（著名オープンソースエンジン出典を明記） */
+/* =========================================================
+   客分四英傑データ（実在の戦国名将・剣聖・軍師・一世名人）
+   ========================================================= */
 const INSTRUCTORS_DATA = {
   nanban: {
-    id: 'inst_nanban', name: '明朝の客分・南蛮棋士', rank: 'アマ初段相当', clan: '異国棋院 ｜ 深さ3＋静止探索',
+    id: 'inst_nanban', name: '蒲生氏郷', rank: 'アマ初段相当', clan: '会津国 ｜ 南蛮兵法・深さ3',
     sourceEngine: 'MicroMax / 西洋古典αβ探索',
-    engineType: 'nanban', baseTroops: 10000, targetDepth: 3,
+    engineType: 'nanban', baseTroops: 15000, targetDepth: 3,
     depthSpec: '深さ3＋静止探索',
+    featureShort: '信長公直伝の南蛮兵法と前進速攻。',
     quotes: {
-      default: '「異国の盤上戦法、日ノ本の武士道に通用するか試させてもらおう。」',
-      opening: '「まずは手堅く陣形を構築いたす。西洋のチェスとは一味違うな。」',
-      midgame: '「駒がぶつかり合うてこそ真骨頂！ 異国の筋を見切れるか！」',
-      endgame: '「寄せの段階に入ったようだな。油断なく包囲網を狭めよう。」',
-      check: '「チェック… いや、王手に候！ 逃げ道を塞がせてもらうぞ！」',
-      pinch: '「ム… 日ノ本の将棋、侮りがたし！ 陣を組み直さねば！」',
-      adv: '「我が優勢は揺るがぬ。異国の秘策、見せて進ぜよう！」'
+      default: '「信長公直伝の南蛮兵法、日ノ本の将棋と融合させてご覧に入れよう！」',
+      opening: '「燕雀安くんぞ鴻鵠の志を知らんや！ まずは堂々たる陣形を敷く！」',
+      midgame: '「銀杏の葉が如く、前線へ兵を繰り出す！ 南蛮の筋、見切れるか！」',
+      endgame: '「これぞ会津黒川の軍略！ 油断なく敵本陣を包囲せん！」',
+      check: '「チェック… いや王手！ 我が南蛮槍の切っ先、かわしてみせよ！」',
+      pinch: '「ム… 日ノ本の将棋、誠に侮りがたし！ 陣を組み直さねば！」',
+      adv: '「我が優勢は揺るがぬ！ 氏郷の秘策、いざ受けてみよ！」'
     },
-    defeatQuote: '「参りました…！ 日ノ本の将棋の奥深さ、敬服いたしました！」',
-    victoryQuote: '「チェックメイト！ 異国の戦法、見事に決まり申した！」',
-    portraitSvg: `<rect width="100" height="100" rx="6" fill="#0d1829"/><circle cx="50" cy="45" r="22" fill="#1b2a47" stroke="#ffd700" stroke-width="2"/><path d="M 35,45 Q 50,25 65,45 Q 50,65 35,45 Z" fill="#ffd700"/><circle cx="50" cy="45" r="6" fill="#ffffff"/>`
+    defeatQuote: '「参り申した…！ 日ノ本の将棋の奥深さ、敬服いたした！」',
+    victoryQuote: '「南蛮兵法の勝利！ 日ノ本の盤上、見事に制覇いたし候！」',
+    portraitSvg: `<rect width="100" height="100" rx="6" fill="#0d1829"/><circle cx="50" cy="45" r="22" fill="#1b2a47" stroke="#ffd700" stroke-width="2"/><line x1="50" y1="28" x2="50" y2="62" stroke="#ffd700" stroke-width="4"/><line x1="38" y1="40" x2="62" y2="40" stroke="#ffd700" stroke-width="4"/><circle cx="50" cy="40" r="4" fill="#ffffff"/>`
   },
   kenshi: {
-    id: 'inst_kenshi', name: '指南役・無双剣士', rank: 'アマ二段相当', clan: '道場指南 ｜ 深さ4＋PST＋静止探索',
+    id: 'inst_kenshi', name: '柳生石舟斎', rank: 'アマ二段相当', clan: '大和国 ｜ 新陰流剣聖・深さ4',
     sourceEngine: 'Sunfish将棋 / LesserKai PST駆動',
-    engineType: 'kenshi', baseTroops: 25000, targetDepth: 4,
-    depthSpec: '深さ4＋PST＋静止探索',
+    engineType: 'kenshi', baseTroops: 30000, targetDepth: 4,
+    depthSpec: '深さ4＋PST配置評価',
+    featureShort: '新陰流無刀取り。基本に忠実で隙なき構え。',
     quotes: {
-      default: '「基本に忠実、陣形に乱れなし。我が剣筋、見切ってみせよ。」',
-      opening: '「隙のない構えこそ不敗の基本。陣を整えて機を待つべし。」',
-      midgame: '「刃と刃の切り結び！ ここからが真剣勝負の本番ぞ！」',
-      endgame: '「太刀筋は完全に定まった！ 必殺の一刀を叩き込む！」',
-      check: '「一刀両断！ 王手！ 逃れられると思うなよ！」',
-      pinch: '「ぬうっ… 刃を交えて初めて知る貴殿の気迫、受けて立とう！」',
-      adv: '「太刀筋は定まった！ 我が指南の妙技、味わうがよい！」'
+      default: '「太刀を構えるが如く駒に魂を宿す。新陰流の太刀筋、受けてみよ。」',
+      opening: '「隙のない構えこそ不敗の基本。陣を整えて静かに機を待つべし。」',
+      midgame: '「刃と刃の切り結び！ ここからが新陰流・盤上白兵戦の本番ぞ！」',
+      endgame: '「太刀筋は完全に定まった！ 必殺の一刀を本陣へ叩き込む！」',
+      check: '「一刀両断！ 王手！ 我が太刀筋から逃れられると思うなよ！」',
+      pinch: '「ぬうっ… 刃を交えて初めて知る貴殿の気迫、受けて立とうぞ！」',
+      adv: '「我が太刀筋に乱れなし！ 新陰流無刀取りの極意、味わうがよい！」'
     },
-    defeatQuote: '「見事な太刀筋… 我が剣、完敗にござる！」',
-    victoryQuote: '「我が無双の一刀、盤上に極まれり！」',
-    portraitSvg: `<rect width="100" height="100" rx="6" fill="#1c0f05"/><polygon points="50,15 80,85 50,70 20,85" fill="#8c671a" stroke="#ffd700" stroke-width="2"/><line x1="50" y1="15" x2="50" y2="70" stroke="#ffd700" stroke-width="2.5"/>`
+    defeatQuote: '「見事な太刀筋… 我が剣、盤上に完敗にござる！」',
+    victoryQuote: '「我が新陰流の太刀筋、盤上に見事に極まれり！」',
+    portraitSvg: `<rect width="100" height="100" rx="6" fill="#1c0f05"/><polygon points="50,15 80,85 50,70 20,85" fill="#8c671a" stroke="#ffd700" stroke-width="2"/><line x1="50" y1="15" x2="50" y2="70" stroke="#ffd700" stroke-width="2.5"/><circle cx="50" cy="40" r="14" fill="none" stroke="#ffd700" stroke-width="1.8"/>`
   },
   inja: {
-    id: 'inst_inja', name: '神算鬼謀の隠者', rank: 'アマ五段相当', clan: '深山幽谷 ｜ 深さ5＋置換表＋キラー探索',
+    id: 'inst_inja', name: '黒田如水', rank: 'アマ五段相当', clan: '播磨国 ｜ 神算鬼謀の隠者・深さ5',
     sourceEngine: 'Bonanza系統 置換表＆キラー探索',
     engineType: 'inja', baseTroops: 60000, targetDepth: 5,
     depthSpec: '深さ5＋置換表＋キラー探索',
+    featureShort: '天下の天才軍師。相手の手を先読みし罠へ誘い込む。',
     quotes: {
-      default: '「盤上の千変万化、すでに結末は見えておる… 一手を指すがよい。」',
+      default: '「すべては我が盤上の絵図通り… 如水の読み、見破れるか。」',
       opening: '「盤上は静かなる深淵。布石の一手ひとつが勝敗を分かつぞ。」',
-      midgame: '「ほほう、仕掛けてきたか。すべては我が手のひらの上よ。」',
-      endgame: '「天網恢恢疎にして漏らさず。これにて逃げ場はなくなったぞ。」',
+      midgame: '「ほほう、仕掛けてきたか。それもすべてこの如水の手のひらの上よ。」',
+      endgame: '「天網恢恢疎にして漏らさず。これにて貴殿に逃げ場はなくなったぞ。」',
       check: '「これぞ深遠なる詰めろ！ 逃げ道はすべて塞がれておるぞ。」',
-      pinch: '「ほほう… この老骨の裏をかくか。面白い、一手興じようぞ。」',
+      pinch: '「ほほう… この如水の裏をかくか。面白い、一手興じようぞ。」',
       adv: '「天網恢恢疎にして漏らさず。神算鬼謀の網からは逃れられぬ。」'
     },
-    defeatQuote: '「この隠者の読みを超えるとは… まこと天下の器よ！」',
+    defeatQuote: '「この如水の読みを超えるとは… まこと天下無双の器よ！」',
     victoryQuote: '「すべては我が読みの筋書き通り。盤上平定なり。」',
-    portraitSvg: `<rect width="100" height="100" rx="6" fill="#10061e"/><circle cx="50" cy="50" r="28" fill="none" stroke="#ba68c8" stroke-width="2.5" stroke-dasharray="4,4"/><polygon points="50,22 74,68 26,68" fill="#2d1245" stroke="#ffd700" stroke-width="1.8"/><circle cx="50" cy="52" r="8" fill="#ffd700"/>`
+    portraitSvg: `<rect width="100" height="100" rx="6" fill="#10061e"/><circle cx="50" cy="50" r="28" fill="none" stroke="#ba68c8" stroke-width="2.5" stroke-dasharray="4,4"/><path d="M 32,30 Q 50,12 68,30 L 74,70 Q 50,82 26,70 Z" fill="#b31212" stroke="#ffd700" stroke-width="1.8"/><circle cx="50" cy="50" r="9" fill="#ffd700"/>`
+  },
+  sokei: {
+    id: 'inst_sokei', name: '初代名人・大橋宗桂', rank: 'アマ八段〜九段相当', clan: '山城国 ｜ 将棋一世名人・深さ6',
+    sourceEngine: 'Apery / やねうら王系統 Null-Move＋PVS探索',
+    engineType: 'sokei', baseTroops: 100000, targetDepth: 6,
+    depthSpec: '深さ6＋Null-Move枝刈り＋PVS探索',
+    featureShort: '信長・家康公より名人を賜りし開祖。最高峰の極致。',
+    quotes: {
+      default: '「信長公、家康公の御前で極めし我が一世名人の技芸… 盤上に見せて進ぜよう。」',
+      opening: '「盤上の礼法に乱れなし。古今無双の名人将棋、受けてみられよ。」',
+      midgame: '「駒の響きが勝利の調べを奏でておる。隙なき名人の構え、崩せるか。」',
+      endgame: '「これにて玉将の運命は定まれり。一手も狂わぬ寄せを放つ！」',
+      check: '「一世名人の王手！ 逃れられる道は天地いずこにもなし！」',
+      pinch: '「ほう…！ 我が名人の読みに挑む鋭い刃、見事な気迫にござる！」',
+      adv: '「盤上の全ては定石の極みに収束す。我が一手、天下無敵なり。」'
+    },
+    defeatQuote: '「見事なり…！ 現代にこれほどの将棋の名手が現れようとは… 完敗にござる！」',
+    victoryQuote: '「信長公、家康公に捧げし将棋名人の誇り… 今ここに極まれり！」',
+    portraitSvg: `<rect width="100" height="100" rx="6" fill="#1c072e"/><polygon points="50,10 88,28 78,92 22,92 12,28" fill="#380d59" stroke="#ffd700" stroke-width="3" stroke-linejoin="round"/><circle cx="50" cy="50" r="18" fill="radial-gradient(circle, #ffd700, #b8860b)" stroke="#ffffff" stroke-width="1.5"/><text x="50" y="58" font-size="20" font-weight="900" fill="#1c072e" text-anchor="middle" font-family="Shippori Mincho, serif">名</text>`
   }
 };
 
@@ -1537,7 +1560,7 @@ function pickRandomStrategistWarlord() {
   exhibitionRandomStrategistWarlordKey = keys[Math.floor(Math.random() * keys.length)];
 }
 
-/* 先手・後手 ＆ 駒台・手番表示の動的整合性エンジン（美麗五角形将棋駒アイコン・完全サイズ拘束版） */
+/* 先手・後手 ＆ 駒台・手番表示の動的整合性エンジン */
 function updateTurnLabels() {
   const pDock = document.getElementById('player-dock-label');
   const aiDock = document.getElementById('ai-dock-label');
@@ -1574,7 +1597,7 @@ function updateTurnLabels() {
   if (aiNameEl) aiNameEl.innerHTML = `${enemyMarkNormal}${w.name}`;
 }
 
-/* 勝敗視認性：特大立体扁額掲揚 ＆ オーラ制御 */
+/* 勝敗視認性：武将名横インライン銘板掲揚 ＆ オーラ制御 */
 function clearWarlordResultPlaques() {
   const pPlaque = document.getElementById('player-result-plaque');
   const aiPlaque = document.getElementById('ai-result-plaque');
@@ -1598,19 +1621,19 @@ function showWarlordResultPlaque(winnerSide) {
   const loseTxt = isExhibitionActive ? '【敗者】' : '【本陣陥落】';
 
   if (winnerSide === 'PLAYER') {
-    if (pPlaque) { pPlaque.textContent = winTxt; pPlaque.className = 'warlord-result-plaque plaque-win'; pPlaque.style.display = 'block'; }
-    if (aiPlaque) { aiPlaque.textContent = loseTxt; aiPlaque.className = 'warlord-result-plaque plaque-lose'; aiPlaque.style.display = 'block'; }
+    if (pPlaque) { pPlaque.textContent = winTxt; pPlaque.className = 'warlord-result-plaque plaque-win'; pPlaque.style.display = 'inline-flex'; }
+    if (aiPlaque) { aiPlaque.textContent = loseTxt; aiPlaque.className = 'warlord-result-plaque plaque-lose'; aiPlaque.style.display = 'inline-flex'; }
     if (pPanel) pPanel.classList.add('is-victor');
     if (aiPanel) aiPanel.classList.add('is-vanquished');
   } else {
-    if (aiPlaque) { aiPlaque.textContent = winTxt; aiPlaque.className = 'warlord-result-plaque plaque-win'; aiPlaque.style.display = 'block'; }
-    if (pPlaque) { pPlaque.textContent = loseTxt; pPlaque.className = 'warlord-result-plaque plaque-lose'; pPlaque.style.display = 'block'; }
+    if (aiPlaque) { aiPlaque.textContent = winTxt; aiPlaque.className = 'warlord-result-plaque plaque-win'; aiPlaque.style.display = 'inline-flex'; }
+    if (pPlaque) { pPlaque.textContent = loseTxt; pPlaque.className = 'warlord-result-plaque plaque-lose'; pPlaque.style.display = 'inline-flex'; }
     if (aiPanel) aiPanel.classList.add('is-victor');
     if (pPanel) pPanel.classList.add('is-vanquished');
   }
 }
 
-/* 御前試合：公儀軍監実況解説エンジン（思考深さの完全適正リアルタイム表示対応） */
+/* 御前試合：公儀軍監実況解説エンジン（思考深さ完全適正リアルタイム表示） */
 function updateExhibitionThinkingDisplay(isThinking = true) {
   if (!isExhibitionActive) return;
   const elapsedSec = Math.max(0.1, (Date.now() - turnStartTime) / 1000).toFixed(1);
@@ -1627,7 +1650,6 @@ function updateExhibitionThinkingDisplay(isThinking = true) {
 
   if (otherThinkingDisp) {
     if (exhibitionLastMoveInfo && !isThinking) {
-      // 直前着手情報の保持表示
       otherThinkingDisp.style.display = 'inline-flex';
       otherThinkingDisp.innerHTML = `✔ 着手 <b>${exhibitionLastMoveInfo.timeSec}秒</b> (深さ${exhibitionLastMoveInfo.depth})`;
     } else {
@@ -2062,7 +2084,7 @@ function loadProgress() {
   updateConquestMapUI();
 }
 
-/* 複数画面安全合体（マージ）保存エンジン */
+/* 複数画面安全合体保存エンジン */
 function saveProgress(clearedLvl) {
   if (isExhibitionActive) return;
   try {
@@ -2075,7 +2097,6 @@ function saveProgress(clearedLvl) {
   updateConquestMapUI();
 }
 
-/* 複数画面リアルタイム同期リスナー（storageイベント監視） */
 window.addEventListener('storage', function(e) {
   if (e.key === 'shogi_cleared_provinces') {
     try {
@@ -2111,7 +2132,7 @@ function getBoardHash(b, h, t) {
   return s;
 }
 
-/* 千日手判定（次手番局面でのハッシュ一致厳密判定版） */
+/* 千日手判定 */
 function checkSennichite(targetNextTurn = turn) {
   const curHash = getBoardHash(board, hands, targetNextTurn);
   boardHashHistory.push(curHash);
@@ -2840,7 +2861,6 @@ function animateAndExecuteMove(m, metric = null, onComplete = null) {
   }, flyTime);
 }
 
-/* 一手着手実行（合戦絵巻モーダルが開いていればリアルタイム自動連動） */
 function executeMove(m, metric = null) {
   if (m.type === 'move' && !m.code && board[m.from.r][m.from.c]) {
     m.code = board[m.from.r][m.from.c].code;
@@ -2882,7 +2902,6 @@ function executeMove(m, metric = null) {
   updateWarlordQuotes();
   updateReviewModeUI();
 
-  // 【合戦絵巻リアルタイム追従更新】
   const kifuModal = document.getElementById('kifu-modal');
   if (kifuModal && kifuModal.style.display === 'flex') {
     updateKifuModalLive();
@@ -3200,7 +3219,6 @@ function undoMove() {
   updateWarlordQuotes();
   updateReviewModeUI();
 
-  // 合戦絵巻が開いていれば再描画同期
   const kifuModal = document.getElementById('kifu-modal');
   if (kifuModal && kifuModal.style.display === 'flex') {
     openKifuModal();
@@ -3492,11 +3510,11 @@ function cycleReplaySpeed() {
   }
 }
 
-/* 御前試合 */
+/* 御前試合：選定対象（戦国武将10名 ＋ 客分四英傑 ＋ 軍師AI） */
 const ALL_EXHIBITION_AI_KEYS = [
   'lvl_1', 'lvl_2', 'lvl_3', 'lvl_4', 'lvl_5',
   'lvl_6', 'lvl_7', 'lvl_8', 'lvl_9', 'lvl_10',
-  'nanban', 'kenshi', 'inja',
+  'nanban', 'kenshi', 'inja', 'sokei',
   'strategist'
 ];
 
@@ -3526,6 +3544,7 @@ function closeExhibitionModal() {
 }
 
 function getAiBadgeHtml(k, data) {
+  if (k === 'sokei') return `<span class="badge-ai-meijin">一世名人</span>`;
   if (['nanban', 'kenshi', 'inja'].includes(k)) return `<span class="badge-ai-dan">${data.rank || '指南役'}</span>`;
   if (k.startsWith('lvl_')) return `<span class="badge-ai-level">Lv.${k.replace('lvl_', '')}</span>`;
   if (k === 'strategist') return `<span class="badge-ai-tactician">軍師AI</span>`;
@@ -3537,8 +3556,8 @@ function renderExhibitionVisualPickers() {
   const goteListEl = document.getElementById('exhibition-gote-pick-list');
   if (!senteListEl || !goteListEl) return;
 
-  senteListEl.innerHTML = `<div class="exhibition-list-header">📜 控え武将一覧（全十四傑より選定）</div>`;
-  goteListEl.innerHTML = `<div class="exhibition-list-header">📜 控え武将一覧（全十四傑より選定）</div>`;
+  senteListEl.innerHTML = `<div class="exhibition-list-header">📜 控え武将一覧（全十五傑より選定）</div>`;
+  goteListEl.innerHTML = `<div class="exhibition-list-header">📜 控え武将一覧（全十五傑より選定）</div>`;
 
   ALL_EXHIBITION_AI_KEYS.forEach(k => {
     const data = getTargetAIData(k);
@@ -3729,7 +3748,6 @@ function dispatchExhibitionTurn() {
   const targetSide = isSenteTurn ? 'PLAYER' : 'AI';
   const targetData = getTargetAIData(targetKey);
 
-  // 手番開始時の深さリセットと目標深度設定
   exhibitionAchievedDepth = 1;
   exhibitionTargetDepth = targetData.targetDepth || (targetKey === 'strategist' ? 5 : 3);
   exhibitionLastMoveInfo = null;
@@ -3740,7 +3758,7 @@ function dispatchExhibitionTurn() {
 
   const safeLimit = EXHIBITION_TIME_LIMITS[exhibitionSpeed] || 8500;
 
-  if (['nanban', 'kenshi', 'inja'].includes(targetKey)) {
+  if (['nanban', 'kenshi', 'inja', 'sokei'].includes(targetKey)) {
     const payload = {
       board: cloneBoardState(board),
       hands: JSON.parse(JSON.stringify(hands)),
@@ -3787,7 +3805,6 @@ function scheduleNextExhibitionTurn() {
   const targetSide = isSenteTurn ? 'PLAYER' : 'AI';
   const targetData = getTargetAIData(targetKey);
 
-  // インターバル中も直前着手情報などを保持
   startTurnTimer(targetSide, targetData.name);
 
   exhibitionTimer = setTimeout(() => {
@@ -3860,14 +3877,11 @@ function updateKifuModalLive() {
   const modalSit = document.getElementById('kifu-modal-situation-text');
   if (modalSit) modalSit.textContent = curSitText;
 
-  // 領地支配グラフ再描画
   drawTerritoryChart();
 
-  // 棋譜リストのリアルタイム行追加
   const l = document.getElementById('kifu-list');
   if (l && moveObjectsHistory.length > 0) {
     const idx = moveObjectsHistory.length - 1;
-    // 既存行数をチェック
     if (l.children.length < moveObjectsHistory.length) {
       const m = moveObjectsHistory[idx];
       const d = document.createElement('div');
@@ -3884,14 +3898,8 @@ function updateKifuModalLive() {
 
       let badgeHtml = '';
       if (m.isCap) {
-        let victimName = '';
-        if (isExhibitionActive) {
-          const sName = getTargetAIData(exhibitionSenteTarget).name.split('・')[0];
-          const gName = getTargetAIData(exhibitionGoteTarget).name.split('・')[0];
-          victimName = (m.owner === 'PLAYER') ? `後手駒` : `先手駒`;
-        } else {
-          victimName = (m.owner === 'PLAYER') ? '敵駒' : '自軍駒';
-        }
+        let victimName = (m.owner === 'PLAYER') ? '敵駒' : '自軍駒';
+        if (isExhibitionActive) victimName = (m.owner === 'PLAYER') ? `後手駒` : `先手駒`;
         badgeHtml = `<span class="kifu-badge-critical badge-tennozan">⚔ ${victimName}討死</span>`;
       } else if (m.promote) {
         badgeHtml = `<span class="kifu-badge-critical badge-shock">🔥 成駒覚醒！</span>`;
@@ -4006,14 +4014,8 @@ function openKifuModal() {
 
       let badgeHtml = '';
       if (m.isCap) {
-        let victimName = '';
-        if (isExhibitionActive) {
-          const sName = getTargetAIData(exhibitionSenteTarget).name.split('・')[0];
-          const gName = getTargetAIData(exhibitionGoteTarget).name.split('・')[0];
-          victimName = (m.owner === 'PLAYER') ? `後手駒` : `先手駒`;
-        } else {
-          victimName = (m.owner === 'PLAYER') ? '敵駒' : '自軍駒';
-        }
+        let victimName = (m.owner === 'PLAYER') ? '敵駒' : '自軍駒';
+        if (isExhibitionActive) victimName = (m.owner === 'PLAYER') ? `後手駒` : `先手駒`;
         badgeHtml = `<span class="kifu-badge-critical badge-tennozan">⚔ ${victimName}討死</span>`;
       } else if (m.promote) {
         badgeHtml = `<span class="kifu-badge-critical badge-shock">🔥 成駒覚醒！</span>`;
@@ -4572,9 +4574,10 @@ function switchHistoryTab(tab) {
         <option value="lvl_8">Lv.8 織田信長</option>
         <option value="lvl_9">Lv.9 豊臣秀吉</option>
         <option value="lvl_10">Lv.10 徳川家康</option>
-        <option value="nanban">南蛮棋士 (MicroMax系)</option>
-        <option value="kenshi">無双剣士 (Sunfish系)</option>
-        <option value="inja">鬼謀の隠者 (Bonanza系)</option>
+        <option value="nanban">蒲生氏郷 (MicroMax系)</option>
+        <option value="kenshi">柳生石舟斎 (Sunfish系)</option>
+        <option value="inja">黒田如水 (Bonanza系)</option>
+        <option value="sokei">初代名人・大橋宗桂 (やねうら王系)</option>
         <option value="strategist">軍師AI</option>
       `;
     }
@@ -4633,7 +4636,7 @@ function renderBattleHistoryList() {
         const match = r.resultLabel.match(/：(.+)勝/);
         if (match) {
           const wName = match[1];
-          if (wName.includes('南蛮') || wName.includes('剣士') || wName.includes('隠者')) instWins++;
+          if (wName.includes('蒲生') || wName.includes('柳生') || wName.includes('如水') || wName.includes('宗桂') || wName.includes('南蛮') || wName.includes('剣士') || wName.includes('隠者')) instWins++;
           else warlordWins++;
         }
       }
@@ -4642,7 +4645,7 @@ function renderBattleHistoryList() {
     if (summaryStripEl) {
       summaryStripEl.innerHTML = `
         <span class="summary-rank-tag">⚔ 御前武芸録</span>
-        <span class="summary-stats-txt">通算 <b>${exhTotal}</b>戦 ｜ 客分指南 <b>${instWins}</b>勝 vs 戦国武将 <b>${warlordWins}</b>勝</span>
+        <span class="summary-stats-txt">通算 <b>${exhTotal}</b>戦 ｜ 客分英傑 <b>${instWins}</b>勝 vs 戦国武将 <b>${warlordWins}</b>勝</span>
       `;
     }
   }

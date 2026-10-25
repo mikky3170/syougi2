@@ -62,12 +62,15 @@
 
       <div class="warlord-panel panel-enemy" id="ai-panel">
         <div class="warlord-avatar" id="ai-avatar-container" onclick="toggleWarlordAvatarView('ai')" title="肖像／家紋切替"></div>
-        <div class="warlord-result-plaque" id="ai-result-plaque" style="display:none;"></div>
 
         <div class="warlord-info-col">
           <div class="warlord-header-row">
             <div class="warlord-identity-block">
-              <span class="warlord-name" id="ai-name-disp">木下藤吉郎</span>
+              <div class="warlord-name-group">
+                <span class="warlord-name" id="ai-name-disp">木下藤吉郎</span>
+                <!-- 勝者・敗者銘板：キャラ名の右横（インライン配置） -->
+                <span class="warlord-result-plaque" id="ai-result-plaque" style="display:none;"></span>
+              </div>
               <div class="warlord-desc-line">
                 <span class="warlord-desc" id="ai-clan-disp">尾張国｜織田足軽隊</span>
                 <span class="warlord-thinking-inline timer-gold-box" id="ai-thinking-disp" style="display:none;"></span>
@@ -95,7 +98,7 @@
       </div>
     </div>
 
-    <!-- 【中陣：本丸対局場（将棋盤・再生バー）】 -->
+    <!-- 【中陣：本丸対局場（将棋盤・再生バー・自駒台統合行）】 -->
     <div class="battle-section-middle">
       <div class="board-wrapper">
         <div class="shogi-board-frame">
@@ -130,26 +133,33 @@
         </div>
       </div>
 
-      <div class="replay-bar-slot">
-        <div class="replay-full-controls" id="replay-full-controls" style="display:none;">
-          <div class="replay-ctrl-left-group">
-            <button class="replay-step-btn btn-3d" onclick="stepReviewToStart()" title="最初（初期配置）へ">⏮</button>
-            <button class="replay-step-btn btn-3d" onclick="stepReview(-1)" title="一手戻る">◀</button>
-            <button class="kifu-auto-btn btn-3d" id="btn-auto-replay" onclick="toggleAutoReplay()" title="自動再生">▶ 自動</button>
-            <button class="replay-step-btn btn-3d" onclick="stepReview(1)" title="一手進む">▶</button>
-            <button class="replay-step-btn btn-3d" onclick="stepReviewToEnd()" title="最新（終局）へ">⏭</button>
-            <button class="kifu-speed-btn btn-3d" id="btn-replay-speed" onclick="cycleReplaySpeed()" title="速度切替">1x</button>
+      <!-- 将棋盤直下：スマホ時「左：再生バー」「右：自駒台」横並び密着コンテナ -->
+      <div class="board-under-control-row" id="board-under-control-row">
+        <div class="replay-bar-slot" id="replay-bar-slot">
+          <div class="replay-full-controls" id="replay-full-controls" style="display:none;">
+            <div class="replay-ctrl-left-group">
+              <button class="replay-step-btn btn-3d" onclick="stepReviewToStart()" title="最初（初期配置）へ">⏮</button>
+              <button class="replay-step-btn btn-3d" onclick="stepReview(-1)" title="一手戻る">◀</button>
+              <button class="kifu-auto-btn btn-3d" id="btn-auto-replay" onclick="toggleAutoReplay()" title="自動再生">▶ 自動</button>
+              <button class="replay-step-btn btn-3d" onclick="stepReview(1)" title="一手進む">▶</button>
+              <button class="replay-step-btn btn-3d" onclick="stepReviewToEnd()" title="最新（終局）へ">⏭</button>
+              <button class="kifu-speed-btn btn-3d" id="btn-replay-speed" onclick="cycleReplaySpeed()" title="速度切替">1x</button>
+            </div>
+            <button class="btn-finish-replay btn-3d" onclick="exitReplayMode()" title="対局へ復帰">⚔ 戻る</button>
           </div>
-          <button class="btn-finish-replay btn-3d" onclick="exitReplayMode()" title="対局へ復帰">⚔ 対局へ戻る</button>
+        </div>
+
+        <div class="board-hand-dock dock-player" id="dock-player-wrapper" title="下陣持ち駒台">
+          <div class="warlord-hand-box hand-box-player" id="player-hand"></div>
+          <div class="dock-label" id="player-dock-label">▲ 自駒</div>
         </div>
       </div>
     </div>
 
-    <!-- 【下陣：自軍／先手陣】 -->
+    <!-- 【下陣：自軍／先手陣武将パネル】 -->
     <div class="battle-section-bottom">
       <div class="warlord-panel panel-player" id="player-panel">
         <div class="warlord-avatar" id="player-avatar-container" onclick="toggleWarlordAvatarView('player')" title="肖像／家紋切替"></div>
-        <div class="warlord-result-plaque" id="player-result-plaque" style="display:none;"></div>
 
         <div class="warlord-info-col">
           <div class="warlord-header-row">
@@ -157,6 +167,8 @@
               <div class="warlord-name-group">
                 <span class="warlord-name" id="player-name-disp">真田幸村</span>
                 <span class="warlord-strategist-badge" id="player-strategist-badge">軍師:昌幸</span>
+                <!-- 勝者・敗者銘板：キャラ名の右横（インライン配置） -->
+                <span class="warlord-result-plaque" id="player-result-plaque" style="display:none;"></span>
               </div>
               <div class="warlord-desc-line">
                 <span class="warlord-desc" id="player-clan-disp">信濃国 ｜ 真田赤備隊</span>
@@ -182,11 +194,6 @@
             <div class="warlord-quote" id="player-quote-disp">「不惜身命！ この一手に命を懸ける！」</div>
           </div>
         </div>
-      </div>
-
-      <div class="board-hand-dock dock-player" id="dock-player-wrapper" title="下陣持ち駒台">
-        <div class="warlord-hand-box hand-box-player" id="player-hand"></div>
-        <div class="dock-label" id="player-dock-label">▲ 自駒</div>
       </div>
     </div>
 
@@ -255,7 +262,7 @@
     
     <div class="exhibition-guide-plaque">
       <span>💡</span>
-      <span>武将・指南役の<b>【肖像・家紋】</b>を選定して御前試合を開始します。<br>※両軍の読み筋・公儀軍監の実況解説を特等席で鑑賞できます。</span>
+      <span>戦国武将・客分英傑・名人の<b>【肖像・家紋】</b>を選定して御前試合を開始します。<br>※両軍の読み筋・公儀軍監の実況解説を特等席で鑑賞できます。</span>
     </div>
 
     <div class="exhibition-mobile-tab-bar" id="exhibition-mobile-tabs">
@@ -304,7 +311,7 @@
         </div>
       </div>
       <div class="exhibition-mode-desc-plaque" id="exhibition-mode-desc-plaque">
-        ※<b>通常本将棋</b>＝最大8.5秒考慮（深さ5到達）。高段位・軍師AIが本来の神算鬼謀と最強棋力を発揮します。<br>
+        ※<b>通常本将棋</b>＝最大8.5秒考慮（深さ5〜6到達）。高段位・軍師AI・将棋名人が本来の神算鬼謀と最強棋力を発揮します。<br>
         ※<b>早指し戦</b>＝思考時間が<b>2.5秒に制限</b>されるため探索深度が浅くなり、最強AIでも見落としが生じて即断即決の乱戦・波乱が起きやすくなります。
       </div>
     </div>
@@ -568,7 +575,7 @@
       <button class="guide-tab-btn btn-3d active" onclick="switchGuideTab(0)">🔰 対陣極意</button>
       <button class="guide-tab-btn btn-3d" onclick="switchGuideTab(1)">其の壱：手順</button>
       <button class="guide-tab-btn btn-3d" onclick="switchGuideTab(2)">其の弐：兵法</button>
-      <button class="guide-tab-btn btn-3d" onclick="switchGuideTab(3)">其の参：敵将</button>
+      <button class="guide-tab-btn btn-3d" onclick="switchGuideTab(3)">其の参：英傑</button>
       <button class="guide-tab-btn btn-3d" onclick="switchGuideTab(4)">其の四：宿命</button>
     </div>
 
@@ -595,9 +602,9 @@
             <h4>⚔ 四、御前試合の対局規定（通常本将棋と早指し戦の妙味）</h4>
             <button class="card-speech-btn btn-3d" onclick="toggleCardSpeech('guide-card-step-exhibition')">🔊 朗読</button>
           </div>
-          客分指南役や戦国武将たちの武芸観戦「御前試合」では、二つの対局方式を選べます：<br><br>
-          ・<b class="kw-gold">通常本将棋（じっくり・深慮）</b>：思考時間の上限は<span class="kw-gold">8.5秒</span>。最強AIが「深さ5」まで確実に読み切るため、軍師AIや隠者が本来の神算鬼謀を遺憾なく発揮します。着手間隔約1.2秒で、重厚な本将棋を鑑賞できます。<br>
-          ・<b class="kw-crimson">早指し戦（即断・切れ味）</b>：思考時間の上限は<span class="kw-crimson">2.5秒に短縮</span>されます。これにより探索深度が浅くなり（深さ3〜4止まり）、<span class="kw-crimson">最強AIでも難所での寄せの見落としや失手が生じて実質的な棋力が低下します</span>。その結果、即断即決のスピード戦となり、下位武将による番狂わせや意外な逆転劇が発生しやすくなります。
+          客分英傑や戦国武将たちの武芸観戦「御前試合」では、二つの対局方式を選べます：<br><br>
+          ・<b class="kw-gold">通常本将棋（じっくり・深慮）</b>：思考時間の上限は<span class="kw-gold">8.5秒</span>。初代名人・大橋宗桂や黒田如水が「深さ5〜6」まで確実に読み切るため、本来の神算鬼謀と最高峰の妙技を遺憾なく発揮します。<br>
+          ・<b class="kw-crimson">早指し戦（即断・切れ味）</b>：思考時間の上限は<span class="kw-crimson">2.5秒に短縮</span>されます。探索深度が浅くなり（深さ3〜4止まり）、<span class="kw-crimson">最強AIでも難所での寄せの見落としや失手が生じて実質的な棋力が変化します</span>。その結果、即断即決のスピード戦となり、下克上や意外な逆転劇が発生しやすくなります。
         </div>
 
         <div class="guide-card-box" id="guide-card-step-2">
@@ -608,7 +615,7 @@
           ・<b class="kw-gold">💡 軍師進言 / 🔥 覚醒進言</b>：自将専属の軍師が次の一手を指南。「🪭 別の策」ボタンで王道・強襲・堅陣の策を切り替えられます。<br>
           ・<b class="kw-gold">🪭 待った</b>：局面を二手前まで巻き戻す秘技。<br>
           ・<b class="kw-gold">⚜ 対局開始</b>：振り駒を行い、合戦の火蓋を切って落とします。<br>
-          ・<b class="kw-blue">⚔ 御前試合</b>：先手・後手それぞれに客分指南役・戦国武将・軍師AIを自由に選定し、特等席で観戦できます。<br>
+          ・<b class="kw-blue">⚔ 御前試合</b>：先手・後手それぞれに客分英傑・戦国武将・初代名人を自由に選定し、特等席で観戦できます。<br>
           ・<b class="kw-gold">🏳 投了</b>：形勢覆し難きとき、潔く負けを認めて陣を引きます。<br>
           ・<b class="kw-gold">📜 勲功録</b>：これまでの全対戦記録を確認・盤上再現できます。「我が合戦録」と「御前試合録」の二大タブで整理可能。<br>
           ・<b class="kw-gold">🗺 天下絵巻</b>：全国平定状況と城郭地図を確認・進軍先を選定。<br>
@@ -625,7 +632,7 @@
           2. <b class="kw-gold">盤上再現を押す</b>：振り返りたい合戦カードの「<span class="kw-gold">盤上再現</span>」を押すと、盤面が瞬時に当時の布陣へと復元されます。<br>
           3. <b class="kw-crimson">自動再生を楽しむ</b>：盤の直下に出現した「<span class="kw-crimson">▶ 自動</span>」を押すと、まるで映画を眺めるように一手ずつ自動で局面が再現されます。<br>
           4. <b class="kw-blue">変速切替（1x/2x/4x）</b>：「<span class="kw-blue">1x</span>」を押すごとに等速・二倍速・四倍速へ切り替わります。<br>
-          5. <b class="kw-crimson">対局へ復帰</b>：再生バー右端の「<span class="kw-crimson">⚔ 対局へ戻る</span>」ボタンを押せば、いつでも元の合戦画面へ迷わず戻ることができます！
+          5. <b class="kw-crimson">対局へ復帰</b>：再生バー右端の「<span class="kw-crimson">⚔ 戻る</span>」ボタンを押せば、いつでも元の合戦画面へ迷わず戻ることができます！
         </div>
 
         <div class="guide-card-box" id="guide-card-step-3">
@@ -694,6 +701,17 @@
           <div class="enemy-line-item"><span class="enemy-line-left">Lv.9 大坂｜豊臣秀吉</span><span class="enemy-line-right">持ち駒包囲戦（動員 150,000兵）</span></div>
           <div class="enemy-line-item"><span class="enemy-line-left">Lv.10 江戸｜徳川家康</span><span class="enemy-line-right">最深探索の鉄壁（動員 200,000兵）</span></div>
           <div class="enemy-line-item" style="border-top:1px solid #ffd700; margin-top:2px; padding-top:4px;"><span class="enemy-line-left" style="color:#ffd700;">Lv.11 天下無双｜前田慶次</span><span class="enemy-line-right" style="color:#ffefa8; font-weight:900;">軍師AI搭載（神算鬼謀）</span></div>
+        </div>
+        <div class="guide-card-box" id="guide-card-warlords-instructors">
+          <div class="guide-card-header-row">
+            <h4>⚔ 三、客分四英傑（御前試合・外部思考エンジン）</h4>
+            <button class="card-speech-btn btn-3d" onclick="toggleCardSpeech('guide-card-warlords-instructors')">🔊 朗読</button>
+          </div>
+          御前試合にて腕を競い合う、日ノ本屈指の客分英傑たちです：<br>
+          ・<b class="kw-blue">蒲生氏郷</b>（アマ初段相当 ｜ 南蛮兵法・MicroMax系統・深さ3）<br>
+          ・<b class="kw-gold">柳生石舟斎</b>（アマ二段相当 ｜ 新陰流剣聖・Sunfish系統・深さ4）<br>
+          ・<b class="kw-green">黒田如水</b>（アマ五段相当 ｜ 神算鬼謀の隠者・Bonanza系統・深さ5）<br>
+          ・<b class="kw-crimson">初代名人・大橋宗桂</b>（アマ八段〜九段相当 ｜ 一世名人・Apery/やねうら王系統・深さ6）
         </div>
       </div>
 
@@ -791,4 +809,5 @@
 <script src="main.js"></script>
 </body>
 </html>
+
 
