@@ -4,7 +4,7 @@
    【パート 1 / 2】
    ========================================================= */
 
-// AI Web Workerコード（思考エンジン：簡易Zobrist置換表＋キラー着手＋MVV-LVA探索強化＆反復深化リアルタイム同期版）
+// AI Web Workerコード（思考エンジン：簡易Zobrist置換表＋キラー着手＋MVV-LVA探索強化＆安全確定ガード版）
 const workerScriptContent = `
 const PIECE_CODES = ['OU','HI','KA','KI','GI','KE','KY','FU','RY','UM','NG','NK','NY','TO'];
 const VALUES = { OU: 30000, HI: 1050, KA: 880, KI: 580, GI: 480, KE: 380, KY: 280, FU: 100, RY: 1450, UM: 1250, NG: 570, NK: 490, NY: 430, TO: 430 };
@@ -28,11 +28,11 @@ const LEVEL_CFG = {
   4:  { depth: 2, qDepth: 3 },
   5:  { depth: 3, qDepth: 3 },
   6:  { depth: 3, qDepth: 4 },
-  7:  { depth: 4, qDepth: 4 },
-  8:  { depth: 4, qDepth: 5 },
-  9:  { depth: 5, qDepth: 4 },
-  10: { depth: 5, qDepth: 5 },
-  11: { depth: 5, qDepth: 5 }
+  7:  { depth: 4, qDepth: 3 },
+  8:  { depth: 4, qDepth: 3 },
+  9:  { depth: 4, qDepth: 4 },
+  10: { depth: 5, qDepth: 4 },
+  11: { depth: 5, qDepth: 4 }
 };
 
 function checkTimeout() {
@@ -470,7 +470,7 @@ self.onmessage = function(e) {
   const effectiveLevel = isHintRequest ? (isAwakened ? 10 : 8) : level;
   const curEval = evaluatePosition(searchOwner, effectiveLevel);
 
-  let cfg = isHintRequest ? (isAwakened ? { depth: 5, qDepth: 5 } : { depth: 4, qDepth: 4 })
+  let cfg = isHintRequest ? (isAwakened ? { depth: 5, qDepth: 4 } : { depth: 4, qDepth: 3 })
                           : (LEVEL_CFG[level] || LEVEL_CFG[1]);
 
   const legals = genLegalMoves(searchOwner, false, true);
@@ -505,6 +505,7 @@ self.onmessage = function(e) {
   let confirmedBestScore = curEval;
   let achievedDepth = 1;
 
+  // 反復深化ループ（安全確定ガード付き）
   for (let d = 1; d <= cfg.depth; d++) {
     if (checkTimeout()) break;
     self.postMessage({ type: 'progress', depth: d, targetDepth: cfg.depth, nodes: nodeCount, evalScore: confirmedBestScore });
@@ -526,9 +527,10 @@ self.onmessage = function(e) {
     }
 
     let currentIterationMoves = scoredMoves.map(item => ({ move: item.move, score: item.score }));
+    let iterationCompleted = true;
 
     for (let i = 0; i < currentIterationMoves.length; i++) {
-      if (checkTimeout()) break;
+      if (checkTimeout()) { iterationCompleted = false; break; }
       const m = currentIterationMoves[i].move;
       const penalty = calcPenalty(m);
       const undo = makeMove(m);
@@ -536,11 +538,12 @@ self.onmessage = function(e) {
       unmakeMove(undo);
 
       currentIterationMoves[i].score = s;
-      if (isSearchTimeout) break;
+      if (isSearchTimeout) { iterationCompleted = false; break; }
       if (s > alpha) alpha = s;
     }
 
-    if (!isSearchTimeout) {
+    // 深さdの全手が100%検証された場合のみ確定最善手を更新（ポカ手の完全排除ガード）
+    if (iterationCompleted && !isSearchTimeout) {
       achievedDepth = d;
       currentIterationMoves.sort((a, b) => b.score - a.score);
       scoredMoves = currentIterationMoves;
@@ -552,7 +555,7 @@ self.onmessage = function(e) {
     if (checkTimeout()) break;
   }
 
-  let finalBestMove = confirmedBestMove;
+  let finalBestMove = confirmedBestMove || legals[0];
   if (!isHintRequest && !isExhibition && level === 1 && scoredMoves.length > 1) {
     if (Math.random() < 0.35) {
       const subIdx = Math.min(scoredMoves.length - 1, Math.floor(Math.random() * 3) + 1);
@@ -1065,7 +1068,7 @@ function updateThinkingTimerDisplay() {
       aiThinkDisp.style.display = 'inline-flex';
       aiThinkDisp.className = 'warlord-thinking-inline timer-gold-box';
       const curD = Math.max(1, exhibitionAchievedDepth);
-      const targetD = WARLORDS_DATA[currentAiLevel]?.targetDepth || 5;
+      const targetD = WARLORDS_DATA[currentAiLevel]?.targetDepth || 4;
       aiThinkDisp.innerHTML = `🧠 敵将熟慮 <b>${elapsedSec}秒</b> (深さ ${curD}/${targetD})`;
     }
     // プレイヤー側は直前の着手確定情報を維持
@@ -1312,7 +1315,7 @@ const INSTRUCTORS_DATA = {
     portraitSvg: `<rect width="100" height="100" rx="6" fill="#10061e"/><circle cx="50" cy="50" r="28" fill="none" stroke="#ba68c8" stroke-width="2.5" stroke-dasharray="4,4"/><path d="M 32,30 Q 50,12 68,30 L 74,70 Q 50,82 26,70 Z" fill="#b31212" stroke="#ffd700" stroke-width="1.8"/><circle cx="50" cy="50" r="9" fill="#ffd700"/>`
   },
   sokei: {
-    id: 'inst_sokei', name: '初代名人・大橋宗桂', rank: 'アマ八段〜九段相当', clan: '山城国 ｜ 将棋一世名人・深さ6',
+    id: 'inst_sokei', name: '大橋宗桂', titleHonor: '初代名人', rank: 'アマ八段〜九段相当', clan: '山城国 ｜ 将棋一世名人・深さ6',
     sourceEngine: 'Apery / やねうら王系統 Null-Move＋PVS探索',
     engineType: 'sokei', baseTroops: 100000, targetDepth: 6,
     depthSpec: '深さ6＋Null-Move枝刈り＋PVS探索',
@@ -1550,7 +1553,7 @@ const WARLORDS_DATA = {
     defeatQuote: '「是非に及ばず…！ 新たなる天下人よ、乱世を束ねよ！」', victoryQuote: '「天下布武！ 我が覇道に従わぬ者に明日はない！」'
   },
   9: {
-    id: 'enemy_9', province: '摂津大坂', name: '豊臣秀吉', clan: '摂津大坂｜天下人・太閤', maxTroops: 150000, targetDepth: 5, depthSpec: '深さ5＋持ち駒包囲網',
+    id: 'enemy_9', province: '摂津大坂', name: '豊臣秀吉', clan: '摂津大坂｜天下人・太閤', maxTroops: 150000, targetDepth: 4, depthSpec: '深さ4＋持ち駒包囲網',
     featureShort: '持ち駒包囲戦。', tacticsHint: '無駄な駒交換を避けて盤上を制圧せよ。',
     portraitSvg: `<rect width="100" height="100" rx="6" fill="#241904"/><g stroke="#ffd700" stroke-width="2"><line x1="50" y1="45" x2="50" y2="8"/><line x1="50" y1="45" x2="25" y2="15"/><line x1="50" y1="45" x2="75" y2="15"/><line x1="50" y1="45" x2="10" y2="30"/><line x1="50" y1="45" x2="90" y2="30"/></g><path d="M 30,46 Q 50,30 70,46 L 74,75 Q 50,84 26,75 Z" fill="#694a08" stroke="#ffd700" stroke-width="2"/><circle cx="50" cy="56" r="10" fill="#ffd700"/>`,
     quotes: {
@@ -1695,6 +1698,15 @@ function formatOfficialKifuMove(m, idx, isKifFile = false) {
   return `${markChar}${squareTxt}${actionTxt}`;
 }
 
+/* 武将名と称号の安全な分離フォーマッタ（初代名人・大橋宗桂の文字あふれ解消） */
+function getWarlordDisplayNameHtml(data) {
+  if (!data) return '';
+  if (data.titleHonor) {
+    return `<span class="warlord-title-badge">${data.titleHonor}</span>${data.name}`;
+  }
+  return data.name;
+}
+
 /* 先手・後手 ＆ 駒台・手番表示の動的整合性エンジン */
 function updateTurnLabels() {
   const pDock = document.getElementById('player-dock-label');
@@ -1707,8 +1719,8 @@ function updateTurnLabels() {
     const gData = getTargetAIData(exhibitionGoteTarget);
     if (pDock) pDock.innerHTML = `☗ 先手陣`;
     if (aiDock) aiDock.innerHTML = `☖ 後手陣`;
-    if (pNameEl) pNameEl.innerHTML = `☗ ${sData.name}`;
-    if (aiNameEl) aiNameEl.innerHTML = `☖ ${gData.name}`;
+    if (pNameEl) pNameEl.innerHTML = `☗ ${getWarlordDisplayNameHtml(sData)}`;
+    if (aiNameEl) aiNameEl.innerHTML = `☖ ${getWarlordDisplayNameHtml(gData)}`;
     return;
   }
 
@@ -1791,7 +1803,7 @@ function updateExhibitionThinkingDisplay(isThinking = true) {
     if (isThinking) {
       targetThinkingDisp.style.display = 'inline-flex';
       targetThinkingDisp.className = 'warlord-thinking-inline timer-gold-box';
-      const maxTargetD = exhibitionTargetDepth || 5;
+      const maxTargetD = exhibitionTargetDepth || 4;
       const dispD = Math.min(maxTargetD, Math.max(1, exhibitionAchievedDepth));
       targetThinkingDisp.innerHTML = `🧠 神算熟慮 <b>${elapsedSec}秒</b> (深さ ${dispD}/${maxTargetD})`;
     } else {
@@ -2495,7 +2507,7 @@ function exitReplayMode() {
       totalTimeSpentMs = savedActiveBattle.totalTimeSpentMs || { PLAYER: 0, AI: 0 };
       movesCountBySide = savedActiveBattle.movesCountBySide || { PLAYER: 0, AI: 0 };
       exhibitionAchievedDepth = savedActiveBattle.exhibitionAchievedDepth || 1;
-      exhibitionTargetDepth = savedActiveBattle.exhibitionTargetDepth || 3;
+      exhibitionTargetDepth = savedActiveBattle.exhibitionTargetDepth || 4;
       exhibitionTotalNodes = savedActiveBattle.exhibitionTotalNodes || 0;
 
       const sData = getTargetAIData(exhibitionSenteTarget);
@@ -2503,11 +2515,11 @@ function exitReplayMode() {
       const sTroops = sData.baseTroops || sData.maxTroops || 10000;
       const gTroops = gData.maxTroops || gData.baseTroops || 10000;
 
-      document.getElementById('player-name-disp').innerHTML = `☗ ${sData.name}`;
+      document.getElementById('player-name-disp').innerHTML = `☗ ${getWarlordDisplayNameHtml(sData)}`;
       document.getElementById('player-clan-disp').textContent = sData.clan;
       document.getElementById('player-troops-disp').textContent = `${sTroops.toLocaleString()} / ${sTroops.toLocaleString()} 兵`;
 
-      document.getElementById('ai-name-disp').innerHTML = `☖ ${gData.name}`;
+      document.getElementById('ai-name-disp').innerHTML = `☖ ${getWarlordDisplayNameHtml(gData)}`;
       document.getElementById('ai-clan-disp').textContent = gData.clan;
       document.getElementById('ai-troops-disp').textContent = `${gTroops.toLocaleString()} / ${gTroops.toLocaleString()} 兵`;
 
@@ -3749,7 +3761,7 @@ function renderExhibitionVisualPickers() {
       <div class="pick-thumb-box">${getWarlordPortraitHtml(data, false)}</div>
       <div class="pick-info-col">
         <div class="pick-name-row">
-          <span class="pick-name-txt">${data.name}</span>
+          <span class="pick-name-txt">${getWarlordDisplayNameHtml(data)}</span>
           ${isSenteActive ? '<span class="badge-active-stamp">✔ 出陣決定</span>' : ''}
           ${badgeHtml}
         </div>
@@ -3771,7 +3783,7 @@ function renderExhibitionVisualPickers() {
       <div class="pick-thumb-box">${getWarlordPortraitHtml(data, false)}</div>
       <div class="pick-info-col">
         <div class="pick-name-row">
-          <span class="pick-name-txt">${data.name}</span>
+          <span class="pick-name-txt">${getWarlordDisplayNameHtml(data)}</span>
           ${isGoteActive ? '<span class="badge-active-stamp">✔ 出陣決定</span>' : ''}
           ${badgeHtml}
         </div>
@@ -3806,7 +3818,7 @@ function updateExhibitionPreviewCards() {
   const sDepth = sData.depthSpec || '深さ3＋静止探索';
   const sSource = sData.sourceEngine ? `<div class="preview-stat-row"><span>技術出典：</span><span class="preview-spec-highlight" style="color:#a8e6cf;">${sData.sourceEngine}</span></div>` : '';
 
-  if (sName) sName.textContent = sData.name;
+  if (sName) sName.innerHTML = getWarlordDisplayNameHtml(sData);
   if (sBadge) sBadge.textContent = sData.rank || (sData.province ? `${sData.province}` : '出陣');
   if (sDesc) {
     sDesc.innerHTML = `
@@ -3824,14 +3836,14 @@ function updateExhibitionPreviewCards() {
   const gDepth = gData.depthSpec || '深さ3＋静止探索';
   const gSource = gData.sourceEngine ? `<div class="preview-stat-row"><span>技術出典：</span><span class="preview-spec-highlight" style="color:#a8e6cf;">${gData.sourceEngine}</span></div>` : '';
 
-  if (gName) gName.textContent = gData.name;
+  if (gName) gName.innerHTML = getWarlordDisplayNameHtml(gData);
   if (gBadge) gBadge.textContent = gData.rank || (gData.province ? `${gData.province}` : '出陣');
   if (gDesc) {
     gDesc.innerHTML = `
       <div class="preview-stat-grid">
         <div class="preview-stat-row"><span>総動員力：</span><span class="preview-troops-highlight">⚔ ${gTroops} 兵</span></div>
         <div class="preview-stat-row"><span>思考仕様：</span><span class="preview-spec-highlight">${gDepth}</span></div>
-        ${gSource}
+        ${sSource}
       </div>`;
   }
 }
@@ -3882,12 +3894,12 @@ function startExhibitionFromModal() {
   const sTroops = sData.baseTroops || sData.maxTroops || 10000;
   const gTroops = gData.maxTroops || gData.baseTroops || 10000;
 
-  document.getElementById('player-name-disp').innerHTML = `☗ ${sData.name}`;
+  document.getElementById('player-name-disp').innerHTML = `☗ ${getWarlordDisplayNameHtml(sData)}`;
   document.getElementById('player-clan-disp').textContent = sData.clan;
   document.getElementById('player-quote-disp').textContent = sData.quotes ? (sData.quotes.opening || sData.quotes.default) : '「先手陣、堂々たる進撃を見せてくれよう！」';
   document.getElementById('player-troops-disp').textContent = `${sTroops.toLocaleString()} / ${sTroops.toLocaleString()} 兵`;
 
-  document.getElementById('ai-name-disp').innerHTML = `☖ ${gData.name}`;
+  document.getElementById('ai-name-disp').innerHTML = `☖ ${getWarlordDisplayNameHtml(gData)}`;
   document.getElementById('ai-clan-disp').textContent = gData.clan;
   document.getElementById('ai-quote-disp').textContent = gData.quotes ? (gData.quotes.opening || gData.quotes.default) : '「後手陣、一歩も退かぬ鉄壁の陣を敷く！」';
   document.getElementById('ai-troops-disp').textContent = `${gTroops.toLocaleString()} / ${gTroops.toLocaleString()} 兵`;
@@ -4050,10 +4062,10 @@ function updateKifuModalLive() {
   const diffBadge = document.getElementById('kifu-troops-diff-disp');
   if (diffBadge) {
     if (troopsDiff >= 0) {
-      diffBadge.textContent = `☗ 先手側 +${troopsDiff.toLocaleString()} 兵優勢`;
+      diffBadge.textContent = `☗ 先手 +${troopsDiff.toLocaleString()} 兵優勢`;
       diffBadge.style.color = '#ffd700';
     } else {
-      diffBadge.textContent = `☖ 後手側 +${Math.abs(troopsDiff).toLocaleString()} 兵優勢`;
+      diffBadge.textContent = `☖ 後手 +${Math.abs(troopsDiff).toLocaleString()} 兵優勢`;
       diffBadge.style.color = '#ffe6aa';
     }
   }
@@ -4141,8 +4153,8 @@ function openKifuModal() {
   const pVal = document.getElementById('kifu-player-troops-val');
   const eVal = document.getElementById('kifu-enemy-troops-val');
 
-  if (pTag) pTag.innerHTML = `☗ 先手：${p.name}`;
-  if (eTag) eTag.innerHTML = `☖ 後手：${e.name}`;
+  if (pTag) pTag.innerHTML = getWarlordDisplayNameHtml(p);
+  if (eTag) eTag.innerHTML = getWarlordDisplayNameHtml(e);
   if (pVal) pVal.textContent = `${pCurrent.toLocaleString()} 兵`;
   if (eVal) eVal.textContent = `${aiCurrent.toLocaleString()} 兵`;
 
@@ -4150,10 +4162,10 @@ function openKifuModal() {
   const diffBadge = document.getElementById('kifu-troops-diff-disp');
   if (diffBadge) {
     if (troopsDiff >= 0) {
-      diffBadge.textContent = `☗ 先手側 +${troopsDiff.toLocaleString()} 兵優勢`;
+      diffBadge.textContent = `☗ 先手 +${troopsDiff.toLocaleString()} 兵優勢`;
       diffBadge.style.color = '#ffd700';
     } else {
-      diffBadge.textContent = `☖ 後手側 +${Math.abs(troopsDiff).toLocaleString()} 兵優勢`;
+      diffBadge.textContent = `☖ 後手 +${Math.abs(troopsDiff).toLocaleString()} 兵優勢`;
       diffBadge.style.color = '#ffe6aa';
     }
   }
@@ -4790,7 +4802,7 @@ function switchHistoryTab(tab) {
         <option value="nanban">蒲生氏郷 (MicroMax系)</option>
         <option value="kenshi">柳生石舟斎 (Sunfish系)</option>
         <option value="inja">黒田如水 (Bonanza系)</option>
-        <option value="sokei">初代名人・大橋宗桂 (やねうら王系)</option>
+        <option value="sokei">大橋宗桂 (初代名人)</option>
         <option value="strategist">軍師AI</option>
       `;
     }
@@ -4944,13 +4956,13 @@ function renderBattleHistoryList() {
       <div class="card-tier-clash">
         <div class="clash-side ${isPlayerWinner ? 'is-winner' : (isEnemyWinner ? 'is-loser' : '')}">
           <div class="clash-avatar-box">${getWarlordPortraitHtml(playerAvatarData, false)}</div>
-          <span class="clash-name-txt">${r.playerWarlordName}</span>
+          <span class="clash-name-txt">${getWarlordDisplayNameHtml(playerAvatarData)}</span>
           <span class="clash-tag-sente">${senteMarkIcon} ${r.sente}</span>
         </div>
         <span class="clash-vs-mark">⚔</span>
         <div class="clash-side clash-side-enemy ${isEnemyWinner ? 'is-winner' : (isPlayerWinner ? 'is-loser' : '')}">
           <div class="clash-avatar-box">${getWarlordPortraitHtml(enemyAvatarData, false)}</div>
-          <span class="clash-name-txt">${r.enemyName}</span>
+          <span class="clash-name-txt">${getWarlordDisplayNameHtml(enemyAvatarData)}</span>
         </div>
       </div>
 
