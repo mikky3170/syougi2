@@ -4,7 +4,7 @@
    【パート 1 / 2】
    ========================================================= */
 
-// AI Web Workerコード（思考エンジン：最善手先行オーダリング高速化＆反復深化リアルタイム進捗通知対応版）
+// AI Web Workerコード（思考エンジン：最善手先行オーダリング高速化＆反復深化リアルタイム進捗通知＆厳格時間制限対応版）
 const workerScriptContent = `
 const PIECE_CODES = ['OU','HI','KA','KI','GI','KE','KY','FU','RY','UM','NG','NK','NY','TO'];
 const VALUES = { OU: 20000, HI: 1050, KA: 880, KI: 580, GI: 480, KE: 380, KY: 280, FU: 100, RY: 1400, UM: 1200, NG: 560, NK: 480, NY: 420, TO: 420 };
@@ -29,6 +29,15 @@ const LEVEL_CFG = {
   10: { depth: 5, qDepth: 5 },
   11: { depth: 5, qDepth: 5 }
 };
+
+function checkTimeout() {
+  if (isSearchTimeout) return true;
+  if ((Date.now() - searchStartTime) >= searchTimeLimit) {
+    isSearchTimeout = true;
+    return true;
+  }
+  return false;
+}
 
 function getBoardHash(b, h, t) {
   let s = t + ':';
@@ -335,9 +344,8 @@ function genLegalMoves(owner, capturesOnly = false, filterUchifuzume = true) {
 
 function quiescence(alpha, beta, owner, qDepth, maxQ, rootPerspective, evalLevel) {
   nodeCount++;
-  if ((nodeCount & 63) === 0 && (Date.now() - searchStartTime >= searchTimeLimit)) {
-    isSearchTimeout = true; return alpha;
-  }
+  if ((nodeCount & 15) === 0 && checkTimeout()) return alpha;
+
   const inCheck = isCheckState(owner);
   if (!inCheck) {
     const standPat = (owner === rootPerspective ? 1 : -1) * evaluatePosition(rootPerspective, evalLevel);
@@ -362,9 +370,7 @@ function quiescence(alpha, beta, owner, qDepth, maxQ, rootPerspective, evalLevel
 
 function negamax(depth, alpha, beta, owner, maxQ, rootPerspective, evalLevel) {
   nodeCount++;
-  if ((nodeCount & 63) === 0 && (Date.now() - searchStartTime >= searchTimeLimit)) {
-    isSearchTimeout = true; return alpha;
-  }
+  if ((nodeCount & 15) === 0 && checkTimeout()) return alpha;
   if (depth <= 0) return quiescence(alpha, beta, owner, 0, maxQ, rootPerspective, evalLevel);
 
   const inCheck = isCheckState(owner);
@@ -402,7 +408,7 @@ self.onmessage = function(e) {
   board = bD; hands = hD; moveHistory = history; pastHashes = hashHistory;
   searchStartTime = Date.now(); isSearchTimeout = false; nodeCount = 0;
   
-  searchTimeLimit = timeLimit || (isExhibition ? 8500 : 9000);
+  searchTimeLimit = (typeof timeLimit === 'number' && timeLimit > 0) ? timeLimit : (isExhibition ? 8500 : 9000);
   
   const searchOwner = isHintRequest ? 'PLAYER' : targetOwner;
   const enemyOwner = (searchOwner === 'AI') ? 'PLAYER' : 'AI';
@@ -445,6 +451,7 @@ self.onmessage = function(e) {
   let achievedDepth = 1;
 
   for (let d = 1; d <= cfg.depth; d++) {
+    if (checkTimeout()) break;
     self.postMessage({ type: 'progress', depth: d, targetDepth: cfg.depth, nodes: nodeCount, evalScore: confirmedBestScore });
 
     let alpha = -Infinity, beta = Infinity;
@@ -466,6 +473,7 @@ self.onmessage = function(e) {
     let currentIterationMoves = scoredMoves.map(item => ({ move: item.move, score: item.score }));
 
     for (let i = 0; i < currentIterationMoves.length; i++) {
+      if (checkTimeout()) break;
       const m = currentIterationMoves[i].move;
       const penalty = calcPenalty(m);
       const undo = makeMove(m);
@@ -486,7 +494,7 @@ self.onmessage = function(e) {
       self.postMessage({ type: 'progress', depth: d, targetDepth: cfg.depth, nodes: nodeCount, evalScore: confirmedBestScore });
     }
 
-    if (isSearchTimeout || (Date.now() - searchStartTime >= searchTimeLimit)) break;
+    if (checkTimeout()) break;
   }
 
   let finalBestMove = confirmedBestMove;
@@ -933,23 +941,14 @@ function formatTimeMinutesSeconds(totalSec) {
 function updateTurnFocus(activeTurn) {
   const pPanel = document.getElementById('player-panel');
   const aiPanel = document.getElementById('ai-panel');
-  const pThinkDisp = document.getElementById('player-thinking-disp');
-  const aiThinkDisp = document.getElementById('ai-thinking-disp');
 
   if (pPanel) pPanel.classList.remove('turn-focus-player');
   if (aiPanel) aiPanel.classList.remove('turn-focus-enemy');
 
   if (activeTurn === 'PLAYER') {
     if (pPanel) pPanel.classList.add('turn-focus-player');
-    if (pThinkDisp) pThinkDisp.style.display = 'inline-flex';
-    if (aiThinkDisp) aiThinkDisp.style.display = 'none';
   } else if (activeTurn === 'AI') {
     if (aiPanel) aiPanel.classList.add('turn-focus-enemy');
-    if (aiThinkDisp) aiThinkDisp.style.display = 'inline-flex';
-    if (pThinkDisp) pThinkDisp.style.display = 'none';
-  } else {
-    if (pThinkDisp) pThinkDisp.style.display = 'none';
-    if (aiThinkDisp) aiThinkDisp.style.display = 'none';
   }
 }
 
@@ -1018,18 +1017,23 @@ function stopTurnTimer() {
     clearInterval(turnTimerInterval);
     turnTimerInterval = null;
   }
-  const pThinkDisp = document.getElementById('player-thinking-disp');
-  const aiThinkDisp = document.getElementById('ai-thinking-disp');
-  if (pThinkDisp) pThinkDisp.style.display = 'none';
-  if (aiThinkDisp) aiThinkDisp.style.display = 'none';
 }
 
 function resumeTurnTimer() {
   if (!isGameOver && !isReviewingPast() && turn) {
-    const name = (turn === 'PLAYER') 
-      ? (isExhibitionActive ? getTargetAIData(exhibitionSenteTarget).name : PLAYER_WARLORDS[currentMyWarlordId].name)
-      : (isExhibitionActive ? getTargetAIData(exhibitionGoteTarget).name : WARLORDS_DATA[currentAiLevel].name);
-    startTurnTimer(turn, name);
+    if (isExhibitionActive) {
+      if (isAiThinking) {
+        const isSenteTurn = (turn === 'PLAYER');
+        const targetKey = isSenteTurn ? exhibitionSenteTarget : exhibitionGoteTarget;
+        const targetData = getTargetAIData(targetKey);
+        startTurnTimer(turn, targetData.name);
+      }
+    } else {
+      const name = (turn === 'PLAYER') 
+        ? PLAYER_WARLORDS[currentMyWarlordId].name
+        : WARLORDS_DATA[currentAiLevel].name;
+      startTurnTimer(turn, name);
+    }
   }
 }
 
@@ -2711,7 +2715,7 @@ function onHandClick(code) {
   if (isGameOver || turn !== 'PLAYER' || isAiThinking || isExhibitionActive || isPieceAnimating) return;
   stopAutoReplay();
   if (isReviewingPast()) {
-    setOrderMessage('下部バーの［⚔ 対局へ戻る］を押して実戦へお戻り下され。', false, 'player');
+    setOrderMessage('下部バーの［⚔ 戻る］を押して実戦へお戻り下され。', false, 'player');
     return;
   }
   initAudio(); playUiClickSound();
@@ -2731,7 +2735,7 @@ function onCellClick(r, c) {
   if (isGameOver || turn !== 'PLAYER' || isAiThinking || isExhibitionActive || isPieceAnimating) return;
   stopAutoReplay();
   if (isReviewingPast()) {
-    setOrderMessage('下部バーの［⚔ 対局へ戻る］を押して実戦へお戻り下され。', false, 'player');
+    setOrderMessage('下部バーの［⚔ 戻る］を押して実戦へお戻り下され。', false, 'player');
     return;
   }
   initAudio();
@@ -2875,7 +2879,7 @@ function executeMove(m, metric = null) {
 
   if (m.type === 'drop') {
     hands[m.owner][m.code]--;
-    board[m.to.r][m.to.c] = { code: m.code, owner: m.owner };
+    board[m.to.r][move.to.c] = { code: m.code, owner: m.owner };
   } else {
     const fp = board[m.from.r][m.from.c], tp = board[m.to.r][m.to.c];
     if (tp) {
@@ -3171,7 +3175,7 @@ function showMasterHint() {
   if (isGameOver || turn !== 'PLAYER' || isHintThinking || isExhibitionActive || isPieceAnimating) return;
   stopAutoReplay();
   if (isReviewingPast()) {
-    setOrderMessage('下部バーの［⚔ 対局へ戻る］を押して実戦局面へお戻り下され。', false, 'player');
+    setOrderMessage('下部バーの［⚔ 戻る］を押して実戦局面へお戻り下され。', false, 'player');
     return;
   }
   playUiClickSound(); isHintThinking = true;
@@ -3732,7 +3736,6 @@ function startExhibitionFromModal() {
   const modeTxt = (exhibitionSpeed === 'fast') ? '早指し戦' : '通常本将棋';
   triggerCutin(`【御前${modeTxt}】${sData.name} vs ${gData.name}`, true);
   updateTurnFocus('PLAYER');
-  startTurnTimer('PLAYER', sData.name);
 
   setTimeout(() => {
     if (!isExhibitionActive || isGameOver) return;
@@ -3752,9 +3755,8 @@ function dispatchExhibitionTurn() {
   exhibitionTargetDepth = targetData.targetDepth || (targetKey === 'strategist' ? 5 : 3);
   exhibitionLastMoveInfo = null;
 
-  if (!turnTimerInterval) {
-    startTurnTimer(targetSide, targetData.name);
-  }
+  isAiThinking = true;
+  startTurnTimer(targetSide, targetData.name);
 
   const safeLimit = EXHIBITION_TIME_LIMITS[exhibitionSpeed] || 8500;
 
@@ -3798,14 +3800,8 @@ function dispatchExhibitionTurn() {
 function scheduleNextExhibitionTurn() {
   if (!isExhibitionActive || isGameOver) return;
   stopExhibitionTimer();
+  stopTurnTimer();
   const delay = EXHIBITION_DELAYS[exhibitionSpeed] || 1200;
-
-  const isSenteTurn = (turn === 'PLAYER');
-  const targetKey = isSenteTurn ? exhibitionSenteTarget : exhibitionGoteTarget;
-  const targetSide = isSenteTurn ? 'PLAYER' : 'AI';
-  const targetData = getTargetAIData(targetKey);
-
-  startTurnTimer(targetSide, targetData.name);
 
   exhibitionTimer = setTimeout(() => {
     if (!isExhibitionActive || isGameOver) return;
@@ -4838,7 +4834,7 @@ function replayFromHistory(recordId, storageKey) {
   updateWarlordQuotes();
   updateReviewModeUI();
   
-  const pauseNotice = savedActiveBattle ? '（※進行中の対戦は一時中断中。［⚔ 対局へ戻る］でいつでも再開できます）' : '';
+  const pauseNotice = savedActiveBattle ? '（※進行中の対戦は一時中断中。［⚔ 戻る］でいつでも再開できます）' : '';
   setOrderMessage({
     line1: `【${rec.playerWarlordName} vs ${rec.enemyName}の合戦を再現中】`,
     line2: `［▶自動］や［◀］［▶］で一手ずつ鑑賞可能。${pauseNotice}`
