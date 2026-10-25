@@ -53,10 +53,10 @@
   <!-- 戦闘主ステージ：battle-theatre-layout -->
   <div class="battle-theatre-layout" id="battle-theatre-layout">
     
-    <!-- 【上陣：敵軍／後手陣】 -->
+    <!-- 【上陣：敵軍／後手陣武将 ＆ 持ち駒台】 -->
     <div class="battle-section-top">
       <div class="board-hand-dock dock-enemy" id="dock-enemy-wrapper" title="上陣持ち駒台">
-        <div class="dock-label" id="ai-dock-label">▽ 敵駒</div>
+        <div class="dock-label" id="ai-dock-label">☖ 敵駒</div>
         <div class="warlord-hand-box hand-box-enemy" id="ai-hand"></div>
       </div>
 
@@ -98,7 +98,7 @@
       </div>
     </div>
 
-    <!-- 【中陣：本丸対局場（将棋盤・再生バー・自駒台統合行）】 -->
+    <!-- 【中陣：本丸対局場（将棋盤・再生操作バー）】 -->
     <div class="battle-section-middle">
       <div class="board-wrapper">
         <div class="shogi-board-frame">
@@ -133,30 +133,23 @@
         </div>
       </div>
 
-      <!-- 将棋盤直下：全画面サイズ共通「左：再生バー」「右：自駒台」横並び密着コンテナ -->
-      <div class="board-under-control-row" id="board-under-control-row">
-        <div class="replay-bar-slot" id="replay-bar-slot">
-          <div class="replay-full-controls" id="replay-full-controls" style="display:none;">
-            <div class="replay-ctrl-left-group">
-              <button class="replay-step-btn btn-3d" onclick="stepReviewToStart()" title="最初（初期配置）へ">⏮</button>
-              <button class="replay-step-btn btn-3d" onclick="stepReview(-1)" title="一手戻る">◀</button>
-              <button class="kifu-auto-btn btn-3d" id="btn-auto-replay" onclick="toggleAutoReplay()" title="自動再生">▶ 自動</button>
-              <button class="replay-step-btn btn-3d" onclick="stepReview(1)" title="一手進む">▶</button>
-              <button class="replay-step-btn btn-3d" onclick="stepReviewToEnd()" title="最新（終局）へ">⏭</button>
-              <button class="kifu-speed-btn btn-3d" id="btn-replay-speed" onclick="cycleReplaySpeed()" title="速度切替">1x</button>
-            </div>
-            <button class="btn-finish-replay btn-3d" onclick="exitReplayMode()" title="対局へ復帰">⚔ 対局へ戻る</button>
+      <!-- 将棋盤直下：再生操作バースロット（鑑賞・再現時に展開） -->
+      <div class="replay-bar-slot" id="replay-bar-slot">
+        <div class="replay-full-controls" id="replay-full-controls" style="display:none;">
+          <div class="replay-ctrl-left-group">
+            <button class="replay-step-btn btn-3d" onclick="stepReviewToStart()" title="最初（初期配置）へ">⏮</button>
+            <button class="replay-step-btn btn-3d" onclick="stepReview(-1)" title="一手戻る">◀</button>
+            <button class="kifu-auto-btn btn-3d" id="btn-auto-replay" onclick="toggleAutoReplay()" title="自動再生">▶ 自動</button>
+            <button class="replay-step-btn btn-3d" onclick="stepReview(1)" title="一手進む">▶</button>
+            <button class="replay-step-btn btn-3d" onclick="stepReviewToEnd()" title="最新（終局）へ">⏭</button>
+            <button class="kifu-speed-btn btn-3d" id="btn-replay-speed" onclick="cycleReplaySpeed()" title="速度切替">1x</button>
           </div>
-        </div>
-
-        <div class="board-hand-dock dock-player" id="dock-player-wrapper" title="下陣持ち駒台">
-          <div class="warlord-hand-box hand-box-player" id="player-hand"></div>
-          <div class="dock-label" id="player-dock-label">▲ 自駒</div>
+          <button class="btn-finish-replay btn-3d" onclick="exitReplayMode()" title="対局へ復帰">⚔ 対局へ戻る</button>
         </div>
       </div>
     </div>
 
-    <!-- 【下陣：自軍／先手陣武将パネル】 -->
+    <!-- 【下陣：自軍／先手陣武将パネル ＆ 自軍持ち駒台】 -->
     <div class="battle-section-bottom">
       <div class="warlord-panel panel-player" id="player-panel">
         <div class="warlord-avatar" id="player-avatar-container" onclick="toggleWarlordAvatarView('player')" title="肖像／家紋切替"></div>
@@ -194,6 +187,11 @@
             <div class="warlord-quote" id="player-quote-disp">「不惜身命！ この一手に命を懸ける！」</div>
           </div>
         </div>
+      </div>
+
+      <div class="board-hand-dock dock-player" id="dock-player-wrapper" title="下陣持ち駒台">
+        <div class="warlord-hand-box hand-box-player" id="player-hand"></div>
+        <div class="dock-label" id="player-dock-label">☗ 自駒</div>
       </div>
     </div>
 
@@ -266,8 +264,8 @@
     </div>
 
     <div class="exhibition-mobile-tab-bar" id="exhibition-mobile-tabs">
-      <button class="exhibition-mobile-tab-btn btn-3d active" id="btn-exh-tab-sente" onclick="switchExhibitionMobileTab('sente')">▲ 先手陣を選定</button>
-      <button class="exhibition-mobile-tab-btn btn-3d" id="btn-exh-tab-gote" onclick="switchExhibitionMobileTab('gote')">▽ 後手陣を選定</button>
+      <button class="exhibition-mobile-tab-btn btn-3d active" id="btn-exh-tab-sente" onclick="switchExhibitionMobileTab('sente')">☗ 先手陣を選定</button>
+      <button class="exhibition-mobile-tab-btn btn-3d" id="btn-exh-tab-gote" onclick="switchExhibitionMobileTab('gote')">☖ 後手陣を選定</button>
     </div>
 
     <div class="exhibition-vs-container" id="exhibition-vs-container">
@@ -495,7 +493,7 @@
     
     <div class="kifu-troops-confrontation-bar">
       <div class="kifu-troops-side side-player">
-        <span class="side-warlord-tag" id="kifu-player-tag">▲ 我が軍</span>
+        <span class="side-warlord-tag" id="kifu-player-tag">☗ 我が軍</span>
         <span class="side-troops-val" id="kifu-player-troops-val">3,000 兵</span>
       </div>
       <div class="kifu-vs-core">
@@ -504,7 +502,7 @@
       </div>
       <div class="kifu-troops-side side-enemy">
         <span class="side-troops-val" id="kifu-enemy-troops-val">3,000 兵</span>
-        <span class="side-warlord-tag" id="kifu-enemy-tag">▽ 敵軍</span>
+        <span class="side-warlord-tag" id="kifu-enemy-tag">☖ 敵軍</span>
       </div>
     </div>
 
@@ -515,12 +513,12 @@
 
     <div class="chart-container territory-chart-box">
       <div class="chart-legend-top">
-        <span class="chart-tag-enemy" id="chart-enemy-name-tag">▽ 敵軍領地（上陣）</span>
+        <span class="chart-tag-enemy" id="chart-enemy-name-tag">☖ 敵軍領地（上陣）</span>
         <span id="chart-eval-num-top" class="chart-eval-troops-txt">領地支配 50%</span>
       </div>
       <div class="chart-tag-mid">── 中央決戦ライン（天下分水嶺） ──</div>
       <div class="chart-legend-bottom">
-        <span class="chart-tag-player" id="chart-player-name-tag">▲ 我が軍領地（下陣・優勢で上へ進撃拡大）</span>
+        <span class="chart-tag-player" id="chart-player-name-tag">☗ 我が軍領地（下陣・優勢で上へ進撃拡大）</span>
         <span id="chart-eval-num-bottom" class="chart-eval-troops-txt">領地支配 50%</span>
       </div>
       <canvas id="chart-canvas"></canvas>
@@ -591,7 +589,7 @@
             <button class="card-speech-btn btn-3d" onclick="toggleCardSpeech('guide-card-step-1')">🔊 朗読</button>
           </div>
           1. <b class="kw-gold">陣容の選定</b>：上下のパネルより「自将」と進軍先の「敵国」を決定します。敵将を討ち取るごとに兵力を吸収し、最大動員力が増強されます！<br>
-          2. <b class="kw-gold">振り駒の儀</b>：「⚜ 対局開始」を押すと、五枚の歩が一斉に舞い散り天運により<span class="kw-green">先手・後手</span>を定めます。<br>
+          2. <b class="kw-gold">振り駒の儀</b>：「⚜ 対局開始」を押すと、五枚の歩が一斉に舞い散り天運により<span class="kw-green">先手（☗）・後手（☖）</span>を定めます。<br>
           3. <b class="kw-gold">布陣と進撃</b>：盤上または手駒をタップすると、進めるマスが鮮やかな<span class="kw-green">若草色</span>、敵駒を取れるマスが<span class="kw-crimson">真金色</span>に輝きます。<br>
           4. <b class="kw-gold">成り（昇格）</b>：敵陣へ突入、敵陣内での移動、または敵陣から出る際、駒がひっくり返り流麗な<span class="kw-crimson">行書体の成駒（龍王・龍馬など）</span>へと覚醒します。<br>
           5. <b class="kw-gold">敵玉撃破（兵力壊滅）</b>：敵将の玉将を討ち取る（詰ます）ことで敵兵力を壊滅させ、天下平定へ一歩前進します！

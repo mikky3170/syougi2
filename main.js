@@ -4,10 +4,10 @@
    【パート 1 / 2】
    ========================================================= */
 
-// AI Web Workerコード（思考エンジン：最善手先行オーダリング高速化＆反復深化リアルタイム進捗通知＆反復泥沼ループ回避＆厳格時間制限対応版）
+// AI Web Workerコード（思考エンジン：最善手先行オーダリング高速化＆MVV-LVA探索強化＆反復深化リアルタイム進捗通知＆厳格時間制限対応版）
 const workerScriptContent = `
 const PIECE_CODES = ['OU','HI','KA','KI','GI','KE','KY','FU','RY','UM','NG','NK','NY','TO'];
-const VALUES = { OU: 20000, HI: 1050, KA: 880, KI: 580, GI: 480, KE: 380, KY: 280, FU: 100, RY: 1400, UM: 1200, NG: 560, NK: 480, NY: 420, TO: 420 };
+const VALUES = { OU: 30000, HI: 1050, KA: 880, KI: 580, GI: 480, KE: 380, KY: 280, FU: 100, RY: 1450, UM: 1250, NG: 570, NK: 490, NY: 430, TO: 430 };
 const UNPROMOTE_MAP = { RY: 'HI', UM: 'KA', NG: 'GI', NK: 'KE', NY: 'KY', TO: 'FU', HI: 'HI', KA: 'KA', KI: 'KI', GI: 'GI', KE: 'KE', KY: 'KY', FU: 'FU', OU: 'OU' };
 const PROMOTE_MAP = { HI: 'RY', KA: 'UM', GI: 'NG', KE: 'NK', KY: 'NY', FU: 'TO' };
 const MATE_SCORE = 100000;
@@ -333,9 +333,10 @@ function genLegalMoves(owner, capturesOnly = false, filterUchifuzume = true) {
     if (safe) legals.push(m);
   }
 
+  // MVV-LVA 探索オーダリング強化
   legals.sort((a, b) => {
-    let sa = (a.isCap ? 10000 + a.capVal * 10 - a.attackerVal * 0.1 : 0) + (a.promote ? 4000 : 0);
-    let sb = (b.isCap ? 10000 + b.capVal * 10 - b.attackerVal * 0.1 : 0) + (b.promote ? 4000 : 0);
+    let sa = (a.isCap ? 20000 + a.capVal * 16 - a.attackerVal * 0.1 : 0) + (a.promote ? 6000 : 0);
+    let sb = (b.isCap ? 20000 + b.capVal * 16 - b.attackerVal * 0.1 : 0) + (b.promote ? 6000 : 0);
     return sb - sa;
   });
 
@@ -387,7 +388,7 @@ function negamax(depth, alpha, beta, owner, maxQ, rootPerspective, evalLevel) {
     unmakeMove(undo);
     if (isSearchTimeout) break;
 
-    // 千日手回避・往復跳躍ペナルティの強化
+    // 千日手・往復跳躍ペナルティ
     if (moveHistory.length >= 2) {
       const last = moveHistory[moveHistory.length - 2];
       if (m.type === 'move' && last.type === 'move' &&
@@ -998,16 +999,16 @@ function updateThinkingTimerDisplay() {
   const isPlayerSente = (battleStartTurn === 'PLAYER');
   if (isPlayer && !tacticsCandidates.length && !isHintThinking) {
     const pName = PLAYER_WARLORDS[currentMyWarlordId].name;
-    const komaIcon = getKomaMarkHtml(isPlayerSente, 'normal');
+    const markChar = isPlayerSente ? '☗' : '☖';
     setOrderMessage({
-      line1: `第${currentStep}手 ── ${komaIcon}<b>${pName}公の手番に候</b>`,
+      line1: `第${currentStep}手 ── <b style="color:#ffd700;">${markChar} ${pName}公の手番に候</b>`,
       line2: '盤上の駒または持ち駒を選び、次の一手を指されよ！'
     }, true, 'player');
   } else if (!isPlayer) {
     const eName = WARLORDS_DATA[currentAiLevel].name;
-    const komaIcon = getKomaMarkHtml(!isPlayerSente, 'normal');
+    const markChar = isPlayerSente ? '☖' : '☗';
     setOrderMessage({
-      line1: `第${currentStep}手 ── ${komaIcon}<b>${eName}が軍略を巡らせております…</b>`,
+      line1: `第${currentStep}手 ── <b style="color:#ffe6aa;">${markChar} ${eName}が軍略を巡らせております…</b>`,
       line2: '敵の狙いを見定め、受けの構えを整えられよ。'
     }, false, 'enemy');
   }
@@ -1520,8 +1521,11 @@ const RIVALRIES = {
 };
 
 const PIECES = { OU:'王将', HI:'飛車', KA:'角行', KI:'金将', GI:'銀将', KE:'桂馬', KY:'香車', FU:'歩兵', RY:'龍王', UM:'龍馬', NG:'成銀', NK:'成桂', NY:'成香', TO:'と金' };
+// 日本将棋連盟・公式KIF規格略称
+const KIF_PIECE_NAMES = { OU:'玉', HI:'飛', KA:'角', KI:'金', GI:'銀', KE:'桂', KY:'香', FU:'歩', RY:'竜', UM:'馬', NG:'成銀', NK:'成桂', NY:'成香', TO:'と' };
 const PROMOTED_PIECES = ['RY', 'UM', 'NG', 'NK', 'NY', 'TO'];
 const KANJI_NUMS = ['一','二','三','四','五','六','七','八','九'];
+const ZENKAKU_NUMS = ['１','２','３','４','５','６','７','８','９'];
 const UNPROMOTE_MAP = { RY:'HI', UM:'KA', NG:'GI', NK:'KE', NY:'KY', TO:'FU', HI:'HI', KA:'KA', KI:'KI', GI:'GI', KE:'KE', KY:'KY', FU:'FU', OU:'OU' };
 const PROMOTE_MAP = { HI:'RY', KA:'UM', GI:'NG', KE:'NK', KY:'NY', FU:'TO' };
 
@@ -1565,6 +1569,56 @@ function pickRandomStrategistWarlord() {
   exhibitionRandomStrategistWarlordKey = keys[Math.floor(Math.random() * keys.length)];
 }
 
+/* =========================================================
+   日本将棋連盟・公式棋譜フォーマット変換エンジン
+   ========================================================= */
+function formatOfficialKifuMove(m, idx, isKifFile = false) {
+  if (!m) return '';
+  const isSenteMove = (m.owner === (battleStartTurn === 'PLAYER' ? 'PLAYER' : 'AI'));
+  const markChar = isSenteMove ? '☗' : '☖';
+  
+  const rawCode = m.code || 'FU';
+  const pieceName = KIF_PIECE_NAMES[rawCode] || '歩';
+
+  // 直前の着手先と同じマスか判定（同 ○○）
+  let isSameSquare = false;
+  if (idx > 0 && moveObjectsHistory[idx - 1]) {
+    const prev = moveObjectsHistory[idx - 1];
+    if (prev.to.r === m.to.r && prev.to.c === m.to.c) {
+      isSameSquare = true;
+    }
+  }
+
+  let squareTxt = '';
+  if (isSameSquare) {
+    squareTxt = '同　';
+  } else {
+    const fileTxt = ZENKAKU_NUMS[8 - m.to.c];
+    const rankTxt = KANJI_NUMS[m.to.r];
+    squareTxt = `${fileTxt}${rankTxt}`;
+  }
+
+  let actionTxt = '';
+  if (m.type === 'drop') {
+    actionTxt = `${pieceName}打`;
+  } else {
+    const fromCoord = `(${9 - m.from.c}${m.from.r + 1})`;
+    if (m.promote) {
+      actionTxt = `${pieceName}成${fromCoord}`;
+    } else {
+      const canP = PROMOTE_MAP[rawCode] && (m.owner === 'AI' ? (m.from.r >= 6 || m.to.r >= 6) : (m.from.r <= 2 || m.to.r <= 2));
+      const unpromStr = canP ? '不成' : '';
+      actionTxt = `${pieceName}${unpromStr}${fromCoord}`;
+    }
+  }
+
+  if (isKifFile) {
+    return `${squareTxt}${actionTxt}`;
+  } else {
+    return `${markChar}${squareTxt}${actionTxt}`;
+  }
+}
+
 /* 先手・後手 ＆ 駒台・手番表示の動的整合性エンジン */
 function updateTurnLabels() {
   const pDock = document.getElementById('player-dock-label');
@@ -1575,15 +1629,10 @@ function updateTurnLabels() {
   if (isExhibitionActive) {
     const sData = getTargetAIData(exhibitionSenteTarget);
     const gData = getTargetAIData(exhibitionGoteTarget);
-    const markSenteNormal = getKomaMarkHtml(true, 'normal');
-    const markGoteNormal = getKomaMarkHtml(false, 'normal');
-    const markSenteMini = getKomaMarkHtml(true, 'mini');
-    const markGoteMini = getKomaMarkHtml(false, 'mini');
-
-    if (pDock) pDock.innerHTML = `${markSenteMini}先手陣`;
-    if (aiDock) aiDock.innerHTML = `${markGoteMini}後手陣`;
-    if (pNameEl) pNameEl.innerHTML = `${markSenteNormal}${sData.name}`;
-    if (aiNameEl) aiNameEl.innerHTML = `${markGoteNormal}${gData.name}`;
+    if (pDock) pDock.innerHTML = `☗ 先手陣`;
+    if (aiDock) aiDock.innerHTML = `☖ 後手陣`;
+    if (pNameEl) pNameEl.innerHTML = `☗ ${sData.name}`;
+    if (aiNameEl) aiNameEl.innerHTML = `☖ ${gData.name}`;
     return;
   }
 
@@ -1591,15 +1640,13 @@ function updateTurnLabels() {
   const w = WARLORDS_DATA[currentAiLevel] || WARLORDS_DATA[1];
   const isPlayerSente = (battleStartTurn === 'PLAYER');
 
-  const playerMarkNormal = getKomaMarkHtml(isPlayerSente, 'normal');
-  const enemyMarkNormal = getKomaMarkHtml(!isPlayerSente, 'normal');
-  const playerMarkMini = getKomaMarkHtml(isPlayerSente, 'mini');
-  const enemyMarkMini = getKomaMarkHtml(!isPlayerSente, 'mini');
+  const pMark = isPlayerSente ? '☗' : '☖';
+  const aiMark = isPlayerSente ? '☖' : '☗';
 
-  if (pDock) pDock.innerHTML = `${playerMarkMini}自駒`;
-  if (aiDock) aiDock.innerHTML = `${enemyMarkMini}敵駒`;
-  if (pNameEl) pNameEl.innerHTML = `${playerMarkNormal}${p.name}`;
-  if (aiNameEl) aiNameEl.innerHTML = `${enemyMarkNormal}${w.name}`;
+  if (pDock) pDock.innerHTML = `${pMark} 自駒`;
+  if (aiDock) aiDock.innerHTML = `${aiMark} 敵駒`;
+  if (pNameEl) pNameEl.innerHTML = `${pMark} ${p.name}`;
+  if (aiNameEl) aiNameEl.innerHTML = `${aiMark} ${w.name}`;
 }
 
 /* 勝敗視認性：武将名横インライン銘板掲揚 ＆ オーラ制御 */
@@ -1683,15 +1730,12 @@ function updateExhibitionThinkingDisplay(isThinking = true) {
   const isHayazashi = (exhibitionSpeed === 'fast');
   const speedNotice = isHayazashi ? '（※早指し戦につき即断即決・波乱あり）' : '';
 
-  const markSente = getKomaMarkHtml(true, 'normal');
-  const markGote = getKomaMarkHtml(false, 'normal');
-
   if (inCheck) {
     commentatorLine1 = `第${currentStep}手 ── <b>【急転直下】王手の一撃が放たれましたぞ！</b>`;
     commentatorLine2 = `「本陣に迫る刃をどう凌ぐか、${currentThinkingName}の受けの妙手に刮目めされよ！」`;
   } else if (currentStep <= 12) {
     commentatorLine1 = `第${currentStep}手 ── <b>【序盤戦】両雄、堂々たる陣形構築の刻 ${speedNotice}</b>`;
-    commentatorLine2 = `「${markSente}<b>${sData.name}</b> と ${markGote}<b>${gData.name}</b>、互いに隙のない布陣を敷き機を伺っております。」`;
+    commentatorLine2 = `「☗<b>${sData.name}</b> と ☖<b>${gData.name}</b>、互いに隙のない布陣を敷き機を伺っております。」`;
   } else if (currentStep <= 30) {
     commentatorLine1 = `第${currentStep}手 ── <b>【中盤戦】前線にて火花散る白兵戦！</b>`;
     commentatorLine2 = `「駒の利きが交錯する天下分水嶺。${currentThinkingName}（${tagSide}）が急所を睨んでおります。」`;
@@ -1834,7 +1878,7 @@ function calculateTroopsPercentages(bd, hd) {
   return { pPct, aiPct };
 }
 
-/* 戦況連動型・動的セリフ切り替えシステム（史実・戦況完全整合） */
+/* 戦況連動型・動的セリフ切り替えシステム */
 function updateWarlordQuotes() {
   if (isReviewingPast()) return;
 
@@ -2254,9 +2298,13 @@ function initBoardState() {
   updateRivalryButton();
   updateReviewModeUI();
 
+  // 【バグ修正・将棋公式初期配置】
+  // 後手（AI/上陣）：８二に角行（KA）、２二に飛車（HI）
   board[0] = [{code:'KY',owner:'AI'},{code:'KE',owner:'AI'},{code:'GI',owner:'AI'},{code:'KI',owner:'AI'},{code:'OU',owner:'AI'},{code:'KI',owner:'AI'},{code:'GI',owner:'AI'},{code:'KE',owner:'AI'},{code:'KY',owner:'AI'}];
-  board[1][1] = {code:'HI',owner:'AI'}; board[1][7] = {code:'KA',owner:'AI'};
+  board[1][1] = {code:'KA',owner:'AI'}; board[1][7] = {code:'HI',owner:'AI'};
   for(let c=0; c<9; c++) board[2][c] = {code:'FU',owner:'AI'};
+  
+  // 先手（PLAYER/下陣）：８八に角行（KA）、２八に飛車（HI）
   for(let c=0; c<9; c++) board[6][c] = {code:'FU',owner:'PLAYER'};
   board[7][1] = {code:'KA',owner:'PLAYER'}; board[7][7] = {code:'HI',owner:'PLAYER'};
   board[8] = [{code:'KY',owner:'PLAYER'},{code:'KE',owner:'PLAYER'},{code:'GI',owner:'PLAYER'},{code:'KI',owner:'PLAYER'},{code:'OU',owner:'PLAYER'},{code:'KI',owner:'PLAYER'},{code:'GI',owner:'PLAYER'},{code:'KE',owner:'PLAYER'},{code:'KY',owner:'PLAYER'}];
@@ -2352,6 +2400,7 @@ function exitReplayMode() {
       board = cloneBoardState(savedActiveBattle.board);
       hands = JSON.parse(JSON.stringify(savedActiveBattle.hands));
       turn = savedActiveBattle.turn;
+      battleStartTurn = savedActiveBattle.battleStartTurn || 'PLAYER';
       isGameOver = false;
       moveObjectsHistory = JSON.parse(JSON.stringify(savedActiveBattle.moveObjectsHistory));
       historyStates = JSON.parse(JSON.stringify(savedActiveBattle.historyStates));
@@ -2373,14 +2422,11 @@ function exitReplayMode() {
       const sTroops = sData.baseTroops || sData.maxTroops || 10000;
       const gTroops = gData.maxTroops || gData.baseTroops || 10000;
 
-      const markSente = getKomaMarkHtml(true, 'normal');
-      const markGote = getKomaMarkHtml(false, 'normal');
-
-      document.getElementById('player-name-disp').innerHTML = `${markSente}${sData.name}`;
+      document.getElementById('player-name-disp').innerHTML = `☗ ${sData.name}`;
       document.getElementById('player-clan-disp').textContent = sData.clan;
       document.getElementById('player-troops-disp').textContent = `${sTroops.toLocaleString()} / ${sTroops.toLocaleString()} 兵`;
 
-      document.getElementById('ai-name-disp').innerHTML = `${markGote}${gData.name}`;
+      document.getElementById('ai-name-disp').innerHTML = `☖ ${gData.name}`;
       document.getElementById('ai-clan-disp').textContent = gData.clan;
       document.getElementById('ai-troops-disp').textContent = `${gTroops.toLocaleString()} / ${gTroops.toLocaleString()} 兵`;
 
@@ -2410,6 +2456,7 @@ function exitReplayMode() {
       board = cloneBoardState(savedActiveBattle.board);
       hands = JSON.parse(JSON.stringify(savedActiveBattle.hands));
       turn = savedActiveBattle.turn;
+      battleStartTurn = savedActiveBattle.battleStartTurn || 'PLAYER';
       isGameOver = false;
       moveObjectsHistory = JSON.parse(JSON.stringify(savedActiveBattle.moveObjectsHistory));
       historyStates = JSON.parse(JSON.stringify(savedActiveBattle.historyStates));
@@ -2604,12 +2651,10 @@ function openFurigomaModal() {
     const isPlayerSente = (5 - toCount) >= 3;
     turn = isPlayerSente ? 'PLAYER' : 'AI';
     battleStartTurn = turn;
-    const markSente = getKomaMarkHtml(true, 'normal');
-    const markGote = getKomaMarkHtml(false, 'normal');
 
     t.innerHTML = isPlayerSente 
-      ? `<span style="color:#ff5252;">歩が${5 - toCount}枚！ ${markSente}我が軍の先手！</span>` 
-      : `<span style="color:#ffd700;">と金が${toCount}枚！ ${markGote}敵軍の先手！</span>`;
+      ? `<span style="color:#ff5252;">歩が${5 - toCount}枚！ ☗ 我が軍の先手！</span>` 
+      : `<span style="color:#ffd700;">と金が${toCount}枚！ ☖ 敵軍の先手！</span>`;
     
     playVictorySound();
 
@@ -2896,7 +2941,6 @@ function executeMove(m, metric = null) {
 
   if (m.type === 'drop') {
     hands[m.owner][m.code]--;
-    // 【バグ修正】未定義変数 move.to.c ではなく m.to.c を指定
     board[m.to.r][m.to.c] = { code: m.code, owner: m.owner };
   } else {
     const fp = board[m.from.r][m.from.c], tp = board[m.to.r][m.to.c];
@@ -3270,7 +3314,7 @@ function surrenderGame() {
 }
 
 function checkGameOver(nextOwner) {
-  // 規定手数上限（256手）判定による無限対局・千手ループ防止
+  // 規定手数上限（256手）判定による無限ループ防止
   if (moveObjectsHistory.length >= 256) {
     isGameOver = true;
     stopAutoReplay(); stopTurnTimer();
@@ -3727,7 +3771,7 @@ function startExhibitionFromModal() {
       currentMyWarlordId, currentAiLevel,
       board: cloneBoardState(board),
       hands: JSON.parse(JSON.stringify(hands)),
-      turn,
+      turn, battleStartTurn,
       moveObjectsHistory: JSON.parse(JSON.stringify(moveObjectsHistory)),
       historyStates: JSON.parse(JSON.stringify(historyStates)),
       evalScoresHistory: JSON.parse(JSON.stringify(evalScoresHistory)),
@@ -3751,15 +3795,12 @@ function startExhibitionFromModal() {
   const sTroops = sData.baseTroops || sData.maxTroops || 10000;
   const gTroops = gData.maxTroops || gData.baseTroops || 10000;
 
-  const markSente = getKomaMarkHtml(true, 'normal');
-  const markGote = getKomaMarkHtml(false, 'normal');
-
-  document.getElementById('player-name-disp').innerHTML = `${markSente}${sData.name}`;
+  document.getElementById('player-name-disp').innerHTML = `☗ ${sData.name}`;
   document.getElementById('player-clan-disp').textContent = sData.clan;
   document.getElementById('player-quote-disp').textContent = sData.quotes ? (sData.quotes.opening || sData.quotes.default) : '「先手陣、堂々たる進撃を見せてくれよう！」';
   document.getElementById('player-troops-disp').textContent = `${sTroops.toLocaleString()} / ${sTroops.toLocaleString()} 兵`;
 
-  document.getElementById('ai-name-disp').innerHTML = `${markGote}${gData.name}`;
+  document.getElementById('ai-name-disp').innerHTML = `☖ ${gData.name}`;
   document.getElementById('ai-clan-disp').textContent = gData.clan;
   document.getElementById('ai-quote-disp').textContent = gData.quotes ? (gData.quotes.opening || gData.quotes.default) : '「後手陣、一歩も退かぬ鉄壁の陣を敷く！」';
   document.getElementById('ai-troops-disp').textContent = `${gTroops.toLocaleString()} / ${gTroops.toLocaleString()} 兵`;
@@ -3800,7 +3841,6 @@ function dispatchExhibitionTurn() {
 
   const safeLimit = EXHIBITION_TIME_LIMITS[exhibitionSpeed] || 8500;
 
-  // 【安全策】万が一Web Workerからの応答が途絶した場合のフォールバック・セーフティタイマー
   clearTimeout(exhibitionSafetyTimer);
   exhibitionSafetyTimer = setTimeout(() => {
     if (isAiThinking && isExhibitionActive && !isGameOver) {
@@ -3896,8 +3936,16 @@ function stopExhibitionTimer() {
    当局・合戦絵巻（棋譜モーダル）リアルタイム自動追従システム
    ========================================================= */
 function updateKifuModalLive() {
-  const p = isExhibitionActive ? getTargetAIData(exhibitionSenteTarget) : PLAYER_WARLORDS[currentMyWarlordId];
-  const e = isExhibitionActive ? getTargetAIData(exhibitionGoteTarget) : WARLORDS_DATA[currentAiLevel];
+  const isPlayerSente = (battleStartTurn === 'PLAYER');
+  let p = null, e = null;
+
+  if (isExhibitionActive) {
+    p = getTargetAIData(exhibitionSenteTarget);
+    e = getTargetAIData(exhibitionGoteTarget);
+  } else {
+    p = isPlayerSente ? PLAYER_WARLORDS[currentMyWarlordId] : WARLORDS_DATA[currentAiLevel];
+    e = isPlayerSente ? WARLORDS_DATA[currentAiLevel] : PLAYER_WARLORDS[currentMyWarlordId];
+  }
 
   const pMax = getPlayerMaxTroops();
   const aiMax = getAiMaxTroops();
@@ -3918,10 +3966,10 @@ function updateKifuModalLive() {
   const diffBadge = document.getElementById('kifu-troops-diff-disp');
   if (diffBadge) {
     if (troopsDiff >= 0) {
-      diffBadge.textContent = isExhibitionActive ? `先手陣 +${troopsDiff.toLocaleString()} 兵優勢` : `我が軍 +${troopsDiff.toLocaleString()} 兵優勢`;
+      diffBadge.textContent = `☗ 先手側 +${troopsDiff.toLocaleString()} 兵優勢`;
       diffBadge.style.color = '#ffd700';
     } else {
-      diffBadge.textContent = isExhibitionActive ? `後手陣 +${Math.abs(troopsDiff).toLocaleString()} 兵優勢` : `敵軍 +${Math.abs(troopsDiff).toLocaleString()} 兵優勢`;
+      diffBadge.textContent = `☖ 後手側 +${Math.abs(troopsDiff).toLocaleString()} 兵優勢`;
       diffBadge.style.color = '#ffe6aa';
     }
   }
@@ -3939,21 +3987,16 @@ function updateKifuModalLive() {
       const m = moveObjectsHistory[idx];
       const d = document.createElement('div');
       d.className = 'kifu-row-item';
-      const rawCode = m.code || 'FU';
-      const pPiece = m.type === 'drop' ? PIECES[m.code] : PIECES[rawCode];
       
-      const isSenteMove = (m.owner === (battleStartTurn === 'PLAYER' ? 'PLAYER' : 'AI'));
-      const markIcon = getKomaMarkHtml(isSenteMove, 'mini');
-      const moveStr = `${idx + 1}手目：${markIcon}${9 - m.to.c}${KANJI_NUMS[m.to.r]} ${pPiece}${m.promote ? '成' : ''}`;
+      const officialMoveTxt = formatOfficialKifuMove(m, idx, false);
+      const moveStr = `${idx + 1}手目：${officialMoveTxt}`;
 
       const metric = moveMetricsHistory[idx] || { timeSec: '0.1', depth: 1 };
       const metricHtml = `<span class="kifu-metric-pill">⏱ ${metric.timeSec}秒 ｜ 深さ${metric.depth}</span>`;
 
       let badgeHtml = '';
       if (m.isCap) {
-        let victimName = (m.owner === 'PLAYER') ? '敵駒' : '自軍駒';
-        if (isExhibitionActive) victimName = (m.owner === 'PLAYER') ? `後手駒` : `先手駒`;
-        badgeHtml = `<span class="kifu-badge-critical badge-tennozan">⚔ ${victimName}討死</span>`;
+        badgeHtml = `<span class="kifu-badge-critical badge-tennozan">⚔ 敵駒討捕</span>`;
       } else if (m.promote) {
         badgeHtml = `<span class="kifu-badge-critical badge-shock">🔥 成駒覚醒！</span>`;
       }
@@ -3988,8 +4031,16 @@ function updateKifuModalLive() {
 function openKifuModal() {
   initAudio(); playUiClickSound(); stopAutoReplay();
 
-  const p = isExhibitionActive ? getTargetAIData(exhibitionSenteTarget) : PLAYER_WARLORDS[currentMyWarlordId];
-  const e = isExhibitionActive ? getTargetAIData(exhibitionGoteTarget) : WARLORDS_DATA[currentAiLevel];
+  const isPlayerSente = (battleStartTurn === 'PLAYER');
+  let p = null, e = null;
+
+  if (isExhibitionActive) {
+    p = getTargetAIData(exhibitionSenteTarget);
+    e = getTargetAIData(exhibitionGoteTarget);
+  } else {
+    p = isPlayerSente ? PLAYER_WARLORDS[currentMyWarlordId] : WARLORDS_DATA[currentAiLevel];
+    e = isPlayerSente ? WARLORDS_DATA[currentAiLevel] : PLAYER_WARLORDS[currentMyWarlordId];
+  }
 
   const pMax = getPlayerMaxTroops();
   const aiMax = getAiMaxTroops();
@@ -4006,11 +4057,8 @@ function openKifuModal() {
   const pVal = document.getElementById('kifu-player-troops-val');
   const eVal = document.getElementById('kifu-enemy-troops-val');
 
-  const markSente = getKomaMarkHtml(true, 'normal');
-  const markGote = getKomaMarkHtml(false, 'normal');
-
-  if (pTag) pTag.innerHTML = isExhibitionActive ? `${markSente}先手陣（${p.name}）` : `${markSente}${p.name}`;
-  if (eTag) eTag.innerHTML = isExhibitionActive ? `${markGote}後手陣（${e.name}）` : `${markGote}${e.name}`;
+  if (pTag) pTag.innerHTML = `☗ 先手：${p.name}`;
+  if (eTag) eTag.innerHTML = `☖ 後手：${e.name}`;
   if (pVal) pVal.textContent = `${pCurrent.toLocaleString()} 兵`;
   if (eVal) eVal.textContent = `${aiCurrent.toLocaleString()} 兵`;
 
@@ -4018,10 +4066,10 @@ function openKifuModal() {
   const diffBadge = document.getElementById('kifu-troops-diff-disp');
   if (diffBadge) {
     if (troopsDiff >= 0) {
-      diffBadge.textContent = isExhibitionActive ? `先手陣 +${troopsDiff.toLocaleString()} 兵優勢` : `我が軍 +${troopsDiff.toLocaleString()} 兵優勢`;
+      diffBadge.textContent = `☗ 先手側 +${troopsDiff.toLocaleString()} 兵優勢`;
       diffBadge.style.color = '#ffd700';
     } else {
-      diffBadge.textContent = isExhibitionActive ? `後手陣 +${Math.abs(troopsDiff).toLocaleString()} 兵優勢` : `敵軍 +${Math.abs(troopsDiff).toLocaleString()} 兵優勢`;
+      diffBadge.textContent = `☖ 後手側 +${Math.abs(troopsDiff).toLocaleString()} 兵優勢`;
       diffBadge.style.color = '#ffe6aa';
     }
   }
@@ -4042,8 +4090,8 @@ function openKifuModal() {
 
   const chartPlayerTag = document.getElementById('chart-player-name-tag');
   const chartEnemyTag = document.getElementById('chart-enemy-name-tag');
-  if (chartPlayerTag) chartPlayerTag.innerHTML = isExhibitionActive ? `${markSente}先手陣領地（${p.name}：下陣）` : `${markSente}我が軍領地（${p.name}：下陣）`;
-  if (chartEnemyTag) chartEnemyTag.innerHTML = isExhibitionActive ? `${markGote}後手陣領地（${e.name}：上陣）` : `${markGote}敵軍領地（${e.name}：上陣）`;
+  if (chartPlayerTag) chartPlayerTag.innerHTML = `☗ 先手陣領地（${p.name}：下陣）`;
+  if (chartEnemyTag) chartEnemyTag.innerHTML = `☖ 後手陣領地（${e.name}：上陣）`;
 
   const curSitText = document.getElementById('situation-text')?.textContent || '';
   const modalSit = document.getElementById('kifu-modal-situation-text');
@@ -4055,21 +4103,16 @@ function openKifuModal() {
     moveObjectsHistory.forEach((m, idx) => {
       const d = document.createElement('div');
       d.className = 'kifu-row-item';
-      const rawCode = m.code || 'FU';
-      const pPiece = m.type === 'drop' ? PIECES[m.code] : PIECES[rawCode];
       
-      const isSenteMove = (m.owner === (battleStartTurn === 'PLAYER' ? 'PLAYER' : 'AI'));
-      const markIcon = getKomaMarkHtml(isSenteMove, 'mini');
-      const moveStr = `${idx + 1}手目：${markIcon}${9 - m.to.c}${KANJI_NUMS[m.to.r]} ${pPiece}${m.promote ? '成' : ''}`;
+      const officialMoveTxt = formatOfficialKifuMove(m, idx, false);
+      const moveStr = `${idx + 1}手目：${officialMoveTxt}`;
 
       const metric = moveMetricsHistory[idx] || { timeSec: '0.1', depth: 1 };
       const metricHtml = `<span class="kifu-metric-pill">⏱ ${metric.timeSec}秒 ｜ 深さ${metric.depth}</span>`;
 
       let badgeHtml = '';
       if (m.isCap) {
-        let victimName = (m.owner === 'PLAYER') ? '敵駒' : '自軍駒';
-        if (isExhibitionActive) victimName = (m.owner === 'PLAYER') ? `後手駒` : `先手駒`;
-        badgeHtml = `<span class="kifu-badge-critical badge-tennozan">⚔ ${victimName}討死</span>`;
+        badgeHtml = `<span class="kifu-badge-critical badge-tennozan">⚔ 敵駒討捕</span>`;
       } else if (m.promote) {
         badgeHtml = `<span class="kifu-badge-critical badge-shock">🔥 成駒覚醒！</span>`;
       }
@@ -4194,10 +4237,10 @@ function drawTerritoryChart() {
   const playerDominancePct = Math.round(50 + (lastPt.diff / 150) * 100);
   const enemyDominancePct = 100 - playerDominancePct;
 
-  if (topEl) topEl.textContent = isExhibitionActive ? `後手陣支配 ${enemyDominancePct}%` : `敵軍支配 ${enemyDominancePct}%`;
+  if (topEl) topEl.textContent = `後手側支配 ${enemyDominancePct}%`;
   if (btmEl) {
     const advNotice = playerDominancePct >= 65 ? '（本陣へ肉薄！）' : (playerDominancePct <= 35 ? '（本陣防衛急務！）' : '（互角）');
-    btmEl.textContent = isExhibitionActive ? `先手陣支配 ${playerDominancePct}% ${advNotice}` : `我が軍支配 ${playerDominancePct}% ${advNotice}`;
+    btmEl.textContent = `先手側支配 ${playerDominancePct}% ${advNotice}`;
   }
 }
 
@@ -4440,29 +4483,64 @@ function setPlayerWarlord(k) {
   selectConquestProvince(currentAiLevel);
 }
 
+/* =========================================================
+   日本将棋連盟・柿木将棋公式規格 KIF保存機能
+   ========================================================= */
 function downloadKifu() {
   playUiClickSound();
-  const pName = isExhibitionActive ? getTargetAIData(exhibitionSenteTarget).name : PLAYER_WARLORDS[currentMyWarlordId].name;
-  const eName = isExhibitionActive ? getTargetAIData(exhibitionGoteTarget).name : WARLORDS_DATA[currentAiLevel].name;
-  const now = new Date();
-  const dateStr = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')}`;
+  const isPlayerSente = (battleStartTurn === 'PLAYER');
+  let senteName = '', goteName = '';
 
-  let txt = `#KIF version=2.0 encoding=UTF-8\n開始日時：${dateStr}\n棋戦：将棋王 2026 〜 天下統一・戦国決戦 〜\n手合割：平手\n先手：${pName}\n後手：${eName}\n手数----指手---------消費時間--\n`;
+  if (isExhibitionActive) {
+    senteName = getTargetAIData(exhibitionSenteTarget).name;
+    goteName = getTargetAIData(exhibitionGoteTarget).name;
+  } else {
+    senteName = isPlayerSente ? PLAYER_WARLORDS[currentMyWarlordId].name : WARLORDS_DATA[currentAiLevel].name;
+    goteName = isPlayerSente ? WARLORDS_DATA[currentAiLevel].name : PLAYER_WARLORDS[currentMyWarlordId].name;
+  }
+
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+
+  let txt = `#KIF version=2.0 encoding=UTF-8\n開始日時：${dateStr}\n棋戦：将棋王 2026 〜 天下統一・戦国決戦 〜\n手合割：平手\n先手：${senteName}\n後手：${goteName}\n手数----指手---------消費時間--\n`;
+
+  let totalSec = { SENTE: 0, GOTE: 0 };
 
   moveObjectsHistory.forEach((m, i) => {
-    const rawCode = m.code || 'FU';
-    const pPiece = m.type === 'drop' ? PIECES[m.code] : PIECES[rawCode];
-    const promoteStr = m.promote ? '成' : '';
-    const toStr = `${9 - m.to.c}${KANJI_NUMS[m.to.r]}`;
-    const fromStr = m.type === 'drop' ? '打' : `(${9 - m.from.c}${9 - m.from.r})`;
-    const metric = moveMetricsHistory[i] || { timeSec: '0.1' };
-    txt += `${(i + 1).toString().padStart(4, ' ')} ${toStr}${pPiece}${promoteStr}${fromStr} ( ${metric.timeSec} / 00:00:00)\n`;
+    const isSenteMove = (i % 2 === 0);
+    const sideKey = isSenteMove ? 'SENTE' : 'GOTE';
+    const metric = moveMetricsHistory[i] || { timeSec: '1' };
+    const stepSec = Math.max(1, Math.round(parseFloat(metric.timeSec) || 1));
+    totalSec[sideKey] += stepSec;
+
+    const mMin = Math.floor(stepSec / 60);
+    const mSec = stepSec % 60;
+    const timeStepStr = `${mMin}:${mSec.toString().padStart(2, '0')}`;
+
+    const tHour = Math.floor(totalSec[sideKey] / 3600);
+    const tMin = Math.floor((totalSec[sideKey] % 3600) / 60);
+    const tSec = totalSec[sideKey] % 60;
+    const timeTotalStr = `${tHour.toString().padStart(2,'0')}:${tMin.toString().padStart(2,'0')}:${tSec.toString().padStart(2,'0')}`;
+
+    const officialKifMove = formatOfficialKifuMove(m, i, true);
+    const stepNumStr = (i + 1).toString().padStart(4, ' ');
+    const paddedMove = officialKifMove.padEnd(7, '　');
+
+    txt += `${stepNumStr} ${paddedMove} ( ${timeStepStr}/${timeTotalStr})\n`;
   });
+
+  // 終局符号の出力
+  if (isGameOver) {
+    const totalMoves = moveObjectsHistory.length;
+    txt += `${(totalMoves + 1).toString().padStart(4, ' ')} 投了         ( 0:01/00:00:00)\n`;
+    const lastWinner = (totalMoves % 2 === 1) ? '先手' : '後手';
+    txt += `まで${totalMoves}手にて${lastWinner}の勝ち\n`;
+  }
 
   const b = new Blob([txt], { type: 'text/plain;charset=UTF-8' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(b);
-  a.download = `将棋王_戦国合戦棋譜_${pName}対${eName}.kif`;
+  a.download = `将棋王_公式合戦棋譜_${senteName}対${goteName}.kif`;
   a.click();
 }
 
@@ -4501,6 +4579,7 @@ function saveBattleRecord(resultType, resultLabel) {
     resultLabel: resultLabel,
     movesCount: moveObjectsHistory.length,
     sente: (battleStartTurn === 'PLAYER') ? '先手' : '後手',
+    battleStartTurn: battleStartTurn,
     hintUsed: hintUsedCount,
     awakenedHintUsed: awakenedHintCount,
     isExhibition: !!isExhibitionActive,
@@ -4526,8 +4605,9 @@ function rebuildHistoryStatesFromMoves(moves) {
   const rBoard = Array.from({length: 9}, () => Array(9).fill(null));
   const rHands = { PLAYER: {}, AI: {} };
 
+  // 公式初期配置（８二角、２二飛）
   rBoard[0] = [{code:'KY',owner:'AI'},{code:'KE',owner:'AI'},{code:'GI',owner:'AI'},{code:'KI',owner:'AI'},{code:'OU',owner:'AI'},{code:'KI',owner:'AI'},{code:'GI',owner:'AI'},{code:'KE',owner:'AI'},{code:'KY',owner:'AI'}];
-  rBoard[1][1] = {code:'HI',owner:'AI'}; rBoard[1][7] = {code:'KA',owner:'AI'};
+  rBoard[1][1] = {code:'KA',owner:'AI'}; rBoard[1][7] = {code:'HI',owner:'AI'};
   for(let c=0; c<9; c++) rBoard[2][c] = {code:'FU',owner:'AI'};
   for(let c=0; c<9; c++) rBoard[6][c] = {code:'FU',owner:'PLAYER'};
   rBoard[7][1] = {code:'KA',owner:'PLAYER'}; rBoard[7][7] = {code:'HI',owner:'PLAYER'};
@@ -4767,7 +4847,7 @@ function renderBattleHistoryList() {
       honorBadgeHtml = `<span class="footer-stat-pill">💡 軍師助言: ${r.hintUsed}回</span>`;
     }
 
-    const senteMarkIcon = getKomaMarkHtml(r.sente === '先手', 'mini');
+    const senteMarkIcon = (r.sente === '先手') ? '☗' : '☖';
 
     card.innerHTML = `
       <div class="card-tier-header">
@@ -4785,7 +4865,7 @@ function renderBattleHistoryList() {
         <div class="clash-side ${isPlayerWinner ? 'is-winner' : (isEnemyWinner ? 'is-loser' : '')}">
           <div class="clash-avatar-box">${getWarlordPortraitHtml(playerAvatarData, false)}</div>
           <span class="clash-name-txt">${r.playerWarlordName}</span>
-          <span class="clash-tag-sente">${senteMarkIcon}${r.sente}</span>
+          <span class="clash-tag-sente">${senteMarkIcon} ${r.sente}</span>
         </div>
         <span class="clash-vs-mark">⚔</span>
         <div class="clash-side clash-side-enemy ${isEnemyWinner ? 'is-winner' : (isPlayerWinner ? 'is-loser' : '')}">
@@ -4835,7 +4915,7 @@ function replayFromHistory(recordId, storageKey) {
       currentMyWarlordId, currentAiLevel,
       board: cloneBoardState(board),
       hands: JSON.parse(JSON.stringify(hands)),
-      turn,
+      turn, battleStartTurn,
       moveObjectsHistory: JSON.parse(JSON.stringify(moveObjectsHistory)),
       historyStates: JSON.parse(JSON.stringify(historyStates)),
       evalScoresHistory: JSON.parse(JSON.stringify(evalScoresHistory)),
@@ -4853,6 +4933,7 @@ function replayFromHistory(recordId, storageKey) {
 
   isPastReplayActive = true;
   isExhibitionActive = !!rec.isExhibition;
+  battleStartTurn = rec.battleStartTurn || (rec.sente === '先手' ? 'PLAYER' : 'AI');
 
   const enemyChangeBtn = document.getElementById('btn-enemy-change');
   const playerChangeBtn = document.getElementById('btn-player-change');
@@ -4915,4 +4996,5 @@ document.addEventListener('touchstart', () => initAudio(), { once: true });
 loadProgress();
 setPlayerWarlord(currentMyWarlordId);
 initBoardState();
+
 

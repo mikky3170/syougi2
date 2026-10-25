@@ -1,7 +1,7 @@
 /* =========================================================
    将棋王 2026 〜 天下統一・戦国決戦 〜
    外部オープンソースAIエンジン統合モジュール
-   【戦国四英傑・客分思考エンジン群（完全成果保証・時間制限厳格連動版）】
+   【戦国四英傑・客分思考エンジン群（MVV-LVA高速化・時間制限厳格連動版）】
    
    1. nanban : 【蒲生氏郷】       - MicroMax系統（西洋古典αβ探索 ＋ 静止探索 / 目標深さ3）
    2. kenshi : 【柳生石舟斎】     - Sunfish将棋系統（Piece-Square Tables 駒配置評価駆動 / 目標深さ4）
@@ -74,7 +74,7 @@
 
   const transpositionTable = new Map();
   const TT_EXACT = 0, TT_ALPHA = 1, TT_BETA = 2;
-  let killerMoves = Array.from({ length: 35 }, () => [null, null]);
+  let killerMoves = Array.from({ length: 40 }, () => [null, null]);
 
   function checkTimeout() {
     if (isSearchTimeout) return true;
@@ -342,12 +342,13 @@
       if (safe) legalList.push(m);
     }
 
+    // 【MVV-LVA徹底強化オーダリング】最小の駒で最大の駒を討ち取る手を最上位に格付け
     legalList.sort((a, b) => {
       let sa = 0, sb = 0;
-      if (a.isCap) sa += 10000 + (a.capVal * 10) - (a.attackerVal * 0.1);
-      if (b.isCap) sb += 10000 + (b.capVal * 10) - (b.attackerVal * 0.1);
-      if (a.promote) sa += 4000;
-      if (b.promote) sb += 4000;
+      if (a.isCap) sa += 20000 + (a.capVal * 16) - (a.attackerVal * 0.1);
+      if (b.isCap) sb += 20000 + (b.capVal * 16) - (b.attackerVal * 0.1);
+      if (a.promote) sa += 6000;
+      if (b.promote) sb += 6000;
       return sb - sa;
     });
 
@@ -490,7 +491,7 @@
     return alpha;
   }
 
-  /* 3. 黒田如水（Bonanza系統）：置換表 ＋ キラー探索 */
+  /* 3. 黒田如水（Bonanza系統）：置換表 ＋ キラー探索 ＋ MVV-LVA */
   function searchInja(depth, alpha, beta, owner, ply, rootPerspective) {
     nodeCount++;
     if ((nodeCount & 15) === 0 && checkTimeout()) return alpha;
@@ -522,12 +523,12 @@
         if (matchA) return -1;
         if (matchB) return 1;
       }
-      let sa = (a.isCap ? 10000 + a.capVal * 10 : 0) + (a.promote ? 4000 : 0);
-      let sb = (b.isCap ? 10000 + b.capVal * 10 : 0) + (b.promote ? 4000 : 0);
-      if (k1 && a.type === k1.type && a.to.r === k1.to.r && a.to.c === k1.to.c) sa += 5000;
-      if (k1 && b.type === k1.type && b.to.r === k1.to.r && b.to.c === k1.to.c) sb += 5000;
-      if (k2 && a.type === k2.type && a.to.r === k2.to.r && a.to.c === k2.to.c) sa += 2500;
-      if (k2 && b.type === k2.type && b.to.r === k2.to.r && b.to.c === k2.to.c) sb += 2500;
+      let sa = (a.isCap ? 20000 + a.capVal * 16 - a.attackerVal * 0.1 : 0) + (a.promote ? 6000 : 0);
+      let sb = (b.isCap ? 20000 + b.capVal * 16 - b.attackerVal * 0.1 : 0) + (b.promote ? 6000 : 0);
+      if (k1 && a.type === k1.type && a.to.r === k1.to.r && a.to.c === k1.to.c) sa += 8000;
+      if (k1 && b.type === k1.type && b.to.r === k1.to.r && b.to.c === k1.to.c) sb += 8000;
+      if (k2 && a.type === k2.type && a.to.r === k2.to.r && a.to.c === k2.to.c) sa += 4000;
+      if (k2 && b.type === k2.type && b.to.r === k2.to.r && b.to.c === k2.to.c) sb += 4000;
       return sb - sa;
     });
 
@@ -549,7 +550,7 @@
       }
       if (score > alpha) alpha = score;
       if (alpha >= beta) {
-        if (!m.isCap && ply < 35) {
+        if (!m.isCap && ply < 40) {
           killerMoves[ply][1] = killerMoves[ply][0];
           killerMoves[ply][0] = m;
         }
@@ -560,13 +561,13 @@
     let flag = TT_EXACT;
     if (bestVal <= origAlpha) flag = TT_ALPHA;
     else if (bestVal >= beta) flag = TT_BETA;
-    if (transpositionTable.size > 20000) transpositionTable.clear();
+    if (transpositionTable.size > 25000) transpositionTable.clear();
     transpositionTable.set(hashKey, { depth, score: bestVal, flag, bestMove: bestM });
 
     return bestVal;
   }
 
-  /* 4. 【初代名人・大橋宗桂】（Apery / やねうら王系統）：高精度玉囲い評価 ＋ Null-Move枝刈り ＋ PVS探索 */
+  /* 4. 【初代名人・大橋宗桂】（Apery / やねうら王系統）：高精度玉囲い評価 ＋ Null-Move枝刈り ＋ PVS探索 ＋ MVV-LVA */
   function evalSokei(perspectiveOwner) {
     let score = 0;
     const opp = (perspectiveOwner === 'PLAYER') ? 'AI' : 'PLAYER';
@@ -685,12 +686,12 @@
         if (matchA) return -1;
         if (matchB) return 1;
       }
-      let sa = (a.isCap ? 12000 + a.capVal * 10 : 0) + (a.promote ? 4500 : 0);
-      let sb = (b.isCap ? 12000 + b.capVal * 10 : 0) + (b.promote ? 4500 : 0);
-      if (k1 && a.type === k1.type && a.to.r === k1.to.r && a.to.c === k1.to.c) sa += 6000;
-      if (k1 && b.type === k1.type && b.to.r === k1.to.r && b.to.c === k1.to.c) sb += 6000;
-      if (k2 && a.type === k2.type && a.to.r === k2.to.r && a.to.c === k2.to.c) sa += 3000;
-      if (k2 && b.type === k2.type && b.to.r === k2.to.r && b.to.c === k2.to.c) sb += 3000;
+      let sa = (a.isCap ? 20000 + a.capVal * 16 - a.attackerVal * 0.1 : 0) + (a.promote ? 6000 : 0);
+      let sb = (b.isCap ? 20000 + b.capVal * 16 - b.attackerVal * 0.1 : 0) + (b.promote ? 6000 : 0);
+      if (k1 && a.type === k1.type && a.to.r === k1.to.r && a.to.c === k1.to.c) sa += 8500;
+      if (k1 && b.type === k1.type && b.to.r === k1.to.r && b.to.c === k1.to.c) sb += 8500;
+      if (k2 && a.type === k2.type && a.to.r === k2.to.r && a.to.c === k2.to.c) sa += 4500;
+      if (k2 && b.type === k2.type && b.to.r === k2.to.r && b.to.c === k2.to.c) sb += 4500;
       return sb - sa;
     });
 
@@ -704,13 +705,10 @@
       let score;
 
       if (i === 0) {
-        // PVノード：全窓探索
         score = -searchSokeiPVS(depth - 1, -beta, -alpha, nextOwner, ply + 1, rootPerspective, true);
       } else {
-        // PVS（Null Window Search）：狭い窓で高速検証
         score = -searchSokeiPVS(depth - 1, -alpha - 1, -alpha, nextOwner, ply + 1, rootPerspective, true);
         if (score > alpha && score < beta) {
-          // 予想外の高スコア時は再探索
           score = -searchSokeiPVS(depth - 1, -beta, -alpha, nextOwner, ply + 1, rootPerspective, true);
         }
       }
@@ -724,7 +722,7 @@
       }
       if (score > alpha) alpha = score;
       if (alpha >= beta) {
-        if (!m.isCap && ply < 35) {
+        if (!m.isCap && ply < 40) {
           killerMoves[ply][1] = killerMoves[ply][0];
           killerMoves[ply][0] = m;
         }
@@ -735,7 +733,7 @@
     let flag = TT_EXACT;
     if (bestVal <= origAlpha) flag = TT_ALPHA;
     else if (bestVal >= beta) flag = TT_BETA;
-    if (transpositionTable.size > 25000) transpositionTable.clear();
+    if (transpositionTable.size > 30000) transpositionTable.clear();
     transpositionTable.set(hashKey, { depth, score: bestVal, flag, bestMove: bestM });
 
     return bestVal;
@@ -778,8 +776,8 @@
       const undo = makeMove(m);
       const hKey = getZobristHash(board, hands, enemyOwner);
       const count = pastHashes.filter(h => h === hKey).length;
-      if (count >= 2) penalty += 4000;
-      else if (count === 1) penalty += 1500;
+      if (count >= 2) penalty += 5500;
+      else if (count === 1) penalty += 2000;
       unmakeMove(undo);
       return penalty;
     };
@@ -823,7 +821,6 @@
         } else if (engineType === 'inja') {
           s = -searchInja(d - 1, -beta, -alpha, enemyOwner, 1, owner) - repPen;
         } else {
-          // 初代名人・大橋宗桂（Null-Move＋PVS探索）
           s = -searchSokeiPVS(d - 1, -beta, -alpha, enemyOwner, 1, owner, true) - repPen;
         }
 
