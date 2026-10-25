@@ -1,7 +1,8 @@
+
 /* =========================================================
    将棋王 2026 〜 天下統一・戦国決戦 〜
    外部オープンソースAIエンジン統合モジュール
-   【戦国四英傑・客分思考エンジン群（MVV-LVA高速化・時間制限厳格連動版）】
+   【戦国四英傑・客分思考エンジン群（反復深化完全同期＆高精度深度確定版）】
    
    1. nanban : 【蒲生氏郷】       - MicroMax系統（西洋古典αβ探索 ＋ 静止探索 / 目標深さ3）
    2. kenshi : 【柳生石舟斎】     - Sunfish将棋系統（Piece-Square Tables 駒配置評価駆動 / 目標深さ4）
@@ -342,7 +343,6 @@
       if (safe) legalList.push(m);
     }
 
-    // 【MVV-LVA徹底強化オーダリング】最小の駒で最大の駒を討ち取る手を最上位に格付け
     legalList.sort((a, b) => {
       let sa = 0, sb = 0;
       if (a.isCap) sa += 20000 + (a.capVal * 16) - (a.attackerVal * 0.1);
@@ -595,7 +595,6 @@
       }
     }
 
-    // 金銀連結・玉囲い守備力ボーナス
     if (myKing) {
       let guards = 0;
       for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
@@ -666,7 +665,6 @@
 
     const nextOwner = (owner === 'PLAYER') ? 'AI' : 'PLAYER';
 
-    // Null-Move Pruning（王手されていない局面で深さ2をパスして即βカット判定）
     if (canNull && !inCheck && depth >= 3) {
       const R = 2;
       const nullScore = -searchSokeiPVS(depth - 1 - R, -beta, -beta + 1, nextOwner, ply + 1, rootPerspective, false);
@@ -767,7 +765,7 @@
 
     const legals = genLegalMoves(owner, false, true);
     if (legals.length === 0) {
-      return { type: 'done', bestMove: null, evalScore: -MATE_SCORE, depth: 0, targetDepth, nodes: 0, engineType };
+      return { type: 'done', bestMove: null, evalScore: -MATE_SCORE, depth: 0, targetDepth, nodes: 0, engineType, timeSpentMs: 10 };
     }
 
     const enemyOwner = (owner === 'PLAYER') ? 'AI' : 'PLAYER';
@@ -844,6 +842,8 @@
       if (checkTimeout()) break;
     }
 
+    const elapsed = Math.max(50, Date.now() - searchStartTime);
+
     return {
       type: 'done',
       bestMove: confirmedBestMove || legals[0],
@@ -851,7 +851,8 @@
       depth: achievedDepth,
       targetDepth,
       nodes: nodeCount,
-      engineType
+      engineType,
+      timeSpentMs: elapsed
     };
   }
 
@@ -869,4 +870,5 @@
   }
 
 })(typeof self !== 'undefined' ? self : this);
+
 

@@ -4,7 +4,7 @@
    【パート 1 / 2】
    ========================================================= */
 
-// AI Web Workerコード（思考エンジン：最善手先行オーダリング高速化＆MVV-LVA探索強化＆反復深化リアルタイム進捗通知＆厳格時間制限対応版）
+// AI Web Workerコード（思考エンジン：簡易Zobrist置換表＋キラー着手＋MVV-LVA探索強化＆反復深化リアルタイム同期版）
 const workerScriptContent = `
 const PIECE_CODES = ['OU','HI','KA','KI','GI','KE','KY','FU','RY','UM','NG','NK','NY','TO'];
 const VALUES = { OU: 30000, HI: 1050, KA: 880, KI: 580, GI: 480, KE: 380, KY: 280, FU: 100, RY: 1450, UM: 1250, NG: 570, NK: 490, NY: 430, TO: 430 };
@@ -15,6 +15,11 @@ const MATE_SCORE = 100000;
 let board = [], hands = { PLAYER: {}, AI: {} };
 let searchStartTime = 0, searchTimeLimit = 5000, isSearchTimeout = false, nodeCount = 0;
 let moveHistory = [], pastHashes = [];
+
+// Worker内部置換表 ＆ キラー手ヒューリスティック
+const ttWorker = new Map();
+const TT_EXACT = 0, TT_ALPHA = 1, TT_BETA = 2;
+let workerKillerMoves = Array.from({ length: 30 }, () => [null, null]);
 
 const LEVEL_CFG = {
   1:  { depth: 1, qDepth: 1 },
@@ -333,7 +338,6 @@ function genLegalMoves(owner, capturesOnly = false, filterUchifuzume = true) {
     if (safe) legals.push(m);
   }
 
-  // MVV-LVA 探索オーダリング強化
   legals.sort((a, b) => {
     let sa = (a.isCap ? 20000 + a.capVal * 16 - a.attackerVal * 0.1 : 0) + (a.promote ? 6000 : 0);
     let sb = (b.isCap ? 20000 + b.capVal * 16 - b.attackerVal * 0.1 : 0) + (b.promote ? 6000 : 0);
@@ -369,26 +373,59 @@ function quiescence(alpha, beta, owner, qDepth, maxQ, rootPerspective, evalLevel
   return alpha;
 }
 
-function negamax(depth, alpha, beta, owner, maxQ, rootPerspective, evalLevel) {
+function negamax(depth, alpha, beta, owner, ply, maxQ, rootPerspective, evalLevel) {
   nodeCount++;
   if ((nodeCount & 15) === 0 && checkTimeout()) return alpha;
+
+  const hashKey = getBoardHash(board, hands, owner);
+  const ttEntry = ttWorker.get(hashKey);
+  let ttMove = null;
+  if (ttEntry) {
+    ttMove = ttEntry.bestMove;
+    if (ttEntry.depth >= depth) {
+      if (ttEntry.flag === TT_EXACT) return ttEntry.score;
+      if (ttEntry.flag === TT_ALPHA && ttEntry.score <= alpha) return alpha;
+      if (ttEntry.flag === TT_BETA  && ttEntry.score >= beta)  return beta;
+    }
+  }
+
   if (depth <= 0) return quiescence(alpha, beta, owner, 0, maxQ, rootPerspective, evalLevel);
 
   const inCheck = isCheckState(owner);
   const moves = genLegalMoves(owner, false, true);
-  if (moves.length === 0) return inCheck ? (-MATE_SCORE + (10 - depth)) : 0;
+  if (moves.length === 0) return inCheck ? (-MATE_SCORE + ply) : 0;
+
+  const k1 = workerKillerMoves[ply] ? workerKillerMoves[ply][0] : null;
+  const k2 = workerKillerMoves[ply] ? workerKillerMoves[ply][1] : null;
+
+  moves.sort((a, b) => {
+    if (ttMove) {
+      const matchA = (a.type === ttMove.type && a.to.r === ttMove.to.r && a.to.c === ttMove.to.c);
+      const matchB = (b.type === ttMove.type && b.to.r === ttMove.to.r && b.to.c === ttMove.to.c);
+      if (matchA) return -1;
+      if (matchB) return 1;
+    }
+    let sa = (a.isCap ? 20000 + a.capVal * 16 - a.attackerVal * 0.1 : 0) + (a.promote ? 6000 : 0);
+    let sb = (b.isCap ? 20000 + b.capVal * 16 - b.attackerVal * 0.1 : 0) + (b.promote ? 6000 : 0);
+    if (k1 && a.type === k1.type && a.to.r === k1.to.r && a.to.c === k1.to.c) sa += 8000;
+    if (k1 && b.type === k1.type && b.to.r === k1.to.r && b.to.c === k1.to.c) sb += 8000;
+    if (k2 && a.type === k2.type && a.to.r === k2.to.r && a.to.c === k2.to.c) sa += 4000;
+    if (k2 && b.type === k2.type && b.to.r === k2.to.r && b.to.c === k2.to.c) sb += 4000;
+    return sb - sa;
+  });
 
   let bestVal = -Infinity;
+  let bestM = null;
+  const origAlpha = alpha;
   const nextOwner = (owner === 'PLAYER') ? 'AI' : 'PLAYER';
 
   for (let i = 0; i < moves.length; i++) {
     const m = moves[i];
     const undo = makeMove(m);
-    let score = -negamax(depth - 1, -beta, -alpha, nextOwner, maxQ, rootPerspective, evalLevel);
+    let score = -negamax(depth - 1, -beta, -alpha, nextOwner, ply + 1, maxQ, rootPerspective, evalLevel);
     unmakeMove(undo);
     if (isSearchTimeout) break;
 
-    // 千日手・往復跳躍ペナルティ
     if (moveHistory.length >= 2) {
       const last = moveHistory[moveHistory.length - 2];
       if (m.type === 'move' && last.type === 'move' &&
@@ -398,10 +435,26 @@ function negamax(depth, alpha, beta, owner, maxQ, rootPerspective, evalLevel) {
       }
     }
 
-    if (score > bestVal) bestVal = score;
+    if (score > bestVal) {
+      bestVal = score;
+      bestM = m;
+    }
     if (score > alpha) alpha = score;
-    if (alpha >= beta) break;
+    if (alpha >= beta) {
+      if (!m.isCap && ply < 30) {
+        workerKillerMoves[ply][1] = workerKillerMoves[ply][0];
+        workerKillerMoves[ply][0] = m;
+      }
+      break;
+    }
   }
+
+  let flag = TT_EXACT;
+  if (bestVal <= origAlpha) flag = TT_ALPHA;
+  else if (bestVal >= beta) flag = TT_BETA;
+  if (ttWorker.size > 25000) ttWorker.clear();
+  ttWorker.set(hashKey, { depth, score: bestVal, flag, bestMove: bestM });
+
   return bestVal;
 }
 
@@ -422,7 +475,7 @@ self.onmessage = function(e) {
 
   const legals = genLegalMoves(searchOwner, false, true);
   if (legals.length === 0) {
-    self.postMessage({ type: isHintRequest ? 'hintDone' : 'done', bestMove: null, candidateMoves: [], evalScore: curEval, depth: 0, targetDepth: cfg.depth, nodes: 0 });
+    self.postMessage({ type: isHintRequest ? 'hintDone' : 'done', bestMove: null, candidateMoves: [], evalScore: curEval, depth: 0, targetDepth: cfg.depth, nodes: 0, timeSpentMs: 10 });
     return;
   }
 
@@ -479,7 +532,7 @@ self.onmessage = function(e) {
       const m = currentIterationMoves[i].move;
       const penalty = calcPenalty(m);
       const undo = makeMove(m);
-      let s = -negamax(d - 1, -beta, -alpha, enemyOwner, cfg.qDepth, searchOwner, effectiveLevel) - penalty;
+      let s = -negamax(d - 1, -beta, -alpha, enemyOwner, 1, cfg.qDepth, searchOwner, effectiveLevel) - penalty;
       unmakeMove(undo);
 
       currentIterationMoves[i].score = s;
@@ -507,6 +560,8 @@ self.onmessage = function(e) {
     }
   }
 
+  const elapsedMs = Math.max(50, Date.now() - searchStartTime);
+
   self.postMessage({
     type: isHintRequest ? 'hintDone' : 'done',
     bestMove: finalBestMove,
@@ -515,7 +570,8 @@ self.onmessage = function(e) {
     depth: achievedDepth,
     targetDepth: cfg.depth,
     nodes: nodeCount,
-    isAwakened
+    isAwakened,
+    timeSpentMs: elapsedMs
   });
 };
 `;
@@ -922,7 +978,7 @@ if ('speechSynthesis' in window) {
 }
 
 /* =========================================================
-   【視線誘導 ＆ 手番・思考タイマー管理エンジン】
+   【視線誘導 ＆ 手番・思考タイマー管理エンジン（深さ・確定銘板維持対応）】
    ========================================================= */
 let turnStartTime = 0;
 let turnTimerInterval = null;
@@ -931,6 +987,12 @@ let currentThinkingName = '';
 
 let totalTimeSpentMs = { PLAYER: 0, AI: 0 };
 let movesCountBySide = { PLAYER: 0, AI: 0 };
+
+// 直近着手完了情報（手番交代後もパネル上に確定銘板を維持する）
+let lastSettledMoveInfo = {
+  PLAYER: null,
+  AI: null
+};
 
 function formatTimeMinutesSeconds(totalSec) {
   const m = Math.floor(totalSec / 60);
@@ -985,15 +1047,37 @@ function updateThinkingTimerDisplay() {
   if (isPlayer) {
     if (pThinkDisp) {
       pThinkDisp.style.display = 'inline-flex';
+      pThinkDisp.className = 'warlord-thinking-inline timer-gold-box';
       pThinkDisp.innerHTML = `🪭 采配思案 <b>${elapsedSec}秒</b>`;
     }
-    if (aiThinkDisp) aiThinkDisp.style.display = 'none';
+    // 相手側（AI）は直前の着手確定情報を維持
+    if (aiThinkDisp) {
+      if (lastSettledMoveInfo.AI) {
+        aiThinkDisp.style.display = 'inline-flex';
+        aiThinkDisp.className = 'warlord-thinking-inline timer-confirmed-box';
+        aiThinkDisp.innerHTML = `✔ 決断 <b>${lastSettledMoveInfo.AI.timeSec}秒</b> (深さ${lastSettledMoveInfo.AI.depth})`;
+      } else {
+        aiThinkDisp.style.display = 'none';
+      }
+    }
   } else {
     if (aiThinkDisp) {
       aiThinkDisp.style.display = 'inline-flex';
-      aiThinkDisp.innerHTML = `⚔ 敵将熟慮 <b>${elapsedSec}秒</b>`;
+      aiThinkDisp.className = 'warlord-thinking-inline timer-gold-box';
+      const curD = Math.max(1, exhibitionAchievedDepth);
+      const targetD = WARLORDS_DATA[currentAiLevel]?.targetDepth || 5;
+      aiThinkDisp.innerHTML = `🧠 敵将熟慮 <b>${elapsedSec}秒</b> (深さ ${curD}/${targetD})`;
     }
-    if (pThinkDisp) pThinkDisp.style.display = 'none';
+    // プレイヤー側は直前の着手確定情報を維持
+    if (pThinkDisp) {
+      if (lastSettledMoveInfo.PLAYER) {
+        pThinkDisp.style.display = 'inline-flex';
+        pThinkDisp.className = 'warlord-thinking-inline timer-confirmed-box';
+        pThinkDisp.innerHTML = `✔ 決断 <b>${lastSettledMoveInfo.PLAYER.timeSec}秒</b>`;
+      } else {
+        pThinkDisp.style.display = 'none';
+      }
+    }
   }
 
   const isPlayerSente = (battleStartTurn === 'PLAYER');
@@ -1039,9 +1123,11 @@ function resumeTurnTimer() {
   }
 }
 
-function recordTurnTime(side) {
+function recordTurnTime(side, customElapsedMs = null) {
   stopTurnTimer();
-  const spentMs = Math.max(100, Date.now() - turnStartTime);
+  const spentMs = (typeof customElapsedMs === 'number' && customElapsedMs > 0)
+    ? customElapsedMs
+    : Math.max(100, Date.now() - turnStartTime);
   totalTimeSpentMs[side] = (totalTimeSpentMs[side] || 0) + spentMs;
   movesCountBySide[side] = (movesCountBySide[side] || 0) + 1;
   const secStr = (spentMs / 1000).toFixed(1);
@@ -1346,7 +1432,7 @@ const WARLORDS_DATA = {
   1: {
     id: 'enemy_1', province: '尾張国', name: '木下藤吉郎', clan: '尾張国｜織田足軽隊', maxTroops: 3000, targetDepth: 1, depthSpec: '深さ1＋足軽速攻',
     featureShort: '足軽戦法。前進重視。', tacticsHint: '駒にヒモをつけ、角・飛車の道を開いて突入されよ！',
-    portraitSvg: `<rect width="100" height="100" rx="6" fill="#140d06"/><path d="M50 20 Q56 28 50 36 Q44 28 50 20 Z M50 36 Q62 50 50 68 Q38 50 50 36 Z M50 68 Q68 85 50 94 Q32 85 50 68 Z" fill="#ffd700"/>`,
+    portraitSvg: `<rect width="100" height="100" rx="6" fill="#140d06"/><path d="M50 20 Q56 28 50 36 Q44 28 50 20 Z M50 36 Q62 50 50 68 Q38 50 50 68 Z M50 68 Q68 85 50 94 Q32 85 50 68 Z" fill="#ffd700"/>`,
     quotes: {
       default: '「草履取りとて天下を夢見候！ 足軽の意地、見せてくれよう！」',
       opening: '「まずは歩を一歩前へ！ 出世の道も一歩からでござる！」',
@@ -1521,7 +1607,6 @@ const RIVALRIES = {
 };
 
 const PIECES = { OU:'王将', HI:'飛車', KA:'角行', KI:'金将', GI:'銀将', KE:'桂馬', KY:'香車', FU:'歩兵', RY:'龍王', UM:'龍馬', NG:'成銀', NK:'成桂', NY:'成香', TO:'と金' };
-// 日本将棋連盟・公式KIF規格略称
 const KIF_PIECE_NAMES = { OU:'玉', HI:'飛', KA:'角', KI:'金', GI:'銀', KE:'桂', KY:'香', FU:'歩', RY:'竜', UM:'馬', NG:'成銀', NK:'成桂', NY:'成香', TO:'と' };
 const PROMOTED_PIECES = ['RY', 'UM', 'NG', 'NK', 'NY', 'TO'];
 const KANJI_NUMS = ['一','二','三','四','五','六','七','八','九'];
@@ -1549,7 +1634,6 @@ const EXHIBITION_TIME_LIMITS = { normal: 8500, fast: 2500 };
 let exhibitionSenteTarget = 'lvl_1', exhibitionGoteTarget = 'lvl_10', exhibitionRandomStrategistWarlordKey = 'sanada';
 let exhibitionMobileCurrentTab = 'sente';
 let exhibitionAchievedDepth = 1, exhibitionTargetDepth = 3, exhibitionTotalNodes = 0;
-let exhibitionLastMoveInfo = null;
 
 let moveMetricsHistory = [], isPieceAnimating = false, currentHistoryTab = 'player';
 
@@ -1569,9 +1653,7 @@ function pickRandomStrategistWarlord() {
   exhibitionRandomStrategistWarlordKey = keys[Math.floor(Math.random() * keys.length)];
 }
 
-/* =========================================================
-   日本将棋連盟・公式棋譜フォーマット変換エンジン
-   ========================================================= */
+/* 日本将棋連盟・公式棋譜フォーマット変換エンジン */
 function formatOfficialKifuMove(m, idx, isKifFile = false) {
   if (!m) return '';
   const isSenteMove = (m.owner === (battleStartTurn === 'PLAYER' ? 'PLAYER' : 'AI'));
@@ -1580,13 +1662,10 @@ function formatOfficialKifuMove(m, idx, isKifFile = false) {
   const rawCode = m.code || 'FU';
   const pieceName = KIF_PIECE_NAMES[rawCode] || '歩';
 
-  // 直前の着手先と同じマスか判定（同 ○○）
   let isSameSquare = false;
   if (idx > 0 && moveObjectsHistory[idx - 1]) {
     const prev = moveObjectsHistory[idx - 1];
-    if (prev.to.r === m.to.r && prev.to.c === m.to.c) {
-      isSameSquare = true;
-    }
+    if (prev.to.r === m.to.r && prev.to.c === m.to.c) isSameSquare = true;
   }
 
   let squareTxt = '';
@@ -1612,11 +1691,8 @@ function formatOfficialKifuMove(m, idx, isKifFile = false) {
     }
   }
 
-  if (isKifFile) {
-    return `${squareTxt}${actionTxt}`;
-  } else {
-    return `${markChar}${squareTxt}${actionTxt}`;
-  }
+  if (isKifFile) return `${squareTxt}${actionTxt}`;
+  return `${markChar}${squareTxt}${actionTxt}`;
 }
 
 /* 先手・後手 ＆ 駒台・手番表示の動的整合性エンジン */
@@ -1701,9 +1777,11 @@ function updateExhibitionThinkingDisplay(isThinking = true) {
     : document.getElementById('player-thinking-disp');
 
   if (otherThinkingDisp) {
-    if (exhibitionLastMoveInfo && !isThinking) {
+    const oppSide = isPlayerSide ? 'AI' : 'PLAYER';
+    if (lastSettledMoveInfo[oppSide]) {
       otherThinkingDisp.style.display = 'inline-flex';
-      otherThinkingDisp.innerHTML = `✔ 着手 <b>${exhibitionLastMoveInfo.timeSec}秒</b> (深さ${exhibitionLastMoveInfo.depth})`;
+      otherThinkingDisp.className = 'warlord-thinking-inline timer-confirmed-box';
+      otherThinkingDisp.innerHTML = `✔ 決断 <b>${lastSettledMoveInfo[oppSide].timeSec}秒</b> (深さ${lastSettledMoveInfo[oppSide].depth})`;
     } else {
       otherThinkingDisp.style.display = 'none';
     }
@@ -1712,14 +1790,19 @@ function updateExhibitionThinkingDisplay(isThinking = true) {
   if (targetThinkingDisp) {
     if (isThinking) {
       targetThinkingDisp.style.display = 'inline-flex';
+      targetThinkingDisp.className = 'warlord-thinking-inline timer-gold-box';
       const maxTargetD = exhibitionTargetDepth || 5;
       const dispD = Math.min(maxTargetD, Math.max(1, exhibitionAchievedDepth));
       targetThinkingDisp.innerHTML = `🧠 神算熟慮 <b>${elapsedSec}秒</b> (深さ ${dispD}/${maxTargetD})`;
-    } else if (exhibitionLastMoveInfo) {
-      targetThinkingDisp.style.display = 'inline-flex';
-      targetThinkingDisp.innerHTML = `✔ 着手 <b>${exhibitionLastMoveInfo.timeSec}秒</b> (深さ${exhibitionLastMoveInfo.depth})`;
     } else {
-      targetThinkingDisp.style.display = 'none';
+      const mySide = isPlayerSide ? 'PLAYER' : 'AI';
+      if (lastSettledMoveInfo[mySide]) {
+        targetThinkingDisp.style.display = 'inline-flex';
+        targetThinkingDisp.className = 'warlord-thinking-inline timer-confirmed-box';
+        targetThinkingDisp.innerHTML = `✔ 決断 <b>${lastSettledMoveInfo[mySide].timeSec}秒</b> (深さ${lastSettledMoveInfo[mySide].depth})`;
+      } else {
+        targetThinkingDisp.style.display = 'none';
+      }
     }
   }
 
@@ -2181,7 +2264,7 @@ function getBoardHash(b, h, t) {
   return s;
 }
 
-/* 千日手判定（御前試合・通常対戦完全対応） */
+/* 千日手判定 */
 function checkSennichite(targetNextTurn = turn) {
   const curHash = getBoardHash(board, hands, targetNextTurn);
   boardHashHistory.push(curHash);
@@ -2260,7 +2343,8 @@ function initBoardState() {
   tacticsCandidates = []; currentTacticIndex = 0;
   totalTimeSpentMs = { PLAYER: 0, AI: 0 };
   movesCountBySide = { PLAYER: 0, AI: 0 };
-  exhibitionAchievedDepth = 1; exhibitionTargetDepth = 3; exhibitionLastMoveInfo = null;
+  exhibitionAchievedDepth = 1; exhibitionTargetDepth = 3;
+  lastSettledMoveInfo = { PLAYER: null, AI: null };
 
   clearWarlordResultPlaques();
   updateTurnFocus(null);
@@ -2298,13 +2382,11 @@ function initBoardState() {
   updateRivalryButton();
   updateReviewModeUI();
 
-  // 【バグ修正・将棋公式初期配置】
-  // 後手（AI/上陣）：８二に角行（KA）、２二に飛車（HI）
+  // 日本将棋連盟・公式初期配置
   board[0] = [{code:'KY',owner:'AI'},{code:'KE',owner:'AI'},{code:'GI',owner:'AI'},{code:'KI',owner:'AI'},{code:'OU',owner:'AI'},{code:'KI',owner:'AI'},{code:'GI',owner:'AI'},{code:'KE',owner:'AI'},{code:'KY',owner:'AI'}];
   board[1][1] = {code:'KA',owner:'AI'}; board[1][7] = {code:'HI',owner:'AI'};
   for(let c=0; c<9; c++) board[2][c] = {code:'FU',owner:'AI'};
   
-  // 先手（PLAYER/下陣）：８八に角行（KA）、２八に飛車（HI）
   for(let c=0; c<9; c++) board[6][c] = {code:'FU',owner:'PLAYER'};
   board[7][1] = {code:'KA',owner:'PLAYER'}; board[7][7] = {code:'HI',owner:'PLAYER'};
   board[8] = [{code:'KY',owner:'PLAYER'},{code:'KE',owner:'PLAYER'},{code:'GI',owner:'PLAYER'},{code:'KI',owner:'PLAYER'},{code:'OU',owner:'PLAYER'},{code:'KI',owner:'PLAYER'},{code:'GI',owner:'PLAYER'},{code:'KE',owner:'PLAYER'},{code:'KY',owner:'PLAYER'}];
@@ -2415,7 +2497,6 @@ function exitReplayMode() {
       exhibitionAchievedDepth = savedActiveBattle.exhibitionAchievedDepth || 1;
       exhibitionTargetDepth = savedActiveBattle.exhibitionTargetDepth || 3;
       exhibitionTotalNodes = savedActiveBattle.exhibitionTotalNodes || 0;
-      exhibitionLastMoveInfo = savedActiveBattle.exhibitionLastMoveInfo || null;
 
       const sData = getTargetAIData(exhibitionSenteTarget);
       const gData = getTargetAIData(exhibitionGoteTarget);
@@ -2806,6 +2887,7 @@ function onCellClick(r, c) {
 
   if (selectedPos?.handCode && currentValidMoves.some(m => m.r === r && m.c === c)) {
     const timeSpent = recordTurnTime('PLAYER');
+    lastSettledMoveInfo.PLAYER = { timeSec: timeSpent, depth: 1 };
     const metric = { timeSec: timeSpent, depth: 1 };
     const moveData = { type:'drop', code:selectedPos.handCode, to:{r,c}, owner:'PLAYER' };
     selectedPos = null; currentValidMoves = [];
@@ -2824,6 +2906,7 @@ function onCellClick(r, c) {
       return;
     }
     const timeSpent = recordTurnTime('PLAYER');
+    lastSettledMoveInfo.PLAYER = { timeSec: timeSpent, depth: 1 };
     const metric = { timeSec: timeSpent, depth: 1 };
     const moveData = { type:'move', code: p.code, from:selectedPos, to:{r,c}, owner:'PLAYER', promote: canP || mustP };
     selectedPos = null; currentValidMoves = [];
@@ -2845,6 +2928,7 @@ document.getElementById('btn-promote-yes').onclick = () => {
   if (pendingMove) {
     playUiClickSound();
     const timeSpent = recordTurnTime('PLAYER');
+    lastSettledMoveInfo.PLAYER = { timeSec: timeSpent, depth: 1 };
     const metric = { timeSec: timeSpent, depth: 1 };
     const m = {...pendingMove, promote:true};
     pendingMove = null;
@@ -2857,6 +2941,7 @@ document.getElementById('btn-promote-no').onclick = () => {
   if (pendingMove) {
     playUiClickSound();
     const timeSpent = recordTurnTime('PLAYER');
+    lastSettledMoveInfo.PLAYER = { timeSec: timeSpent, depth: 1 };
     const metric = { timeSec: timeSpent, depth: 1 };
     const m = {...pendingMove, promote:false};
     pendingMove = null;
@@ -2941,7 +3026,7 @@ function executeMove(m, metric = null) {
 
   if (m.type === 'drop') {
     hands[m.owner][m.code]--;
-    board[m.to.r][m.to.c] = { code: m.code, owner: m.owner };
+    board[m.to.r][moveObjectsHistory[moveObjectsHistory.length-1].to.c] = { code: m.code, owner: m.owner };
   } else {
     const fp = board[m.from.r][m.from.c], tp = board[m.to.r][m.to.c];
     if (tp) {
@@ -2993,7 +3078,7 @@ function finishTurn() {
   updateTurnFocus('AI');
   const enemy = WARLORDS_DATA[currentAiLevel];
   startTurnTimer('AI', enemy.name);
-  setTimeout(aiTurn, 450);
+  setTimeout(aiTurn, 200);
 }
 
 let aiWorker = null;
@@ -3143,10 +3228,11 @@ function handleWorkerMessage(e) {
   exhibitionAchievedDepth = data.depth || exhibitionAchievedDepth;
   exhibitionTargetDepth = data.targetDepth || exhibitionTargetDepth;
   exhibitionTotalNodes = data.nodes || exhibitionTotalNodes;
-  const elapsedSec = recordTurnTime(turn);
+  
+  const elapsedSec = recordTurnTime(turn, data.timeSpentMs);
   stopTurnTimer();
 
-  exhibitionLastMoveInfo = { timeSec: elapsedSec, depth: exhibitionAchievedDepth };
+  lastSettledMoveInfo[turn] = { timeSec: elapsedSec, depth: exhibitionAchievedDepth };
   if (isExhibitionActive) updateExhibitionThinkingDisplay(false);
 
   const bm = data.bestMove;
@@ -3195,10 +3281,11 @@ function handleExternalWorkerMessage(e) {
   exhibitionAchievedDepth = data.depth || exhibitionAchievedDepth;
   exhibitionTargetDepth = data.targetDepth || exhibitionTargetDepth;
   exhibitionTotalNodes = data.nodes || exhibitionTotalNodes;
-  const elapsedSec = recordTurnTime(turn);
+  
+  const elapsedSec = recordTurnTime(turn, data.timeSpentMs);
   stopTurnTimer();
 
-  exhibitionLastMoveInfo = { timeSec: elapsedSec, depth: exhibitionAchievedDepth };
+  lastSettledMoveInfo[turn] = { timeSec: elapsedSec, depth: exhibitionAchievedDepth };
   if (isExhibitionActive) updateExhibitionThinkingDisplay(false);
 
   const bm = data.bestMove;
@@ -3278,6 +3365,7 @@ function undoMove() {
   reviewingIndex = historyStates.length - 1;
   turn = 'PLAYER'; selectedPos = null; currentValidMoves = [];
   tacticsCandidates = [];
+  lastSettledMoveInfo = { PLAYER: null, AI: null };
   document.getElementById('btn-alt-tactic').style.display = 'none';
 
   updateTurnLabels();
@@ -3314,7 +3402,6 @@ function surrenderGame() {
 }
 
 function checkGameOver(nextOwner) {
-  // 規定手数上限（256手）判定による無限ループ防止
   if (moveObjectsHistory.length >= 256) {
     isGameOver = true;
     stopAutoReplay(); stopTurnTimer();
@@ -3834,7 +3921,6 @@ function dispatchExhibitionTurn() {
 
   exhibitionAchievedDepth = 1;
   exhibitionTargetDepth = targetData.targetDepth || (targetKey === 'strategist' ? 5 : 3);
-  exhibitionLastMoveInfo = null;
 
   isAiThinking = true;
   startTurnTimer(targetSide, targetData.name);
@@ -3848,7 +3934,7 @@ function dispatchExhibitionTurn() {
       const legals = getLegalMoves(targetSide);
       if (legals.length > 0) {
         const fallbackMove = legals[0];
-        handleWorkerMessage({ data: { type: 'done', bestMove: fallbackMove, depth: 1, targetDepth: 1, nodes: 0 } });
+        handleWorkerMessage({ data: { type: 'done', bestMove: fallbackMove, depth: 1, targetDepth: 1, nodes: 0, timeSpentMs: safeLimit } });
       }
     }
   }, safeLimit + 2000);
@@ -3932,9 +4018,7 @@ function stopExhibitionTimer() {
   }
 }
 
-/* =========================================================
-   当局・合戦絵巻（棋譜モーダル）リアルタイム自動追従システム
-   ========================================================= */
+/* 当局・合戦絵巻（棋譜モーダル）リアルタイム自動追従システム */
 function updateKifuModalLive() {
   const isPlayerSente = (battleStartTurn === 'PLAYER');
   let p = null, e = null;
@@ -4483,9 +4567,7 @@ function setPlayerWarlord(k) {
   selectConquestProvince(currentAiLevel);
 }
 
-/* =========================================================
-   日本将棋連盟・柿木将棋公式規格 KIF保存機能
-   ========================================================= */
+/* 日本将棋連盟・柿木将棋公式規格 KIF保存機能 */
 function downloadKifu() {
   playUiClickSound();
   const isPlayerSente = (battleStartTurn === 'PLAYER');
@@ -4529,7 +4611,6 @@ function downloadKifu() {
     txt += `${stepNumStr} ${paddedMove} ( ${timeStepStr}/${timeTotalStr})\n`;
   });
 
-  // 終局符号の出力
   if (isGameOver) {
     const totalMoves = moveObjectsHistory.length;
     txt += `${(totalMoves + 1).toString().padStart(4, ' ')} 投了         ( 0:01/00:00:00)\n`;
@@ -4605,7 +4686,6 @@ function rebuildHistoryStatesFromMoves(moves) {
   const rBoard = Array.from({length: 9}, () => Array(9).fill(null));
   const rHands = { PLAYER: {}, AI: {} };
 
-  // 公式初期配置（８二角、２二飛）
   rBoard[0] = [{code:'KY',owner:'AI'},{code:'KE',owner:'AI'},{code:'GI',owner:'AI'},{code:'KI',owner:'AI'},{code:'OU',owner:'AI'},{code:'KI',owner:'AI'},{code:'GI',owner:'AI'},{code:'KE',owner:'AI'},{code:'KY',owner:'AI'}];
   rBoard[1][1] = {code:'KA',owner:'AI'}; rBoard[1][7] = {code:'HI',owner:'AI'};
   for(let c=0; c<9; c++) rBoard[2][c] = {code:'FU',owner:'AI'};
@@ -4911,7 +4991,7 @@ function replayFromHistory(recordId, storageKey) {
       exhibitionGoteTarget: isExhibitionActive ? exhibitionGoteTarget : null,
       exhibitionSpeed: isExhibitionActive ? exhibitionSpeed : 'normal',
       exhibitionStrategistKey: isExhibitionActive ? exhibitionRandomStrategistWarlordKey : null,
-      exhibitionAchievedDepth, exhibitionTargetDepth, exhibitionTotalNodes, exhibitionLastMoveInfo,
+      exhibitionAchievedDepth, exhibitionTargetDepth, exhibitionTotalNodes,
       currentMyWarlordId, currentAiLevel,
       board: cloneBoardState(board),
       hands: JSON.parse(JSON.stringify(hands)),
@@ -4996,5 +5076,4 @@ document.addEventListener('touchstart', () => initAudio(), { once: true });
 loadProgress();
 setPlayerWarlord(currentMyWarlordId);
 initBoardState();
-
 
