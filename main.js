@@ -4,7 +4,7 @@
    【パート 1 / 2】
    ========================================================= */
 
-// AI Web Workerコード（思考エンジン：最善手先行オーダリング高速化＆早指し高精度タイムアウト対応版）
+// AI Web Workerコード（思考エンジン：最善手先行オーダリング高速化＆反復深化リアルタイム進捗通知対応版）
 const workerScriptContent = `
 const PIECE_CODES = ['OU','HI','KA','KI','GI','KE','KY','FU','RY','UM','NG','NK','NY','TO'];
 const VALUES = { OU: 20000, HI: 1050, KA: 880, KI: 580, GI: 480, KE: 380, KY: 280, FU: 100, RY: 1400, UM: 1200, NG: 560, NK: 480, NY: 420, TO: 420 };
@@ -414,7 +414,7 @@ self.onmessage = function(e) {
 
   const legals = genLegalMoves(searchOwner, false, true);
   if (legals.length === 0) {
-    self.postMessage({ type: isHintRequest ? 'hintDone' : 'done', bestMove: null, candidateMoves: [], evalScore: curEval, depth: 0, nodes: 0 });
+    self.postMessage({ type: isHintRequest ? 'hintDone' : 'done', bestMove: null, candidateMoves: [], evalScore: curEval, depth: 0, targetDepth: cfg.depth, nodes: 0 });
     return;
   }
 
@@ -445,6 +445,9 @@ self.onmessage = function(e) {
   let achievedDepth = 1;
 
   for (let d = 1; d <= cfg.depth; d++) {
+    // 探索開始時にも進捗を通知（UI即時連動）
+    self.postMessage({ type: 'progress', depth: d, targetDepth: cfg.depth, nodes: nodeCount, evalScore: confirmedBestScore });
+
     let alpha = -Infinity, beta = Infinity;
     
     if (d > 1 && confirmedBestMove) {
@@ -481,7 +484,7 @@ self.onmessage = function(e) {
       scoredMoves = currentIterationMoves;
       confirmedBestMove = scoredMoves[0].move;
       confirmedBestScore = scoredMoves[0].score;
-      self.postMessage({ type: 'progress', depth: d, nodes: nodeCount, evalScore: confirmedBestScore });
+      self.postMessage({ type: 'progress', depth: d, targetDepth: cfg.depth, nodes: nodeCount, evalScore: confirmedBestScore });
     }
 
     if (isSearchTimeout || (Date.now() - searchStartTime >= searchTimeLimit)) break;
@@ -501,11 +504,57 @@ self.onmessage = function(e) {
     allScoredMoves: scoredMoves,
     evalScore: confirmedBestScore,
     depth: achievedDepth,
+    targetDepth: cfg.depth,
     nodes: nodeCount,
     isAwakened
   });
 };
 `;
+
+/* =========================================================
+   安土桃山・黄金工芸 立体五角形将棋駒アイコン 生成エンジン
+   【完全インライン絶対拘束サイズ：レイアウト崩壊100%防止設計】
+   ========================================================= */
+function getKomaMarkHtml(isSente, sizeType = 'normal') {
+  let w = 12, h = 13, vAlign = '-1.5px', mRight = '3px';
+  if (sizeType === 'mini') {
+    w = 10; h = 11; vAlign = '-1px'; mRight = '2px';
+  } else if (sizeType === 'tiny') {
+    w = 9; h = 10; vAlign = '-1px'; mRight = '2px';
+  }
+
+  const baseStyle = `display:inline-block; vertical-align:${vAlign}; width:${w}px !important; height:${h}px !important; max-width:${w}px !important; max-height:${h}px !important; margin-right:${mRight}; flex-shrink:0; pointer-events:none;`;
+
+  if (isSente) {
+    return `<svg viewBox="0 0 100 115" width="${w}" height="${h}" style="${baseStyle}">
+      <defs>
+        <linearGradient id="koma-s-gold-${w}" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#fff6b8"/>
+          <stop offset="40%" stop-color="#ffd700"/>
+          <stop offset="85%" stop-color="#c98a12"/>
+          <stop offset="100%" stop-color="#7a4e05"/>
+        </linearGradient>
+      </defs>
+      <polygon points="50,4 94,24 82,110 18,110 6,24" fill="#170903" stroke="url(#koma-s-gold-${w})" stroke-width="7" stroke-linejoin="round"/>
+      <polygon points="50,16 82,30 72,98 28,98 18,30" fill="url(#koma-s-gold-${w})" opacity="0.95"/>
+      <polygon points="50,26 74,36 66,88 34,88 26,36" fill="#0d0401"/>
+    </svg>`;
+  } else {
+    return `<svg viewBox="0 0 100 115" width="${w}" height="${h}" style="${baseStyle} transform:rotate(180deg);">
+      <defs>
+        <linearGradient id="koma-g-silver-${w}" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#ffffff"/>
+          <stop offset="40%" stop-color="#d6e1f0"/>
+          <stop offset="85%" stop-color="#8a9db8"/>
+          <stop offset="100%" stop-color="#465873"/>
+        </linearGradient>
+      </defs>
+      <polygon points="50,4 94,24 82,110 18,110 6,24" fill="#08101a" stroke="url(#koma-g-silver-${w})" stroke-width="7" stroke-linejoin="round"/>
+      <polygon points="50,16 82,30 72,98 28,98 18,30" fill="url(#koma-g-silver-${w})" opacity="0.95"/>
+      <polygon points="50,26 74,36 66,88 34,88 26,36" fill="#04080f"/>
+    </svg>`;
+  }
+}
 
 /* =========================================================
    最高峰二重音響エンジン
@@ -804,7 +853,7 @@ function stopGuideSpeech() {
 }
 
 function cleanSpeechText(rawText) {
-  let text = rawText.replace(/🔊\s*朗読/g, '').replace(/⏹\s*停止/g, '').replace(/[⚜🪭📜🔰🔥🛡⚔👑🏯💡⚖▶◀⏭♪🎞]/g, '');
+  let text = rawText.replace(/🔊\s*朗読/g, '').replace(/⏹\s*停止/g, '').replace(/[⚜🪭📜🔰🔥🛡⚔👑🏯💡⚖▶◀⏭♪🎞☗☖]/g, '');
   text = text.replace(/７六歩/g, 'ななろくふ、').replace(/２六歩/g, 'にいろくふ、').replace(/４八銀/g, 'よんはちぎん、');
   text = text.replace(/６八玉/g, 'ろくはちぎょく、').replace(/２五歩/g, 'にすごふ、');
   text = text.replace(/Lv\.(\d+)/gi, 'レベル$1、');
@@ -929,6 +978,11 @@ function updateThinkingTimerDisplay() {
   const pThinkDisp = document.getElementById('player-thinking-disp');
   const aiThinkDisp = document.getElementById('ai-thinking-disp');
 
+  if (isExhibitionActive) {
+    updateExhibitionThinkingDisplay(true);
+    return;
+  }
+
   if (isPlayer) {
     if (pThinkDisp) {
       pThinkDisp.style.display = 'inline-flex';
@@ -943,23 +997,19 @@ function updateThinkingTimerDisplay() {
     if (pThinkDisp) pThinkDisp.style.display = 'none';
   }
 
-  if (isExhibitionActive) {
-    updateExhibitionThinkingDisplay(true);
-    return;
-  }
-
+  const isPlayerSente = (battleStartTurn === 'PLAYER');
   if (isPlayer && !tacticsCandidates.length && !isHintThinking) {
     const pName = PLAYER_WARLORDS[currentMyWarlordId].name;
-    const senteMark = (battleStartTurn === 'PLAYER') ? '▲' : '▽';
+    const komaIcon = getKomaMarkHtml(isPlayerSente, 'normal');
     setOrderMessage({
-      line1: `第${currentStep}手 ── <b>${senteMark} ${pName}公の手番に候</b>`,
+      line1: `第${currentStep}手 ── ${komaIcon}<b>${pName}公の手番に候</b>`,
       line2: '盤上の駒または持ち駒を選び、次の一手を指されよ！'
     }, true, 'player');
   } else if (!isPlayer) {
     const eName = WARLORDS_DATA[currentAiLevel].name;
-    const enemyMark = (battleStartTurn === 'PLAYER') ? '▽' : '▲';
+    const komaIcon = getKomaMarkHtml(!isPlayerSente, 'normal');
     setOrderMessage({
-      line1: `第${currentStep}手 ── <b>${enemyMark} ${eName}が軍略を巡らせております…</b>`,
+      line1: `第${currentStep}手 ── ${komaIcon}<b>${eName}が軍略を巡らせております…</b>`,
       line2: '敵の狙いを見定め、受けの構えを整えられよ。'
     }, false, 'enemy');
   }
@@ -1109,11 +1159,12 @@ function getGunbaiIconHtml() {
   `;
 }
 
-/* 客分指南役データ */
+/* 客分指南役データ（著名オープンソースエンジン出典を明記） */
 const INSTRUCTORS_DATA = {
   nanban: {
     id: 'inst_nanban', name: '明朝の客分・南蛮棋士', rank: 'アマ初段相当', clan: '異国棋院 ｜ 深さ3＋静止探索',
-    engineType: 'nanban', baseTroops: 10000,
+    sourceEngine: 'MicroMax / 西洋古典αβ探索',
+    engineType: 'nanban', baseTroops: 10000, targetDepth: 3,
     depthSpec: '深さ3＋静止探索',
     quotes: {
       default: '「異国の盤上戦法、日ノ本の武士道に通用するか試させてもらおう。」',
@@ -1130,7 +1181,8 @@ const INSTRUCTORS_DATA = {
   },
   kenshi: {
     id: 'inst_kenshi', name: '指南役・無双剣士', rank: 'アマ二段相当', clan: '道場指南 ｜ 深さ4＋PST＋静止探索',
-    engineType: 'kenshi', baseTroops: 25000,
+    sourceEngine: 'Sunfish将棋 / LesserKai PST駆動',
+    engineType: 'kenshi', baseTroops: 25000, targetDepth: 4,
     depthSpec: '深さ4＋PST＋静止探索',
     quotes: {
       default: '「基本に忠実、陣形に乱れなし。我が剣筋、見切ってみせよ。」',
@@ -1147,7 +1199,8 @@ const INSTRUCTORS_DATA = {
   },
   inja: {
     id: 'inst_inja', name: '神算鬼謀の隠者', rank: 'アマ五段相当', clan: '深山幽谷 ｜ 深さ5＋置換表＋キラー探索',
-    engineType: 'inja', baseTroops: 60000,
+    sourceEngine: 'Bonanza系統 置換表＆キラー探索',
+    engineType: 'inja', baseTroops: 60000, targetDepth: 5,
     depthSpec: '深さ5＋置換表＋キラー探索',
     quotes: {
       default: '「盤上の千変万化、すでに結末は見えておる… 一手を指すがよい。」',
@@ -1253,7 +1306,6 @@ const PLAYER_WARLORDS = {
   }
 };
 
-
 /* =========================================================
    将棋王 2026 〜 天下統一・戦国決戦 〜
    メインスクリプト（軍略・演出・思考エンジン・御前試合統合管理）
@@ -1263,7 +1315,7 @@ const PLAYER_WARLORDS = {
 /* 対戦武将十一人 */
 const WARLORDS_DATA = {
   1: {
-    id: 'enemy_1', province: '尾張国', name: '木下藤吉郎', clan: '尾張国｜織田足軽隊', maxTroops: 3000, depthSpec: '深さ1＋足軽速攻',
+    id: 'enemy_1', province: '尾張国', name: '木下藤吉郎', clan: '尾張国｜織田足軽隊', maxTroops: 3000, targetDepth: 1, depthSpec: '深さ1＋足軽速攻',
     featureShort: '足軽戦法。前進重視。', tacticsHint: '駒にヒモをつけ、角・飛車の道を開いて突入されよ！',
     portraitSvg: `<rect width="100" height="100" rx="6" fill="#140d06"/><path d="M50 20 Q56 28 50 36 Q44 28 50 20 Z M50 36 Q62 50 50 68 Q38 50 50 36 Z M50 68 Q68 85 50 94 Q32 85 50 68 Z" fill="#ffd700"/>`,
     quotes: {
@@ -1278,7 +1330,7 @@ const WARLORDS_DATA = {
     defeatQuote: '「参り申した…！ されど猿は何度でも木を登り候！」', victoryQuote: '「勝ったぞ！ 信長様、藤吉郎やりましたぞ！」'
   },
   2: {
-    id: 'enemy_2', province: '加賀国', name: '前田利家', clan: '加賀国｜槍の又左', maxTroops: 8000, depthSpec: '深さ1＋槍の突破',
+    id: 'enemy_2', province: '加賀国', name: '前田利家', clan: '加賀国｜槍の又左', maxTroops: 8000, targetDepth: 1, depthSpec: '深さ1＋槍の突破',
     featureShort: '中央5筋から飛車で突進。', tacticsHint: '真ん中に金銀を配して防壁を築き、飛車の突撃を跳ね返されよ！',
     portraitSvg: `<rect width="100" height="100" rx="6" fill="#180707"/><circle cx="50" cy="50" r="10" fill="#ffd700"/><circle cx="50" cy="24" r="8" fill="#ffd700"/><circle cx="75" cy="42" r="8" fill="#ffd700"/><circle cx="65" cy="74" r="8" fill="#ffd700"/><circle cx="35" cy="74" r="8" fill="#ffd700"/><circle cx="25" cy="42" r="8" fill="#ffd700"/>`,
     quotes: {
@@ -1293,7 +1345,7 @@ const WARLORDS_DATA = {
     defeatQuote: '「見事な槍さばき… 前田の当主として完敗を認めよう！」', victoryQuote: '「槍の又左の前に敵なし！ 百万石の礎となれ！」'
   },
   3: {
-    id: 'enemy_3', province: '越前国', name: '柴田勝家', clan: '越前国｜鬼柴田', maxTroops: 15000, depthSpec: '深さ2＋瓶割り突進',
+    id: 'enemy_3', province: '越前国', name: '柴田勝家', clan: '越前国｜鬼柴田', maxTroops: 15000, targetDepth: 2, depthSpec: '深さ2＋瓶割り突進',
     featureShort: '歩と銀で正面突破。', tacticsHint: '横から飛車・角の射線で銀の首を狙い撃たれよ！',
     portraitSvg: `<rect width="100" height="100" rx="6" fill="#150a04"/><path d="M30 40 Q50 25 70 40 Q50 48 30 40 Z M30 65 Q50 50 70 65 Q50 73 30 65 Z" fill="#ffd700"/>`,
     quotes: {
@@ -1308,7 +1360,7 @@ const WARLORDS_DATA = {
     defeatQuote: '「無念…！ 瓶を割れども、貴殿の策を砕けなんだか…！」', victoryQuote: '「ガハハ！ 鬼柴田の突進を止められる者などおらぬわ！」'
   },
   4: {
-    id: 'enemy_4', province: '近江国', name: '浅井長政', clan: '近江国｜浅井軍総帥', maxTroops: 25000, depthSpec: '深さ2＋三間飛車',
+    id: 'enemy_4', province: '近江国', name: '浅井長政', clan: '近江国｜浅井軍総帥', maxTroops: 25000, targetDepth: 2, depthSpec: '深さ2＋三間飛車',
     featureShort: '三間飛車の持久戦。', tacticsHint: '自玉を美濃囲い等に囲ってからじっくり攻略されよ。',
     portraitSvg: `<rect width="100" height="100" rx="6" fill="#0d1824"/><g fill="none" stroke="#ffd700" stroke-width="3"><polygon points="50,18 64,26 64,42 50,50 36,42 36,26"/><polygon points="36,44 50,52 50,68 36,76 22,68 22,52"/><polygon points="64,44 78,52 78,68 64,76 50,68 50,52"/></g>`,
     quotes: {
@@ -1323,7 +1375,7 @@ const WARLORDS_DATA = {
     defeatQuote: '「浅井の誇り、盤上に散る… お市、許せよ…」', victoryQuote: '「信義は勝てり！ 近江の誇りは揺るぎなし！」'
   },
   5: {
-    id: 'enemy_5', province: '美濃国', name: '明智光秀', clan: '美濃国｜智謀の軍総帥', maxTroops: 40000, depthSpec: '深さ3＋静止探索',
+    id: 'enemy_5', province: '美濃国', name: '明智光秀', clan: '美濃国｜智謀の軍総帥', maxTroops: 40000, targetDepth: 3, depthSpec: '深さ3＋静止探索',
     featureShort: '隙を突く知謀。', tacticsHint: '自陣の駒同士を常に連結させ、隙を作らぬよう戦われよ。',
     portraitSvg: `<rect width="100" height="100" rx="6" fill="#09141c"/><polygon points="50,18 60,38 82,38 65,52 72,74 50,60 28,74 35,52 18,38 40,38" fill="#ffd700"/>`,
     quotes: {
@@ -1338,7 +1390,7 @@ const WARLORDS_DATA = {
     defeatQuote: '「我が天運の尽きる刻… 貴殿の軍略、誠にお見事…」', victoryQuote: '「時は今！ 天下を統べるは、この光秀よ！」'
   },
   6: {
-    id: 'enemy_6', province: '越後国', name: '上杉謙信', clan: '越後国｜越後の龍・軍神', maxTroops: 60000, depthSpec: '深さ3＋車懸り射線',
+    id: 'enemy_6', province: '越後国', name: '上杉謙信', clan: '越後国｜越後の龍・軍神', maxTroops: 60000, targetDepth: 3, depthSpec: '深さ3＋車懸り射線',
     featureShort: '角行と龍馬の遠距離砲撃。', tacticsHint: '斜めの射線上に自軍の大事な駒を置かぬよう注意されよ。',
     portraitSvg: `<rect width="100" height="100" rx="6" fill="#14061a"/><path d="M 26,45 Q 50,18 74,45 L 76,78 Q 50,86 24,78 Z" fill="#e8e8e8" stroke="#ffd700" stroke-width="1.8"/><circle cx="50" cy="46" r="16" fill="#1c0a24"/><text x="50" y="52" font-size="14" font-weight="900" fill="#ffd700" text-anchor="middle">毘</text>`,
     quotes: {
@@ -1353,7 +1405,7 @@ const WARLORDS_DATA = {
     defeatQuote: '「極楽も地獄も先は有明の… 義戦を尽くし、悔いはなし！」', victoryQuote: '「毘沙門天の御前、悪は滅び義は輝かん！」'
   },
   7: {
-    id: 'enemy_7', province: '甲斐国', name: '武田信玄', clan: '甲斐国｜甲斐の虎', maxTroops: 80000, depthSpec: '深さ4＋風林火山要塞',
+    id: 'enemy_7', province: '甲斐国', name: '武田信玄', clan: '甲斐国｜甲斐の虎', maxTroops: 80000, targetDepth: 4, depthSpec: '深さ4＋風林火山要塞',
     featureShort: '金銀要塞の風林火山。', tacticsHint: '端攻め（1筋や9筋）から崩すのが妙手。',
     portraitSvg: `<rect width="100" height="100" rx="6" fill="#1f0303"/><path d="M 22,34 Q 50,10 78,34 Q 90,60 76,76 Q 50,88 24,76 Q 10,60 22,34 Z" fill="#e0d6c3" stroke="#ffd700" stroke-width="1.8"/><polygon points="50,30 60,42 50,54 40,42" fill="#ffd700"/><polygon points="40,44 50,56 40,68 30,56" fill="#ffd700"/><polygon points="60,44 70,56 60,68 50,56" fill="#ffd700"/>`,
     quotes: {
@@ -1368,7 +1420,7 @@ const WARLORDS_DATA = {
     defeatQuote: '「人は城、人は石垣… 儂の石垣が崩れるとは… 見事！」', victoryQuote: '「風林火山の旗靡くところ、天下平定の道あり！」'
   },
   8: {
-    id: 'enemy_8', province: '近江安土', name: '織田信長', clan: '近江安土｜第六天魔王', maxTroops: 110000, depthSpec: '深さ4＋成駒電撃戦',
+    id: 'enemy_8', province: '近江安土', name: '織田信長', clan: '近江安土｜第六天魔王', maxTroops: 110000, targetDepth: 4, depthSpec: '深さ4＋成駒電撃戦',
     featureShort: '龍王・龍馬の電撃速攻。', tacticsHint: '自玉を深く囲い、成駒の突入に耐え反撃せよ。',
     portraitSvg: `<rect width="100" height="100" rx="6" fill="#140606"/><path d="M 28,42 Q 50,20 72,42 L 76,76 Q 50,86 24,76 Z" fill="#3b0808" stroke="#ffd700" stroke-width="2"/><circle cx="50" cy="27" r="10" fill="#ffd700"/><circle cx="68" cy="40" r="10" fill="#ffd700"/><circle cx="62" cy="62" r="10" fill="#ffd700"/><circle cx="38" cy="62" r="10" fill="#ffd700"/><circle cx="32" cy="40" r="10" fill="#ffd700"/><circle cx="50" cy="48" r="11" fill="#9b111e" stroke="#ffd700" stroke-width="1.5"/>`,
     quotes: {
@@ -1383,7 +1435,7 @@ const WARLORDS_DATA = {
     defeatQuote: '「是非に及ばず…！ 新たなる天下人よ、乱世を束ねよ！」', victoryQuote: '「天下布武！ 我が覇道に従わぬ者に明日はない！」'
   },
   9: {
-    id: 'enemy_9', province: '摂津大坂', name: '豊臣秀吉', clan: '摂津大坂｜天下人・太閤', maxTroops: 150000, depthSpec: '深さ5＋持ち駒包囲網',
+    id: 'enemy_9', province: '摂津大坂', name: '豊臣秀吉', clan: '摂津大坂｜天下人・太閤', maxTroops: 150000, targetDepth: 5, depthSpec: '深さ5＋持ち駒包囲網',
     featureShort: '持ち駒包囲戦。', tacticsHint: '無駄な駒交換を避けて盤上を制圧せよ。',
     portraitSvg: `<rect width="100" height="100" rx="6" fill="#241904"/><g stroke="#ffd700" stroke-width="2"><line x1="50" y1="45" x2="50" y2="8"/><line x1="50" y1="45" x2="25" y2="15"/><line x1="50" y1="45" x2="75" y2="15"/><line x1="50" y1="45" x2="10" y2="30"/><line x1="50" y1="45" x2="90" y2="30"/></g><path d="M 30,46 Q 50,30 70,46 L 74,75 Q 50,84 26,75 Z" fill="#694a08" stroke="#ffd700" stroke-width="2"/><circle cx="50" cy="56" r="10" fill="#ffd700"/>`,
     quotes: {
@@ -1398,7 +1450,7 @@ const WARLORDS_DATA = {
     defeatQuote: '「露と落ち露と消えにし我が身かな… 天下の夢、託し申す！」', victoryQuote: '「天下人はこの秀吉よ！ 日輪の光、誰にも遮れぬ！」'
   },
   10: {
-    id: 'enemy_10', province: '武蔵江戸', name: '徳川家康', clan: '武蔵江戸｜天下の覇者', maxTroops: 200000, depthSpec: '深さ5＋鉄壁探索',
+    id: 'enemy_10', province: '武蔵江戸', name: '徳川家康', clan: '武蔵江戸｜天下の覇者', maxTroops: 200000, targetDepth: 5, depthSpec: '深さ5＋鉄壁探索',
     featureShort: '最深探索の鉄壁。', tacticsHint: '軍師の【覚醒進言】と連携し神算鬼謀の一撃を狙うべし。',
     portraitSvg: `<rect width="100" height="100" rx="6" fill="#080f1f"/><path d="M 32,24 Q 50,14 68,24 Q 80,38 74,62 Q 50,78 26,62 Q 20,38 32,24 Z" fill="#1b2a47" stroke="#ffd700" stroke-width="2"/><circle cx="50" cy="50" r="18" fill="none" stroke="#ffd700" stroke-width="2.5"/><path d="M50 48 C44 32, 36 24, 50 18 C64 24, 56 32, 50 48 Z" fill="#ffd700"/><path d="M49 52 C33 50, 24 60, 26 74 C38 74, 46 64, 49 52 Z" fill="#ffd700"/><path d="M51 52 C67 50, 76 60, 74 74 C62 74, 54 64, 51 52 Z" fill="#ffd700"/>`,
     quotes: {
@@ -1413,7 +1465,7 @@ const WARLORDS_DATA = {
     defeatQuote: '「見事なり… 乱世を鎮むる真の器、確かに見届けた…！」', victoryQuote: '「忍耐の末に泰平あり。天下は徳川の掌中にあり！」'
   },
   11: {
-    id: 'enemy_11', province: '天下無双', name: '前田慶次', clan: '天下無双｜軍師AI：奥村助右衛門', maxTroops: 180000, depthSpec: '深さ5＋神算鬼謀',
+    id: 'enemy_11', province: '天下無双', name: '前田慶次', clan: '天下無双｜軍師AI：奥村助右衛門', maxTroops: 180000, targetDepth: 5, depthSpec: '深さ5＋神算鬼謀',
     featureShort: '軍師AI搭載。豪快傾奇と神算鬼謀の極み。', tacticsHint: '助右衛門の神算が仕組む罠に警戒し、守りを固めてから挑まれよ！',
     customImg: 'images/keiji',
     portraitSvg: `<rect width="100" height="100" rx="6" fill="#301404"/><path d="M 20,80 L 80,20" stroke="#d41313" stroke-width="6" stroke-linecap="round"/><path d="M 32,45 Q 50,22 68,45 L 72,72 Q 50,80 28,72 Z" fill="#613808" stroke="#ffd700" stroke-width="2"/><circle cx="50" cy="45" r="9" fill="#ffd700"/><circle cx="50" cy="26" r="6" fill="#ffd700"/><circle cx="68" cy="38" r="6" fill="#ffd700"/><circle cx="62" cy="62" r="10" fill="#ffd700"/><circle cx="38" cy="62" r="10" fill="#ffd700"/><circle cx="32" cy="38" r="6" fill="#ffd700"/>`,
@@ -1464,7 +1516,8 @@ const EXHIBITION_DELAYS = { normal: 1200, fast: 650 };
 const EXHIBITION_TIME_LIMITS = { normal: 8500, fast: 2500 };
 let exhibitionSenteTarget = 'lvl_1', exhibitionGoteTarget = 'lvl_10', exhibitionRandomStrategistWarlordKey = 'sanada';
 let exhibitionMobileCurrentTab = 'sente';
-let exhibitionAchievedDepth = 0, exhibitionTotalNodes = 0;
+let exhibitionAchievedDepth = 1, exhibitionTargetDepth = 3, exhibitionTotalNodes = 0;
+let exhibitionLastMoveInfo = null;
 
 let moveMetricsHistory = [], isPieceAnimating = false, currentHistoryTab = 'player';
 
@@ -1484,7 +1537,7 @@ function pickRandomStrategistWarlord() {
   exhibitionRandomStrategistWarlordKey = keys[Math.floor(Math.random() * keys.length)];
 }
 
-/* 先手・後手 ＆ 駒台・手番表示の動的整合性エンジン */
+/* 先手・後手 ＆ 駒台・手番表示の動的整合性エンジン（美麗五角形将棋駒アイコン・完全サイズ拘束版） */
 function updateTurnLabels() {
   const pDock = document.getElementById('player-dock-label');
   const aiDock = document.getElementById('ai-dock-label');
@@ -1494,27 +1547,31 @@ function updateTurnLabels() {
   if (isExhibitionActive) {
     const sData = getTargetAIData(exhibitionSenteTarget);
     const gData = getTargetAIData(exhibitionGoteTarget);
-    if (pDock) pDock.textContent = '▲ 先手陣';
-    if (aiDock) aiDock.textContent = '▽ 後手陣';
-    if (pNameEl) pNameEl.textContent = `▲ ${sData.name}`;
-    if (aiNameEl) aiNameEl.textContent = `▽ ${gData.name}`;
+    const markSenteNormal = getKomaMarkHtml(true, 'normal');
+    const markGoteNormal = getKomaMarkHtml(false, 'normal');
+    const markSenteMini = getKomaMarkHtml(true, 'mini');
+    const markGoteMini = getKomaMarkHtml(false, 'mini');
+
+    if (pDock) pDock.innerHTML = `${markSenteMini}先手陣`;
+    if (aiDock) aiDock.innerHTML = `${markGoteMini}後手陣`;
+    if (pNameEl) pNameEl.innerHTML = `${markSenteNormal}${sData.name}`;
+    if (aiNameEl) aiNameEl.innerHTML = `${markGoteNormal}${gData.name}`;
     return;
   }
 
   const p = PLAYER_WARLORDS[currentMyWarlordId] || PLAYER_WARLORDS['sanada'];
   const w = WARLORDS_DATA[currentAiLevel] || WARLORDS_DATA[1];
+  const isPlayerSente = (battleStartTurn === 'PLAYER');
 
-  if (battleStartTurn === 'PLAYER') {
-    if (pDock) pDock.textContent = '▲ 自駒';
-    if (aiDock) aiDock.textContent = '▽ 敵駒';
-    if (pNameEl) pNameEl.textContent = `▲ ${p.name}`;
-    if (aiNameEl) aiNameEl.textContent = `▽ ${w.name}`;
-  } else {
-    if (pDock) pDock.textContent = '▽ 自駒';
-    if (aiDock) aiDock.textContent = '▲ 敵駒';
-    if (pNameEl) pNameEl.textContent = `▽ ${p.name}`;
-    if (aiNameEl) aiNameEl.textContent = `▲ ${w.name}`;
-  }
+  const playerMarkNormal = getKomaMarkHtml(isPlayerSente, 'normal');
+  const enemyMarkNormal = getKomaMarkHtml(!isPlayerSente, 'normal');
+  const playerMarkMini = getKomaMarkHtml(isPlayerSente, 'mini');
+  const enemyMarkMini = getKomaMarkHtml(!isPlayerSente, 'mini');
+
+  if (pDock) pDock.innerHTML = `${playerMarkMini}自駒`;
+  if (aiDock) aiDock.innerHTML = `${enemyMarkMini}敵駒`;
+  if (pNameEl) pNameEl.innerHTML = `${playerMarkNormal}${p.name}`;
+  if (aiNameEl) aiNameEl.innerHTML = `${enemyMarkNormal}${w.name}`;
 }
 
 /* 勝敗視認性：特大立体扁額掲揚 ＆ オーラ制御 */
@@ -1553,22 +1610,40 @@ function showWarlordResultPlaque(winnerSide) {
   }
 }
 
-/* 御前試合：公儀軍監実況解説エンジン */
+/* 御前試合：公儀軍監実況解説エンジン（思考深さの完全適正リアルタイム表示対応） */
 function updateExhibitionThinkingDisplay(isThinking = true) {
   if (!isExhibitionActive) return;
   const elapsedSec = Math.max(0.1, (Date.now() - turnStartTime) / 1000).toFixed(1);
   const currentStep = moveObjectsHistory.length + 1;
-  const tagSide = (currentThinkingSide === 'PLAYER') ? '先手' : '後手';
-  
   const isPlayerSide = (currentThinkingSide === 'PLAYER');
+  const tagSide = isPlayerSide ? '先手' : '後手';
+  
   const targetThinkingDisp = isPlayerSide
     ? document.getElementById('player-thinking-disp')
     : document.getElementById('ai-thinking-disp');
+  const otherThinkingDisp = isPlayerSide
+    ? document.getElementById('ai-thinking-disp')
+    : document.getElementById('player-thinking-disp');
+
+  if (otherThinkingDisp) {
+    if (exhibitionLastMoveInfo && !isThinking) {
+      // 直前着手情報の保持表示
+      otherThinkingDisp.style.display = 'inline-flex';
+      otherThinkingDisp.innerHTML = `✔ 着手 <b>${exhibitionLastMoveInfo.timeSec}秒</b> (深さ${exhibitionLastMoveInfo.depth})`;
+    } else {
+      otherThinkingDisp.style.display = 'none';
+    }
+  }
 
   if (targetThinkingDisp) {
     if (isThinking) {
       targetThinkingDisp.style.display = 'inline-flex';
-      targetThinkingDisp.innerHTML = `🧠 神算熟慮 <b>${elapsedSec}秒</b> (深さ${exhibitionAchievedDepth})`;
+      const maxTargetD = exhibitionTargetDepth || 5;
+      const dispD = Math.min(maxTargetD, Math.max(1, exhibitionAchievedDepth));
+      targetThinkingDisp.innerHTML = `🧠 神算熟慮 <b>${elapsedSec}秒</b> (深さ ${dispD}/${maxTargetD})`;
+    } else if (exhibitionLastMoveInfo) {
+      targetThinkingDisp.style.display = 'inline-flex';
+      targetThinkingDisp.innerHTML = `✔ 着手 <b>${exhibitionLastMoveInfo.timeSec}秒</b> (深さ${exhibitionLastMoveInfo.depth})`;
     } else {
       targetThinkingDisp.style.display = 'none';
     }
@@ -1581,12 +1656,15 @@ function updateExhibitionThinkingDisplay(isThinking = true) {
   const isHayazashi = (exhibitionSpeed === 'fast');
   const speedNotice = isHayazashi ? '（※早指し戦につき即断即決・波乱あり）' : '';
 
+  const markSente = getKomaMarkHtml(true, 'normal');
+  const markGote = getKomaMarkHtml(false, 'normal');
+
   if (inCheck) {
     commentatorLine1 = `第${currentStep}手 ── <b>【急転直下】王手の一撃が放たれましたぞ！</b>`;
     commentatorLine2 = `「本陣に迫る刃をどう凌ぐか、${currentThinkingName}の受けの妙手に刮目めされよ！」`;
   } else if (currentStep <= 12) {
     commentatorLine1 = `第${currentStep}手 ── <b>【序盤戦】両雄、堂々たる陣形構築の刻 ${speedNotice}</b>`;
-    commentatorLine2 = `「▲${sData.name}と▽${gData.name}、互いに隙のない布陣を敷き機を伺っております。」`;
+    commentatorLine2 = `「${markSente}<b>${sData.name}</b> と ${markGote}<b>${gData.name}</b>、互いに隙のない布陣を敷き機を伺っております。」`;
   } else if (currentStep <= 30) {
     commentatorLine1 = `第${currentStep}手 ── <b>【中盤戦】前線にて火花散る白兵戦！</b>`;
     commentatorLine2 = `「駒の利きが交錯する天下分水嶺。${currentThinkingName}（${tagSide}）が急所を睨んでおります。」`;
@@ -1613,7 +1691,7 @@ function getTargetAIData(targetKey) {
       id: `strategist_${p.id}`,
       name: `${p.name}（軍師:${p.strategistShort}）`,
       clan: `${p.clan} ｜ 神算鬼謀・軍師AI`,
-      maxTroops: 180000, baseTroops: 180000,
+      maxTroops: 180000, baseTroops: 180000, targetDepth: 5,
       depthSpec: `深さ5＋${p.strategistShort}の神算鬼謀`,
       featureShort: '豪快傾奇・変幻自在の奇襲',
       strategistImgId: p.strategistImgId,
@@ -1984,16 +2062,42 @@ function loadProgress() {
   updateConquestMapUI();
 }
 
+/* 複数画面安全合体（マージ）保存エンジン */
 function saveProgress(clearedLvl) {
   if (isExhibitionActive) return;
   try {
-    if (!clearedProvinces.includes(clearedLvl)) {
-      clearedProvinces.push(clearedLvl);
-      localStorage.setItem('shogi_cleared_provinces', JSON.stringify(clearedProvinces));
-    }
+    const s = localStorage.getItem('shogi_cleared_provinces');
+    let stored = s !== null ? JSON.parse(s) : [];
+    const mergedSet = new Set([...stored, ...clearedProvinces, clearedLvl]);
+    clearedProvinces = Array.from(mergedSet).sort((a,b) => a - b);
+    localStorage.setItem('shogi_cleared_provinces', JSON.stringify(clearedProvinces));
   } catch (e) {}
   updateConquestMapUI();
 }
+
+/* 複数画面リアルタイム同期リスナー（storageイベント監視） */
+window.addEventListener('storage', function(e) {
+  if (e.key === 'shogi_cleared_provinces') {
+    try {
+      clearedProvinces = JSON.parse(e.newValue || '[]');
+      updateConquestMapUI();
+      if (!isExhibitionActive && !isGameOver) {
+        const pMax = getPlayerMaxTroops();
+        const pDisp = document.getElementById('player-troops-disp');
+        if (pDisp) {
+          const { pPct } = calculateTroopsPercentages(board, hands);
+          const pCurrent = Math.round(pMax * (pPct / 100));
+          pDisp.textContent = `${pCurrent.toLocaleString()} / ${pMax.toLocaleString()} 兵`;
+        }
+      }
+    } catch(err) {}
+  } else if (e.key === 'shogi_battle_records_player' || e.key === 'shogi_battle_records_exhibition') {
+    const histModal = document.getElementById('battle-history-modal');
+    if (histModal && histModal.style.display === 'flex') {
+      renderBattleHistoryList();
+    }
+  }
+});
 
 function cloneBoardState(b) { return b.map(row => row.map(cell => cell ? {...cell} : null)); }
 function getBoardHash(b, h, t) {
@@ -2007,10 +2111,11 @@ function getBoardHash(b, h, t) {
   return s;
 }
 
-function checkSennichite() {
-  const curHash = getBoardHash(board, hands, turn);
+/* 千日手判定（次手番局面でのハッシュ一致厳密判定版） */
+function checkSennichite(targetNextTurn = turn) {
+  const curHash = getBoardHash(board, hands, targetNextTurn);
   boardHashHistory.push(curHash);
-  checkHistory.push({ turn, inCheck: isCheckState(turn) });
+  checkHistory.push({ turn: targetNextTurn, inCheck: isCheckState(targetNextTurn) });
 
   const count = boardHashHistory.filter(h => h === curHash).length;
   if (count >= 4) {
@@ -2069,6 +2174,7 @@ function initBoardState() {
   tacticsCandidates = []; currentTacticIndex = 0;
   totalTimeSpentMs = { PLAYER: 0, AI: 0 };
   movesCountBySide = { PLAYER: 0, AI: 0 };
+  exhibitionAchievedDepth = 1; exhibitionTargetDepth = 3; exhibitionLastMoveInfo = null;
 
   clearWarlordResultPlaques();
   updateTurnFocus(null);
@@ -2216,18 +2322,23 @@ function exitReplayMode() {
       totalTimeSpentMs = savedActiveBattle.totalTimeSpentMs || { PLAYER: 0, AI: 0 };
       movesCountBySide = savedActiveBattle.movesCountBySide || { PLAYER: 0, AI: 0 };
       exhibitionAchievedDepth = savedActiveBattle.exhibitionAchievedDepth || 1;
+      exhibitionTargetDepth = savedActiveBattle.exhibitionTargetDepth || 3;
       exhibitionTotalNodes = savedActiveBattle.exhibitionTotalNodes || 0;
+      exhibitionLastMoveInfo = savedActiveBattle.exhibitionLastMoveInfo || null;
 
       const sData = getTargetAIData(exhibitionSenteTarget);
       const gData = getTargetAIData(exhibitionGoteTarget);
       const sTroops = sData.baseTroops || sData.maxTroops || 10000;
       const gTroops = gData.maxTroops || gData.baseTroops || 10000;
 
-      document.getElementById('player-name-disp').textContent = `▲ ${sData.name}`;
+      const markSente = getKomaMarkHtml(true, 'normal');
+      const markGote = getKomaMarkHtml(false, 'normal');
+
+      document.getElementById('player-name-disp').innerHTML = `${markSente}${sData.name}`;
       document.getElementById('player-clan-disp').textContent = sData.clan;
       document.getElementById('player-troops-disp').textContent = `${sTroops.toLocaleString()} / ${sTroops.toLocaleString()} 兵`;
 
-      document.getElementById('ai-name-disp').textContent = `▽ ${gData.name}`;
+      document.getElementById('ai-name-disp').innerHTML = `${markGote}${gData.name}`;
       document.getElementById('ai-clan-disp').textContent = gData.clan;
       document.getElementById('ai-troops-disp').textContent = `${gTroops.toLocaleString()} / ${gTroops.toLocaleString()} 兵`;
 
@@ -2451,9 +2562,12 @@ function openFurigomaModal() {
     const isPlayerSente = (5 - toCount) >= 3;
     turn = isPlayerSente ? 'PLAYER' : 'AI';
     battleStartTurn = turn;
+    const markSente = getKomaMarkHtml(true, 'normal');
+    const markGote = getKomaMarkHtml(false, 'normal');
+
     t.innerHTML = isPlayerSente 
-      ? `<span style="color:#ff5252;">歩が${5 - toCount}枚！ 我が軍の先手！</span>` 
-      : `<span style="color:#ffd700;">と金が${toCount}枚！ 敵軍の先手！</span>`;
+      ? `<span style="color:#ff5252;">歩が${5 - toCount}枚！ ${markSente}我が軍の先手！</span>` 
+      : `<span style="color:#ffd700;">と金が${toCount}枚！ ${markGote}敵軍の先手！</span>`;
     
     playVictorySound();
 
@@ -2726,6 +2840,7 @@ function animateAndExecuteMove(m, metric = null, onComplete = null) {
   }, flyTime);
 }
 
+/* 一手着手実行（合戦絵巻モーダルが開いていればリアルタイム自動連動） */
 function executeMove(m, metric = null) {
   if (m.type === 'move' && !m.code && board[m.from.r][m.from.c]) {
     m.code = board[m.from.r][m.from.c].code;
@@ -2767,6 +2882,12 @@ function executeMove(m, metric = null) {
   updateWarlordQuotes();
   updateReviewModeUI();
 
+  // 【合戦絵巻リアルタイム追従更新】
+  const kifuModal = document.getElementById('kifu-modal');
+  if (kifuModal && kifuModal.style.display === 'flex') {
+    updateKifuModalLive();
+  }
+
   if (isKingCaptured && capturedKingOwner) {
     checkGameOver(capturedKingOwner);
   }
@@ -2777,7 +2898,7 @@ function finishTurn() {
   document.getElementById('btn-alt-tactic').style.display = 'none';
 
   if (isGameOver) return;
-  if (checkSennichite()) return;
+  if (checkSennichite('AI')) return;
   if (isCheckState('AI')) {
     playCheckSound(); triggerCutin('敵将へ王手！');
   }
@@ -2911,6 +3032,7 @@ function handleWorkerMessage(e) {
 
   if (data.type === 'progress') {
     exhibitionAchievedDepth = data.depth || 1;
+    exhibitionTargetDepth = data.targetDepth || exhibitionTargetDepth;
     exhibitionTotalNodes = data.nodes || 0;
     if (isExhibitionActive) updateExhibitionThinkingDisplay(true);
     return;
@@ -2933,9 +3055,12 @@ function handleWorkerMessage(e) {
 
   isAiThinking = false;
   exhibitionAchievedDepth = data.depth || exhibitionAchievedDepth;
+  exhibitionTargetDepth = data.targetDepth || exhibitionTargetDepth;
   exhibitionTotalNodes = data.nodes || exhibitionTotalNodes;
   const elapsedSec = recordTurnTime(turn);
   stopTurnTimer();
+
+  exhibitionLastMoveInfo = { timeSec: elapsedSec, depth: exhibitionAchievedDepth };
   if (isExhibitionActive) updateExhibitionThinkingDisplay(false);
 
   const bm = data.bestMove;
@@ -2945,10 +3070,10 @@ function handleWorkerMessage(e) {
   
   animateAndExecuteMove(bm, metric, () => {
     if (isGameOver) return;
-    if (checkSennichite()) return;
+    const nextTurn = (bm.owner === 'PLAYER') ? 'AI' : 'PLAYER';
+    if (checkSennichite(nextTurn)) return;
 
     if (isExhibitionActive) {
-      const nextTurn = (bm.owner === 'PLAYER') ? 'AI' : 'PLAYER';
       if (!checkGameOver(nextTurn)) {
         turn = nextTurn;
         updateTurnFocus(turn);
@@ -2973,6 +3098,7 @@ function handleExternalWorkerMessage(e) {
   const data = e.data;
   if (data.type === 'progress') {
     exhibitionAchievedDepth = data.depth || 1;
+    exhibitionTargetDepth = data.targetDepth || exhibitionTargetDepth;
     exhibitionTotalNodes = data.nodes || 0;
     if (isExhibitionActive) updateExhibitionThinkingDisplay(true);
     return;
@@ -2980,9 +3106,12 @@ function handleExternalWorkerMessage(e) {
 
   isAiThinking = false;
   exhibitionAchievedDepth = data.depth || exhibitionAchievedDepth;
+  exhibitionTargetDepth = data.targetDepth || exhibitionTargetDepth;
   exhibitionTotalNodes = data.nodes || exhibitionTotalNodes;
   const elapsedSec = recordTurnTime(turn);
   stopTurnTimer();
+
+  exhibitionLastMoveInfo = { timeSec: elapsedSec, depth: exhibitionAchievedDepth };
   if (isExhibitionActive) updateExhibitionThinkingDisplay(false);
 
   const bm = data.bestMove;
@@ -2992,9 +3121,9 @@ function handleExternalWorkerMessage(e) {
   
   animateAndExecuteMove(bm, metric, () => {
     if (isGameOver) return;
-    if (checkSennichite()) return;
-
     const nextTurn = (bm.owner === 'PLAYER') ? 'AI' : 'PLAYER';
+    if (checkSennichite(nextTurn)) return;
+
     if (!checkGameOver(nextTurn)) {
       turn = nextTurn;
       updateTurnFocus(turn);
@@ -3070,6 +3199,13 @@ function undoMove() {
   updateTroopsAndSituation();
   updateWarlordQuotes();
   updateReviewModeUI();
+
+  // 合戦絵巻が開いていれば再描画同期
+  const kifuModal = document.getElementById('kifu-modal');
+  if (kifuModal && kifuModal.style.display === 'flex') {
+    openKifuModal();
+  }
+
   startTurnTimer('PLAYER', PLAYER_WARLORDS[currentMyWarlordId].name);
 }
 
@@ -3409,6 +3545,7 @@ function renderExhibitionVisualPickers() {
     const badgeHtml = getAiBadgeHtml(k, data);
     const troopsNum = (data.maxTroops || data.baseTroops || 10000).toLocaleString();
     const depthTxt = data.depthSpec || '深さ3＋静止探索';
+    const sourceTxt = data.sourceEngine ? `<span class="badge-source-tag">技術出典: ${data.sourceEngine}</span>` : '';
     const tacticTxt = data.featureShort || data.clan || '正道布陣';
 
     const isSenteActive = (exhibitionSenteTarget === k);
@@ -3425,6 +3562,7 @@ function renderExhibitionVisualPickers() {
         <div class="pick-stats-row">
           <span class="badge-ai-troops">⚔ ${troopsNum} 兵</span>
           <span class="badge-ai-depth">🧠 ${depthTxt}</span>
+          ${sourceTxt}
         </div>
         <div class="pick-desc-txt">兵法：${tacticTxt}</div>
       </div>
@@ -3446,6 +3584,7 @@ function renderExhibitionVisualPickers() {
         <div class="pick-stats-row">
           <span class="badge-ai-troops">⚔ ${troopsNum} 兵</span>
           <span class="badge-ai-depth">🧠 ${depthTxt}</span>
+          ${sourceTxt}
         </div>
         <div class="pick-desc-txt">兵法：${tacticTxt}</div>
       </div>
@@ -3471,6 +3610,7 @@ function updateExhibitionPreviewCards() {
   const sDesc = document.getElementById('preview-sente-desc');
   const sTroops = (sData.baseTroops || sData.maxTroops || 10000).toLocaleString();
   const sDepth = sData.depthSpec || '深さ3＋静止探索';
+  const sSource = sData.sourceEngine ? `<div class="preview-stat-row"><span>技術出典：</span><span class="preview-spec-highlight" style="color:#a8e6cf;">${sData.sourceEngine}</span></div>` : '';
 
   if (sName) sName.textContent = sData.name;
   if (sBadge) sBadge.textContent = sData.rank || (sData.province ? `${sData.province}` : '出陣');
@@ -3479,6 +3619,7 @@ function updateExhibitionPreviewCards() {
       <div class="preview-stat-grid">
         <div class="preview-stat-row"><span>総動員力：</span><span class="preview-troops-highlight">⚔ ${sTroops} 兵</span></div>
         <div class="preview-stat-row"><span>思考仕様：</span><span class="preview-spec-highlight">${sDepth}</span></div>
+        ${sSource}
       </div>`;
   }
 
@@ -3487,6 +3628,7 @@ function updateExhibitionPreviewCards() {
   const gDesc = document.getElementById('preview-gote-desc');
   const gTroops = (gData.maxTroops || gData.baseTroops || 10000).toLocaleString();
   const gDepth = gData.depthSpec || '深さ3＋静止探索';
+  const gSource = gData.sourceEngine ? `<div class="preview-stat-row"><span>技術出典：</span><span class="preview-spec-highlight" style="color:#a8e6cf;">${gData.sourceEngine}</span></div>` : '';
 
   if (gName) gName.textContent = gData.name;
   if (gBadge) gBadge.textContent = gData.rank || (gData.province ? `${gData.province}` : '出陣');
@@ -3495,6 +3637,7 @@ function updateExhibitionPreviewCards() {
       <div class="preview-stat-grid">
         <div class="preview-stat-row"><span>総動員力：</span><span class="preview-troops-highlight">⚔ ${gTroops} 兵</span></div>
         <div class="preview-stat-row"><span>思考仕様：</span><span class="preview-spec-highlight">${gDepth}</span></div>
+        ${gSource}
       </div>`;
   }
 }
@@ -3545,12 +3688,15 @@ function startExhibitionFromModal() {
   const sTroops = sData.baseTroops || sData.maxTroops || 10000;
   const gTroops = gData.maxTroops || gData.baseTroops || 10000;
 
-  document.getElementById('player-name-disp').textContent = `▲ ${sData.name}`;
+  const markSente = getKomaMarkHtml(true, 'normal');
+  const markGote = getKomaMarkHtml(false, 'normal');
+
+  document.getElementById('player-name-disp').innerHTML = `${markSente}${sData.name}`;
   document.getElementById('player-clan-disp').textContent = sData.clan;
   document.getElementById('player-quote-disp').textContent = sData.quotes ? (sData.quotes.opening || sData.quotes.default) : '「先手陣、堂々たる進撃を見せてくれよう！」';
   document.getElementById('player-troops-disp').textContent = `${sTroops.toLocaleString()} / ${sTroops.toLocaleString()} 兵`;
 
-  document.getElementById('ai-name-disp').textContent = `▽ ${gData.name}`;
+  document.getElementById('ai-name-disp').innerHTML = `${markGote}${gData.name}`;
   document.getElementById('ai-clan-disp').textContent = gData.clan;
   document.getElementById('ai-quote-disp').textContent = gData.quotes ? (gData.quotes.opening || gData.quotes.default) : '「後手陣、一歩も退かぬ鉄壁の陣を敷く！」';
   document.getElementById('ai-troops-disp').textContent = `${gTroops.toLocaleString()} / ${gTroops.toLocaleString()} 兵`;
@@ -3582,6 +3728,11 @@ function dispatchExhibitionTurn() {
   const targetKey = isSenteTurn ? exhibitionSenteTarget : exhibitionGoteTarget;
   const targetSide = isSenteTurn ? 'PLAYER' : 'AI';
   const targetData = getTargetAIData(targetKey);
+
+  // 手番開始時の深さリセットと目標深度設定
+  exhibitionAchievedDepth = 1;
+  exhibitionTargetDepth = targetData.targetDepth || (targetKey === 'strategist' ? 5 : 3);
+  exhibitionLastMoveInfo = null;
 
   if (!turnTimerInterval) {
     startTurnTimer(targetSide, targetData.name);
@@ -3635,6 +3786,8 @@ function scheduleNextExhibitionTurn() {
   const targetKey = isSenteTurn ? exhibitionSenteTarget : exhibitionGoteTarget;
   const targetSide = isSenteTurn ? 'PLAYER' : 'AI';
   const targetData = getTargetAIData(targetKey);
+
+  // インターバル中も直前着手情報などを保持
   startTurnTimer(targetSide, targetData.name);
 
   exhibitionTimer = setTimeout(() => {
@@ -3669,7 +3822,108 @@ function stopExhibitionTimer() {
   }
 }
 
-/* 棋譜モーダル */
+/* =========================================================
+   当局・合戦絵巻（棋譜モーダル）リアルタイム自動追従システム
+   ========================================================= */
+function updateKifuModalLive() {
+  const p = isExhibitionActive ? getTargetAIData(exhibitionSenteTarget) : PLAYER_WARLORDS[currentMyWarlordId];
+  const e = isExhibitionActive ? getTargetAIData(exhibitionGoteTarget) : WARLORDS_DATA[currentAiLevel];
+
+  const pMax = getPlayerMaxTroops();
+  const aiMax = getAiMaxTroops();
+
+  const curBoard = (reviewingIndex >= 0 && historyStates[reviewingIndex]) ? historyStates[reviewingIndex].board : board;
+  const curHands = (reviewingIndex >= 0 && historyStates[reviewingIndex]) ? historyStates[reviewingIndex].hands : hands;
+  const { pPct, aiPct } = calculateTroopsPercentages(curBoard, curHands);
+
+  const pCurrent = Math.round(pMax * (pPct / 100));
+  const aiCurrent = Math.round(aiMax * (aiPct / 100));
+
+  const pVal = document.getElementById('kifu-player-troops-val');
+  const eVal = document.getElementById('kifu-enemy-troops-val');
+  if (pVal) pVal.textContent = `${pCurrent.toLocaleString()} 兵`;
+  if (eVal) eVal.textContent = `${aiCurrent.toLocaleString()} 兵`;
+
+  const troopsDiff = pCurrent - aiCurrent;
+  const diffBadge = document.getElementById('kifu-troops-diff-disp');
+  if (diffBadge) {
+    if (troopsDiff >= 0) {
+      diffBadge.textContent = isExhibitionActive ? `先手陣 +${troopsDiff.toLocaleString()} 兵優勢` : `我が軍 +${troopsDiff.toLocaleString()} 兵優勢`;
+      diffBadge.style.color = '#ffd700';
+    } else {
+      diffBadge.textContent = isExhibitionActive ? `後手陣 +${Math.abs(troopsDiff).toLocaleString()} 兵優勢` : `敵軍 +${Math.abs(troopsDiff).toLocaleString()} 兵優勢`;
+      diffBadge.style.color = '#ffe6aa';
+    }
+  }
+
+  const curSitText = document.getElementById('situation-text')?.textContent || '';
+  const modalSit = document.getElementById('kifu-modal-situation-text');
+  if (modalSit) modalSit.textContent = curSitText;
+
+  // 領地支配グラフ再描画
+  drawTerritoryChart();
+
+  // 棋譜リストのリアルタイム行追加
+  const l = document.getElementById('kifu-list');
+  if (l && moveObjectsHistory.length > 0) {
+    const idx = moveObjectsHistory.length - 1;
+    // 既存行数をチェック
+    if (l.children.length < moveObjectsHistory.length) {
+      const m = moveObjectsHistory[idx];
+      const d = document.createElement('div');
+      d.className = 'kifu-row-item';
+      const rawCode = m.code || 'FU';
+      const pPiece = m.type === 'drop' ? PIECES[m.code] : PIECES[rawCode];
+      
+      const isSenteMove = (m.owner === (battleStartTurn === 'PLAYER' ? 'PLAYER' : 'AI'));
+      const markIcon = getKomaMarkHtml(isSenteMove, 'mini');
+      const moveStr = `${idx + 1}手目：${markIcon}${9 - m.to.c}${KANJI_NUMS[m.to.r]} ${pPiece}${m.promote ? '成' : ''}`;
+
+      const metric = moveMetricsHistory[idx] || { timeSec: '0.1', depth: 1 };
+      const metricHtml = `<span class="kifu-metric-pill">⏱ ${metric.timeSec}秒 ｜ 深さ${metric.depth}</span>`;
+
+      let badgeHtml = '';
+      if (m.isCap) {
+        let victimName = '';
+        if (isExhibitionActive) {
+          const sName = getTargetAIData(exhibitionSenteTarget).name.split('・')[0];
+          const gName = getTargetAIData(exhibitionGoteTarget).name.split('・')[0];
+          victimName = (m.owner === 'PLAYER') ? `後手駒` : `先手駒`;
+        } else {
+          victimName = (m.owner === 'PLAYER') ? '敵駒' : '自軍駒';
+        }
+        badgeHtml = `<span class="kifu-badge-critical badge-tennozan">⚔ ${victimName}討死</span>`;
+      } else if (m.promote) {
+        badgeHtml = `<span class="kifu-badge-critical badge-shock">🔥 成駒覚醒！</span>`;
+      }
+
+      d.innerHTML = `
+        <span class="kifu-move-txt">${moveStr}</span>
+        <div class="kifu-row-right-group">
+          ${badgeHtml}
+          ${metricHtml}
+        </div>
+      `;
+
+      d.onclick = () => {
+        playUiClickSound();
+        reviewingIndex = idx + 1;
+        const snap = historyStates[reviewingIndex];
+        board = cloneBoardState(snap.board);
+        hands = JSON.parse(JSON.stringify(snap.hands));
+        lastMove = snap.moveObjectsHistory[snap.moveObjectsHistory.length - 1] || null;
+        renderBoard();
+        updateTroopsAndSituation(); updateReviewModeUI();
+        closeKifuModal();
+        setOrderMessage(`【合戦絵巻鑑賞中】第 ${reviewingIndex} 手目の布陣を再現しております。`, false, 'player');
+      };
+
+      l.appendChild(d);
+      l.scrollTop = l.scrollHeight;
+    }
+  }
+}
+
 function openKifuModal() {
   initAudio(); playUiClickSound(); stopAutoReplay();
 
@@ -3691,8 +3945,11 @@ function openKifuModal() {
   const pVal = document.getElementById('kifu-player-troops-val');
   const eVal = document.getElementById('kifu-enemy-troops-val');
 
-  if (pTag) pTag.textContent = isExhibitionActive ? `▲ 先手陣（${p.name}）` : `▲ ${p.name}`;
-  if (eTag) eTag.textContent = isExhibitionActive ? `▽ 後手陣（${e.name}）` : `▽ ${e.name}`;
+  const markSente = getKomaMarkHtml(true, 'normal');
+  const markGote = getKomaMarkHtml(false, 'normal');
+
+  if (pTag) pTag.innerHTML = isExhibitionActive ? `${markSente}先手陣（${p.name}）` : `${markSente}${p.name}`;
+  if (eTag) eTag.innerHTML = isExhibitionActive ? `${markGote}後手陣（${e.name}）` : `${markGote}${e.name}`;
   if (pVal) pVal.textContent = `${pCurrent.toLocaleString()} 兵`;
   if (eVal) eVal.textContent = `${aiCurrent.toLocaleString()} 兵`;
 
@@ -3724,8 +3981,8 @@ function openKifuModal() {
 
   const chartPlayerTag = document.getElementById('chart-player-name-tag');
   const chartEnemyTag = document.getElementById('chart-enemy-name-tag');
-  if (chartPlayerTag) chartPlayerTag.textContent = isExhibitionActive ? `▲ 先手陣領地（${p.name}：下陣）` : `▲ 我が軍領地（${p.name}：下陣）`;
-  if (chartEnemyTag) chartEnemyTag.textContent = isExhibitionActive ? `▽ 後手陣領地（${e.name}：上陣）` : `▽ 敵軍領地（${e.name}：上陣）`;
+  if (chartPlayerTag) chartPlayerTag.innerHTML = isExhibitionActive ? `${markSente}先手陣領地（${p.name}：下陣）` : `${markSente}我が軍領地（${p.name}：下陣）`;
+  if (chartEnemyTag) chartEnemyTag.innerHTML = isExhibitionActive ? `${markGote}後手陣領地（${e.name}：上陣）` : `${markGote}敵軍領地（${e.name}：上陣）`;
 
   const curSitText = document.getElementById('situation-text')?.textContent || '';
   const modalSit = document.getElementById('kifu-modal-situation-text');
@@ -3739,8 +3996,10 @@ function openKifuModal() {
       d.className = 'kifu-row-item';
       const rawCode = m.code || 'FU';
       const pPiece = m.type === 'drop' ? PIECES[m.code] : PIECES[rawCode];
-      const mark = m.owner === 'PLAYER' ? '▲' : '△';
-      const moveStr = `${idx + 1}手目：${mark} ${9 - m.to.c}${KANJI_NUMS[m.to.r]} ${pPiece}${m.promote ? '成' : ''}`;
+      
+      const isSenteMove = (m.owner === (battleStartTurn === 'PLAYER' ? 'PLAYER' : 'AI'));
+      const markIcon = getKomaMarkHtml(isSenteMove, 'mini');
+      const moveStr = `${idx + 1}手目：${markIcon}${9 - m.to.c}${KANJI_NUMS[m.to.r]} ${pPiece}${m.promote ? '成' : ''}`;
 
       const metric = moveMetricsHistory[idx] || { timeSec: '0.1', depth: 1 };
       const metricHtml = `<span class="kifu-metric-pill">⏱ ${metric.timeSec}秒 ｜ 深さ${metric.depth}</span>`;
@@ -3751,7 +4010,7 @@ function openKifuModal() {
         if (isExhibitionActive) {
           const sName = getTargetAIData(exhibitionSenteTarget).name.split('・')[0];
           const gName = getTargetAIData(exhibitionGoteTarget).name.split('・')[0];
-          victimName = (m.owner === 'PLAYER') ? `▽${gName}駒` : `▲${sName}駒`;
+          victimName = (m.owner === 'PLAYER') ? `後手駒` : `先手駒`;
         } else {
           victimName = (m.owner === 'PLAYER') ? '敵駒' : '自軍駒';
         }
@@ -4313,9 +4572,9 @@ function switchHistoryTab(tab) {
         <option value="lvl_8">Lv.8 織田信長</option>
         <option value="lvl_9">Lv.9 豊臣秀吉</option>
         <option value="lvl_10">Lv.10 徳川家康</option>
-        <option value="nanban">南蛮棋士</option>
-        <option value="kenshi">無双剣士</option>
-        <option value="inja">鬼謀の隠者</option>
+        <option value="nanban">南蛮棋士 (MicroMax系)</option>
+        <option value="kenshi">無双剣士 (Sunfish系)</option>
+        <option value="inja">鬼謀の隠者 (Bonanza系)</option>
         <option value="strategist">軍師AI</option>
       `;
     }
@@ -4452,6 +4711,8 @@ function renderBattleHistoryList() {
       honorBadgeHtml = `<span class="footer-stat-pill">💡 軍師助言: ${r.hintUsed}回</span>`;
     }
 
+    const senteMarkIcon = getKomaMarkHtml(r.sente === '先手', 'mini');
+
     card.innerHTML = `
       <div class="card-tier-header">
         <div class="tier-header-left">
@@ -4468,7 +4729,7 @@ function renderBattleHistoryList() {
         <div class="clash-side ${isPlayerWinner ? 'is-winner' : (isEnemyWinner ? 'is-loser' : '')}">
           <div class="clash-avatar-box">${getWarlordPortraitHtml(playerAvatarData, false)}</div>
           <span class="clash-name-txt">${r.playerWarlordName}</span>
-          <span class="clash-tag-sente">${r.sente}</span>
+          <span class="clash-tag-sente">${senteMarkIcon}${r.sente}</span>
         </div>
         <span class="clash-vs-mark">⚔</span>
         <div class="clash-side clash-side-enemy ${isEnemyWinner ? 'is-winner' : (isPlayerWinner ? 'is-loser' : '')}">
@@ -4514,7 +4775,7 @@ function replayFromHistory(recordId, storageKey) {
       exhibitionGoteTarget: isExhibitionActive ? exhibitionGoteTarget : null,
       exhibitionSpeed: isExhibitionActive ? exhibitionSpeed : 'normal',
       exhibitionStrategistKey: isExhibitionActive ? exhibitionRandomStrategistWarlordKey : null,
-      exhibitionAchievedDepth, exhibitionTotalNodes,
+      exhibitionAchievedDepth, exhibitionTargetDepth, exhibitionTotalNodes, exhibitionLastMoveInfo,
       currentMyWarlordId, currentAiLevel,
       board: cloneBoardState(board),
       hands: JSON.parse(JSON.stringify(hands)),

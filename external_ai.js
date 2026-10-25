@@ -2,10 +2,13 @@
    将棋王 2026 〜 天下統一・戦国決戦 〜
    外部オープンソースAIエンジン統合モジュール (完全成果保証・安全装置完全連動版)
    
-   【内蔵する3つの客分指南役】
-   1. nanban : 【明朝の客分・南蛮棋士】 (アマ初段相当 / 深さ3＋静止探索 通常8.5s・早指し2.5s保証)
-   2. kenshi : 【指南役・無双剣士】     (アマ二段相当 / 深さ4＋PST＋静止探索 通常8.5s・早指し2.5s保証)
-   3. inja   : 【神算鬼謀の隠者】       (アマ五段相当 / 深さ5＋置換表＋キラー探索 通常8.5s・早指し2.5s保証)
+   【内蔵する3つの客分指南役とオープンソース技術出典】
+   1. nanban : 【明朝の客分・南蛮棋士】 
+      - 技術出典：MicroMax / Toledo Nanochess 系統（古典的αβ探索 ＋ 静止探索 / 目標深さ3）
+   2. kenshi : 【指南役・無双剣士】     
+      - 技術出典：Sunfish将棋 / LesserKai 系統（Piece-Square Tables 駒配置評価駆動 / 目標深さ4）
+   3. inja   : 【神算鬼謀の隠者】       
+      - 技術出典：Bonanza / GPS将棋 系統（Zobrist Hash 置換表 ＋ キラー探索 ＋ 反復深化 / 目標深さ5）
    ========================================================= */
 
 (function(global) {
@@ -25,7 +28,7 @@
   };
   const MATE_SCORE = 100000;
 
-  // Sunfish / LesserKai 用 Piece-Square Tables (PST)
+  // Sunfish / LesserKai 由来 Piece-Square Tables (PST：駒配置評価テーブル)
   const PST_FU = [
     0,  0,  0,  0,  0,  0,  0,  0,  0,
     20, 20, 25, 30, 30, 30, 25, 20, 20,
@@ -357,6 +360,7 @@
     return s;
   }
 
+  /* MicroMax 系統：古典的評価関数 */
   function evalNanban(perspectiveOwner) {
     let score = 0;
     for (let r = 0; r < 9; r++) {
@@ -419,6 +423,7 @@
     return alpha;
   }
 
+  /* Sunfish将棋 / LesserKai 系統：PST（駒配置評価テーブル）駆動評価関数 */
   function evalKenshi(perspectiveOwner) {
     let score = 0;
     for (let r = 0; r < 9; r++) {
@@ -486,6 +491,7 @@
     return alpha;
   }
 
+  /* Bonanza 系統：Zobrist Hash 置換表 ＋ キラー探索 ＋ 反復深化 */
   function searchInja(depth, alpha, beta, owner, ply, rootPerspective) {
     nodeCount++;
     if ((nodeCount & 127) === 0 && (Date.now() - searchStartTime >= searchTimeLimit)) {
@@ -585,9 +591,11 @@
     searchTimeLimit = timeLimit || 8500;
     updateKingCache();
 
+    let targetDepth = (engineType === 'nanban') ? 3 : ((engineType === 'kenshi') ? 4 : 5);
+
     const legals = genLegalMoves(owner, false, true);
     if (legals.length === 0) {
-      return { type: 'done', bestMove: null, evalScore: -MATE_SCORE, depth: 0, nodes: 0, engineType };
+      return { type: 'done', bestMove: null, evalScore: -MATE_SCORE, depth: 0, targetDepth, nodes: 0, engineType };
     }
 
     const enemyOwner = (owner === 'PLAYER') ? 'AI' : 'PLAYER';
@@ -602,7 +610,6 @@
       return penalty;
     };
 
-    let targetDepth = (engineType === 'nanban') ? 3 : ((engineType === 'kenshi') ? 4 : 5);
     let confirmedBestMove = legals[0];
     let confirmedScore = 0;
     let achievedDepth = 1;
@@ -610,6 +617,11 @@
 
     if (engineType === 'nanban') {
       for (let d = 1; d <= 3; d++) {
+        // 反復深化ループ開始時にも深さ進捗を送信（リアルタイムUI連動）
+        if (typeof self !== 'undefined' && typeof window === 'undefined') {
+          self.postMessage({ type: 'progress', depth: d, targetDepth: 3, nodes: nodeCount, evalScore: confirmedScore });
+        }
+
         let alpha = -Infinity, beta = Infinity;
 
         if (d > 1 && confirmedBestMove) {
@@ -642,7 +654,7 @@
           confirmedScore = scoredMoves[0].score;
 
           if (typeof self !== 'undefined' && typeof window === 'undefined') {
-            self.postMessage({ type: 'progress', depth: d, nodes: nodeCount, evalScore: confirmedScore });
+            self.postMessage({ type: 'progress', depth: d, targetDepth: 3, nodes: nodeCount, evalScore: confirmedScore });
           }
         }
         if (isSearchTimeout || (Date.now() - searchStartTime >= searchTimeLimit)) break;
@@ -650,6 +662,11 @@
 
     } else if (engineType === 'kenshi') {
       for (let d = 1; d <= 4; d++) {
+        // 反復深化ループ開始時にも深さ進捗を送信（リアルタイムUI連動）
+        if (typeof self !== 'undefined' && typeof window === 'undefined') {
+          self.postMessage({ type: 'progress', depth: d, targetDepth: 4, nodes: nodeCount, evalScore: confirmedScore });
+        }
+
         let alpha = -Infinity, beta = Infinity;
 
         if (d > 1 && confirmedBestMove) {
@@ -682,7 +699,7 @@
           confirmedScore = scoredMoves[0].score;
 
           if (typeof self !== 'undefined' && typeof window === 'undefined') {
-            self.postMessage({ type: 'progress', depth: d, nodes: nodeCount, evalScore: confirmedScore });
+            self.postMessage({ type: 'progress', depth: d, targetDepth: 4, nodes: nodeCount, evalScore: confirmedScore });
           }
         }
         if (isSearchTimeout || (Date.now() - searchStartTime >= searchTimeLimit)) break;
@@ -691,6 +708,11 @@
     } else {
       killerMoves = Array.from({ length: 30 }, () => [null, null]);
       for (let d = 1; d <= 5; d++) {
+        // 反復深化ループ開始時にも深さ進捗を送信（リアルタイムUI連動）
+        if (typeof self !== 'undefined' && typeof window === 'undefined') {
+          self.postMessage({ type: 'progress', depth: d, targetDepth: 5, nodes: nodeCount, evalScore: confirmedScore });
+        }
+
         let alpha = -Infinity, beta = Infinity;
 
         if (d > 1 && confirmedBestMove) {
@@ -723,7 +745,7 @@
           confirmedScore = scoredMoves[0].score;
 
           if (typeof self !== 'undefined' && typeof window === 'undefined') {
-            self.postMessage({ type: 'progress', depth: d, nodes: nodeCount, evalScore: confirmedScore });
+            self.postMessage({ type: 'progress', depth: d, targetDepth: 5, nodes: nodeCount, evalScore: confirmedScore });
           }
         }
         if (isSearchTimeout || (Date.now() - searchStartTime >= searchTimeLimit)) break;
@@ -735,6 +757,7 @@
       bestMove: confirmedBestMove || legals[0],
       evalScore: confirmedScore,
       depth: achievedDepth,
+      targetDepth,
       nodes: nodeCount,
       engineType
     };
@@ -754,4 +777,5 @@
   }
 
 })(typeof self !== 'undefined' ? self : this);
+
 
