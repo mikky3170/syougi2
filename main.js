@@ -200,8 +200,7 @@ let totalTimeSpentMs = { PLAYER: 0, AI: 0 }, movesCountBySide = { PLAYER: 0, AI:
 let lastSettledMoveInfo = { PLAYER: null, AI: null };
 
 /* 音声朗読（Web Speech API）制御 */
-let currentVoiceGender = 'male';
-let isSpeakingActive = false, currentReadingCardId = null;
+let currentVoiceGender = 'male', isSpeakingActive = false, currentReadingCardId = null;
 
 function setGuideVoiceGender(gender) {
   playUiClickSound(); currentVoiceGender = gender;
@@ -572,7 +571,7 @@ function showWarlordResultPlaque(winnerSide) {
   }
 }
 
-/* タイマー制御 */
+/* タイマー制御（完全修正：御前試合対応＆永久進行防止） */
 function startTurnTimer(side) {
   stopTurnTimer();
   currentThinkingSide = side;
@@ -597,7 +596,12 @@ function updateThinkingTimerDisplay() {
   if (currentThinkingSide === 'PLAYER') {
     if (pDisp) {
       pDisp.style.display = 'inline-flex'; pDisp.className = 'warlord-thinking-inline timer-gold-box';
-      pDisp.innerHTML = `🪭 采配思案 <b>${elapsedSec}秒</b>`;
+      if (isExhibitionActive) {
+        const sData = getTargetAIData(exhibitionSenteTarget);
+        pDisp.innerHTML = `☗ ${sData.name}思考 <b>${elapsedSec}秒</b>`;
+      } else {
+        pDisp.innerHTML = `🪭 采配思案 <b>${elapsedSec}秒</b>`;
+      }
     }
     if (aiDisp) {
       if (lastSettledMoveInfo.AI) {
@@ -610,7 +614,12 @@ function updateThinkingTimerDisplay() {
       aiDisp.style.display = 'inline-flex'; aiDisp.className = 'warlord-thinking-inline timer-gold-box';
       const curD = Math.max(1, exhibitionAchievedDepth);
       const targetD = isExhibitionActive ? (getTargetAIData(exhibitionGoteTarget).targetDepth || 4) : (WARLORDS_DATA[currentAiLevel]?.targetDepth || 4);
-      aiDisp.innerHTML = `🧠 熟慮思考 <b>${elapsedSec}秒</b> (深さ ${curD}/${targetD})`;
+      if (isExhibitionActive) {
+        const gData = getTargetAIData(exhibitionGoteTarget);
+        aiDisp.innerHTML = `☖ ${gData.name}熟慮 <b>${elapsedSec}秒</b> (深さ ${curD}/${targetD})`;
+      } else {
+        aiDisp.innerHTML = `🧠 敵将熟慮 <b>${elapsedSec}秒</b> (深さ ${curD}/${targetD})`;
+      }
     }
     if (pDisp) {
       if (lastSettledMoveInfo.PLAYER) {
@@ -771,7 +780,21 @@ function initBoardState() {
   if (enemyChangeBtn) enemyChangeBtn.style.display = isExhibitionActive ? 'none' : 'inline-flex';
   if (playerChangeBtn) playerChangeBtn.style.display = isExhibitionActive ? 'none' : 'inline-flex';
 
-  if (!isExhibitionActive) {
+  if (isExhibitionActive) {
+    const sData = getTargetAIData(exhibitionSenteTarget);
+    const gData = getTargetAIData(exhibitionGoteTarget);
+    const sMax = sData.baseTroops || sData.maxTroops || 10000;
+    const gMax = gData.maxTroops || gData.baseTroops || 10000;
+    document.getElementById('player-name-disp').innerHTML = `☗ ${getWarlordDisplayNameHtml(sData)}`;
+    document.getElementById('player-clan-disp').textContent = sData.clan;
+    document.getElementById('player-quote-disp').textContent = sData.quotes.default;
+    document.getElementById('player-troops-disp').textContent = `${sMax.toLocaleString()} / ${sMax.toLocaleString()} 兵`;
+
+    document.getElementById('ai-name-disp').innerHTML = `☖ ${getWarlordDisplayNameHtml(gData)}`;
+    document.getElementById('ai-clan-disp').textContent = gData.clan;
+    document.getElementById('ai-quote-disp').textContent = gData.quotes.default;
+    document.getElementById('ai-troops-disp').textContent = `${gMax.toLocaleString()} / ${gMax.toLocaleString()} 兵`;
+  } else {
     const p = PLAYER_WARLORDS[currentMyWarlordId] || PLAYER_WARLORDS['sanada'];
     const w = WARLORDS_DATA[currentAiLevel] || WARLORDS_DATA[1];
     const pMax = getPlayerMaxTroops();
@@ -891,6 +914,7 @@ function exitReplayMode() {
       moveMetricsHistory = JSON.parse(JSON.stringify(savedActiveBattle.moveMetricsHistory || []));
       lastMove = savedActiveBattle.lastMove; reviewingIndex = historyStates.length - 1;
       savedActiveBattle = null;
+      initBoardState();
       renderBoard(); updateTroopsAndSituation(); updateWarlordQuotes(); updateReviewModeUI();
       scheduleNextExhibitionTurn();
     } else {
@@ -1136,7 +1160,6 @@ function executeMove(m, metric = null) {
   const inCheck = isCheckState(m.owner === 'PLAYER' ? 'AI' : 'PLAYER');
   checkHistory.push(inCheck);
 
-  // 評価値履歴（グラフ追従用）
   const { pPct, aiPct } = calculateTroopsPercentages(board, hands);
   evalScoresHistory.push(pPct - aiPct);
 
@@ -1144,7 +1167,6 @@ function executeMove(m, metric = null) {
   reviewingIndex = historyStates.length - 1;
   renderBoard(); updateTroopsAndSituation(); updateWarlordQuotes(); updateReviewModeUI();
 
-  // 合戦絵巻モーダルが開いていればリアルタイム描画追従
   if (document.getElementById('kifu-modal').style.display === 'flex') {
     renderKifuModalLive();
   }
@@ -1172,7 +1194,7 @@ function aiTurn() {
     board, hands, level: currentAiLevel,
     engineType: `warlord_${currentAiLevel}`,
     history: moveObjectsHistory, hashHistory: boardHashHistory, checkHist: checkHistory,
-    isExhibition: isExhibitionActive, targetOwner: 'AI', timeLimit: safeLimit
+    isExhibition: isExhibitionActive, owner: 'AI', targetOwner: 'AI', timeLimit: safeLimit
   };
 
   if (aiWorker) {
@@ -1270,7 +1292,8 @@ function showMasterHint() {
   aiWorker.postMessage({
     board, hands, level: isAwakenedNow ? 10 : 8,
     isHintRequest: true, isAwakened: isAwakenedNow,
-    history: moveObjectsHistory, hashHistory: boardHashHistory, checkHist: checkHistory, targetOwner: 'PLAYER', timeLimit: 5000
+    history: moveObjectsHistory, hashHistory: boardHashHistory, checkHist: checkHistory,
+    owner: 'PLAYER', targetOwner: 'PLAYER', timeLimit: 5000
   });
 }
 
@@ -1337,7 +1360,6 @@ function checkSennichite(targetTurn) {
   if (matchIndices.length >= 4) {
     isGameOver = true; playCheckSound(); stopAutoReplay(); stopTurnTimer();
 
-    // 連続王手の千日手（反則負け）判定
     let playerAllCheck = true, aiAllCheck = true;
     for (let i = matchIndices[0]; i < matchIndices[3]; i++) {
       const mover = moveObjectsHistory[i]?.owner;
@@ -1388,11 +1410,11 @@ function updateTroopsAndSituation() {
 
 function updateWarlordQuotes() {
   if (isReviewingPast()) return;
-  const pData = PLAYER_WARLORDS[currentMyWarlordId] || PLAYER_WARLORDS['sanada'];
-  const wData = WARLORDS_DATA[currentAiLevel] || WARLORDS_DATA[1];
+  const pData = isExhibitionActive ? getTargetAIData(exhibitionSenteTarget) : (PLAYER_WARLORDS[currentMyWarlordId] || PLAYER_WARLORDS['sanada']);
+  const wData = isExhibitionActive ? getTargetAIData(exhibitionGoteTarget) : (WARLORDS_DATA[currentAiLevel] || WARLORDS_DATA[1]);
   const pQ = document.getElementById('player-quote-disp'), aiQ = document.getElementById('ai-quote-disp');
-  if (pQ) pQ.textContent = isCheckState('AI') ? pData.quotes.check : pData.quotes.default;
-  if (aiQ) aiQ.textContent = isCheckState('PLAYER') ? wData.quotes.check : wData.quotes.default;
+  if (pQ && pData.quotes) pQ.textContent = isCheckState('AI') ? pData.quotes.check : pData.quotes.default;
+  if (aiQ && wData.quotes) aiQ.textContent = isCheckState('PLAYER') ? wData.quotes.check : wData.quotes.default;
 }
 
 function setOrderMessage(msg, isMyTurn = false, category = 'player') {
@@ -1452,7 +1474,7 @@ function startBattle() {
   }
 }
 
-/* 御前試合制御 */
+/* 御前試合制御（キャラクター選択プレビュー絢爛豪華拡張） */
 function setExhibitionModalSpeed(speed) {
   playUiClickSound(); exhibitionSpeed = speed;
   document.getElementById('btn-speed-normal').classList.toggle('active', speed === 'normal');
@@ -1480,34 +1502,85 @@ function renderExhibitionVisualPickers() {
   const sList = document.getElementById('exhibition-sente-pick-list'), gList = document.getElementById('exhibition-gote-pick-list');
   if (!sList || !gList) return;
   sList.innerHTML = ''; gList.innerHTML = '';
+
   ALL_EXHIBITION_AI_KEYS.forEach(k => {
     const data = getTargetAIData(k);
-    [ { el: sList, cur: exhibitionSenteTarget, set: v => { exhibitionSenteTarget = v; } },
-      { el: gList, cur: exhibitionGoteTarget, set: v => { exhibitionGoteTarget = v; } }
+    [ { el: sList, cur: exhibitionSenteTarget, isSente: true, set: v => { exhibitionSenteTarget = v; } },
+      { el: gList, cur: exhibitionGoteTarget, isSente: false, set: v => { exhibitionGoteTarget = v; } }
     ].forEach(tgt => {
+      const isSelected = (tgt.cur === k);
       const item = document.createElement('div');
-      item.className = `pick-avatar-item ${tgt.cur === k ? 'active' : ''}`;
+      item.className = `pick-avatar-item ${isSelected ? 'active' : ''}`;
+      const troops = data.baseTroops || data.maxTroops || 10000;
       item.innerHTML = `
         <div class="pick-thumb-box">${getWarlordPortraitHtml(data, false)}</div>
         <div class="pick-info-col">
-          <div class="pick-name-row"><span class="pick-name-txt">${getWarlordDisplayNameHtml(data)}</span></div>
-          <div class="pick-stats-row"><span class="badge-ai-depth">${data.depthSpec || '深さ3'}</span></div>
+          <div class="pick-name-row">
+            <span class="pick-name-txt">${getWarlordDisplayNameHtml(data)}</span>
+            ${isSelected ? '<span class="badge-active-stamp">出陣中</span>' : ''}
+          </div>
+          <div class="pick-stats-row">
+            <span class="badge-ai-troops">動員 ${troops.toLocaleString()}兵</span>
+            <span class="badge-ai-depth">${data.depthSpec || '深さ3'}</span>
+          </div>
         </div>`;
-      item.onclick = () => { playUiClickSound(); tgt.set(k); renderExhibitionVisualPickers(); };
+      item.onclick = () => {
+        playUiClickSound();
+        tgt.set(k);
+        renderExhibitionVisualPickers();
+        flashPreviewCard(tgt.isSente ? 'sente' : 'gote');
+      };
       tgt.el.appendChild(item);
     });
   });
   updateExhibitionPreviewCards();
 }
 
+function flashPreviewCard(side) {
+  const card = document.getElementById(side === 'sente' ? 'exhibition-sente-preview-card' : 'exhibition-gote-preview-card');
+  if (!card) return;
+  card.classList.remove('preview-card-glow-pulse');
+  void card.offsetWidth;
+  card.classList.add('preview-card-glow-pulse');
+}
+
 function updateExhibitionPreviewCards() {
-  const sData = getTargetAIData(exhibitionSenteTarget), gData = getTargetAIData(exhibitionGoteTarget);
-  document.getElementById('preview-sente-avatar').innerHTML = getWarlordPortraitHtml(sData, false);
-  document.getElementById('preview-sente-name').innerHTML = getWarlordDisplayNameHtml(sData);
-  document.getElementById('preview-sente-desc').innerHTML = `${sData.clan}<br><b>${sData.featureShort}</b>`;
-  document.getElementById('preview-gote-avatar').innerHTML = getWarlordPortraitHtml(gData, false);
-  document.getElementById('preview-gote-name').innerHTML = getWarlordDisplayNameHtml(gData);
-  document.getElementById('preview-gote-desc').innerHTML = `${gData.clan}<br><b>${gData.featureShort}</b>`;
+  const sData = getTargetAIData(exhibitionSenteTarget);
+  const gData = getTargetAIData(exhibitionGoteTarget);
+  renderSingleExhibitionPreview('sente', sData);
+  renderSingleExhibitionPreview('gote', gData);
+}
+
+function renderSingleExhibitionPreview(side, data) {
+  const card = document.getElementById(`exhibition-${side}-preview-card`);
+  if (!card) return;
+
+  const troops = data.baseTroops || data.maxTroops || 10000;
+  const rankClass = data.titleHonor ? 'badge-rank-gold' : (side === 'sente' ? 'badge-rank-gold' : 'badge-rank-blue');
+  const quote = data.quotes?.default || '「いざ尋常に勝負！」';
+
+  card.innerHTML = `
+    <div class="preview-avatar-box">
+      ${getWarlordPortraitHtml(data, false)}
+    </div>
+    <div class="preview-info-box">
+      <div class="preview-header-row">
+        <div class="preview-name-group">
+          ${data.titleHonor ? `<span class="preview-honor-tag">${data.titleHonor}</span>` : ''}
+          <span class="preview-inst-name">${data.name}</span>
+        </div>
+        <span class="preview-rank-badge ${rankClass}">${side === 'sente' ? '☗ 先手陣' : '☖ 後手陣'}</span>
+      </div>
+      <div class="preview-clan-txt">${data.clan}</div>
+      <div class="preview-spec-grid">
+        <div class="spec-pill">🏯 動員 <b>${troops.toLocaleString()} 兵</b></div>
+        <div class="spec-pill">🧠 <b>${data.depthSpec || '深さ3'}</b></div>
+      </div>
+      <div class="preview-quote-box">
+        <p class="preview-quote-txt">${quote}</p>
+      </div>
+    </div>
+  `;
 }
 
 function startExhibitionFromModal() {
@@ -1527,14 +1600,30 @@ function dispatchExhibitionTurn() {
   const targetSide = isSente ? 'PLAYER' : 'AI';
   const targetData = getTargetAIData(targetKey);
 
-  isAiThinking = true; startTurnTimer(targetSide);
+  isAiThinking = true;
+  startTurnTimer(targetSide);
   const safeLimit = EXHIBITION_TIME_LIMITS[exhibitionSpeed] || 8500;
+
+  // 強制進行セーフティタイマー（万一Workerが応答しなくても3秒後に強制指し手進行）
+  clearTimeout(exhibitionSafetyTimer);
+  exhibitionSafetyTimer = setTimeout(() => {
+    if (isAiThinking) {
+      const legals = getLegalMoves(targetSide);
+      if (legals.length > 0) {
+        handleWorkerMessage({
+          data: {
+            type: 'done', bestMove: legals[0], evalScore: 0, depth: 1, targetDepth: 1, nodes: 1, timeSpentMs: safeLimit
+          }
+        });
+      }
+    }
+  }, safeLimit + 1500);
 
   aiWorker.postMessage({
     board, hands, level: targetKey.startsWith('lvl_') ? parseInt(targetKey.replace('lvl_',''), 10) : 5,
     engineType: targetData.engineType || 'kenshi',
     history: moveObjectsHistory, hashHistory: boardHashHistory, checkHist: checkHistory,
-    isExhibition: true, targetOwner: targetSide, timeLimit: safeLimit
+    isExhibition: true, owner: targetSide, targetOwner: targetSide, timeLimit: safeLimit
   });
 }
 
@@ -1659,14 +1748,12 @@ function drawTerritoryChart() {
   const w = cvs.width, h = cvs.height;
   ctx.clearRect(0, 0, w, h);
 
-  // 背景中央分水嶺ライン
   ctx.strokeStyle = 'rgba(255, 215, 0, 0.4)'; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
   ctx.beginPath(); ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2); ctx.stroke(); ctx.setLineDash([]);
 
   if (evalScoresHistory.length <= 1) return;
   const stepX = w / Math.max(1, evalScoresHistory.length - 1);
 
-  // 領地争奪塗りグラデーション
   const grad = ctx.createLinearGradient(0, 0, 0, h);
   grad.addColorStop(0, 'rgba(255, 60, 60, 0.45)');
   grad.addColorStop(0.5, 'rgba(255, 215, 0, 0.15)');
@@ -1683,7 +1770,6 @@ function drawTerritoryChart() {
   ctx.closePath();
   ctx.fillStyle = grad; ctx.fill();
 
-  // 実線プロット
   ctx.beginPath();
   ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 2;
   evalScoresHistory.forEach((score, i) => {
@@ -1693,7 +1779,6 @@ function drawTerritoryChart() {
   });
   ctx.stroke();
 
-  // 最新支配率表示
   const latestDiff = evalScoresHistory[evalScoresHistory.length - 1] || 0;
   const pTerritory = Math.max(10, Math.min(90, Math.round(50 + latestDiff * 0.4)));
   const aiTerritory = 100 - pTerritory;
@@ -1713,7 +1798,7 @@ function downloadKifu() {
   const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `将棋王_天下合戦棋譜_${Date.now()}.kif`; a.click();
 }
 
-/* 勲功録・戦歴帳制御 */
+/* 勲功録・戦歴帳制御（全フィルタ完全復元） */
 function saveProgress(lvl) {
   if (isExhibitionActive) return;
   if (!clearedProvinces.includes(lvl)) clearedProvinces.push(lvl);
@@ -1756,14 +1841,19 @@ function renderBattleHistoryList() {
   const l = document.getElementById('history-records-list'); if (!l) return;
   const list = JSON.parse(localStorage.getItem('shogi_records') || '[]');
   const filterRes = document.getElementById('filter-result')?.value || 'all';
+  const filterWarlord = document.getElementById('filter-warlord')?.value || 'all';
+  const filterLevel = document.getElementById('filter-level')?.value || 'all';
 
   const filtered = list.filter(r => {
     if (r.mode !== currentHistoryTab && !(currentHistoryTab === 'player' && !r.mode)) return false;
     if (filterRes !== 'all' && r.result !== filterRes) return false;
+    if (r.mode === 'player') {
+      if (filterWarlord !== 'all' && r.playerWarlordId !== filterWarlord) return false;
+      if (filterLevel !== 'all' && r.aiLevel.toString() !== filterLevel) return false;
+    }
     return true;
   });
 
-  // サマリー集計
   let wins = 0, losses = 0, draws = 0;
   filtered.forEach(r => { if (r.result === 'win') wins++; else if (r.result === 'lose') losses++; else draws++; });
   const total = filtered.length;
@@ -1775,7 +1865,7 @@ function renderBattleHistoryList() {
 
   l.innerHTML = filtered.length === 0 ? `<div style="text-align:center; padding:20px; color:#d6be89;">合戦の記録はまだござらぬ。</div>` : '';
 
-  filtered.forEach((r, idx) => {
+  filtered.forEach(r => {
     const card = document.createElement('div'); card.className = 'history-record-card';
     const isWin = r.result === 'win';
     card.innerHTML = `
@@ -1808,7 +1898,6 @@ function loadPastBattleForReplay(recId) {
   const list = JSON.parse(localStorage.getItem('shogi_records') || '[]');
   const rec = list.find(r => r.id === recId); if (!rec || !rec.historySnap) return;
 
-  // 進行中の合戦を一時退避保存（安全復帰機構）
   if (!isGameOver && !isPastReplayActive) {
     savedActiveBattle = {
       isExhibitionActive, exhibitionSenteTarget, exhibitionGoteTarget, exhibitionSpeed,
