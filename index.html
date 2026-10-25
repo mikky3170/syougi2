@@ -133,7 +133,7 @@
         </div>
       </div>
 
-      <!-- 将棋盤直下：スマホ時「左：再生バー」「右：自駒台」横並び密着コンテナ -->
+      <!-- 将棋盤直下：全画面サイズ共通「左：再生バー」「右：自駒台」横並び密着コンテナ -->
       <div class="board-under-control-row" id="board-under-control-row">
         <div class="replay-bar-slot" id="replay-bar-slot">
           <div class="replay-full-controls" id="replay-full-controls" style="display:none;">
@@ -145,7 +145,7 @@
               <button class="replay-step-btn btn-3d" onclick="stepReviewToEnd()" title="最新（終局）へ">⏭</button>
               <button class="kifu-speed-btn btn-3d" id="btn-replay-speed" onclick="cycleReplaySpeed()" title="速度切替">1x</button>
             </div>
-            <button class="btn-finish-replay btn-3d" onclick="exitReplayMode()" title="対局へ復帰">⚔ 戻る</button>
+            <button class="btn-finish-replay btn-3d" onclick="exitReplayMode()" title="対局へ復帰">⚔ 対局へ戻る</button>
           </div>
         </div>
 
@@ -632,7 +632,7 @@
           2. <b class="kw-gold">盤上再現を押す</b>：振り返りたい合戦カードの「<span class="kw-gold">盤上再現</span>」を押すと、盤面が瞬時に当時の布陣へと復元されます。<br>
           3. <b class="kw-crimson">自動再生を楽しむ</b>：盤の直下に出現した「<span class="kw-crimson">▶ 自動</span>」を押すと、まるで映画を眺めるように一手ずつ自動で局面が再現されます。<br>
           4. <b class="kw-blue">変速切替（1x/2x/4x）</b>：「<span class="kw-blue">1x</span>」を押すごとに等速・二倍速・四倍速へ切り替わります。<br>
-          5. <b class="kw-crimson">対局へ復帰</b>：再生バー右端の「<span class="kw-crimson">⚔ 戻る</span>」ボタンを押せば、いつでも元の合戦画面へ迷わず戻ることができます！
+          5. <b class="kw-crimson">対局へ復帰</b>：再生バー右端の「<span class="kw-crimson">⚔ 対局へ戻る</span>」ボタンを押せば、いつでも元の合戦画面へ迷わず戻ることができます！
         </div>
 
         <div class="guide-card-box" id="guide-card-step-3">

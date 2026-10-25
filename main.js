@@ -4,7 +4,7 @@
    【パート 1 / 2】
    ========================================================= */
 
-// AI Web Workerコード（思考エンジン：最善手先行オーダリング高速化＆反復深化リアルタイム進捗通知＆厳格時間制限対応版）
+// AI Web Workerコード（思考エンジン：最善手先行オーダリング高速化＆反復深化リアルタイム進捗通知＆反復泥沼ループ回避＆厳格時間制限対応版）
 const workerScriptContent = `
 const PIECE_CODES = ['OU','HI','KA','KI','GI','KE','KY','FU','RY','UM','NG','NK','NY','TO'];
 const VALUES = { OU: 20000, HI: 1050, KA: 880, KI: 580, GI: 480, KE: 380, KY: 280, FU: 100, RY: 1400, UM: 1200, NG: 560, NK: 480, NY: 420, TO: 420 };
@@ -387,12 +387,13 @@ function negamax(depth, alpha, beta, owner, maxQ, rootPerspective, evalLevel) {
     unmakeMove(undo);
     if (isSearchTimeout) break;
 
+    // 千日手回避・往復跳躍ペナルティの強化
     if (moveHistory.length >= 2) {
       const last = moveHistory[moveHistory.length - 2];
       if (m.type === 'move' && last.type === 'move' &&
           m.to.r === last.from.r && m.to.c === last.from.c &&
           m.from.r === last.to.r && m.from.c === last.to.c) {
-        score -= 500;
+        score -= 900;
       }
     }
 
@@ -429,15 +430,15 @@ self.onmessage = function(e) {
     const undo = makeMove(m);
     const nextHash = getBoardHash(board, hands, enemyOwner);
     const hashOccurrences = pastHashes.filter(h => h === nextHash).length;
-    if (hashOccurrences >= 2) penalty += 4000;
-    else if (hashOccurrences === 1) penalty += 1500;
+    if (hashOccurrences >= 2) penalty += 5500;
+    else if (hashOccurrences === 1) penalty += 2000;
 
     if (moveHistory.length >= 2) {
       const lastOwnerMove = moveHistory[moveHistory.length - 2];
       if (m.type === 'move' && lastOwnerMove?.type === 'move') {
         if (m.to.r === lastOwnerMove.from.r && m.to.c === lastOwnerMove.from.c &&
             m.from.r === lastOwnerMove.to.r && m.from.c === lastOwnerMove.to.c) {
-          penalty += 2800;
+          penalty += 3500;
         }
       }
     }
@@ -1538,7 +1539,7 @@ const REPLAY_SPEEDS = [1500, 750, 350], REPLAY_SPEED_LABELS = ['1x', '2x', '4x']
 let replaySpeedIndex = 0;
 
 let isPastReplayActive = false, savedActiveBattle = null;
-let isExhibitionActive = false, exhibitionTimer = null, exhibitionSpeed = 'normal';
+let isExhibitionActive = false, exhibitionTimer = null, exhibitionSafetyTimer = null, exhibitionSpeed = 'normal';
 const EXHIBITION_DELAYS = { normal: 1200, fast: 650 };
 const EXHIBITION_TIME_LIMITS = { normal: 8500, fast: 2500 };
 let exhibitionSenteTarget = 'lvl_1', exhibitionGoteTarget = 'lvl_10', exhibitionRandomStrategistWarlordKey = 'sanada';
@@ -1833,7 +1834,7 @@ function calculateTroopsPercentages(bd, hd) {
   return { pPct, aiPct };
 }
 
-/* 戦況連動型・動的セリフ切り替えシステム */
+/* 戦況連動型・動的セリフ切り替えシステム（史実・戦況完全整合） */
 function updateWarlordQuotes() {
   if (isReviewingPast()) return;
 
@@ -2136,7 +2137,7 @@ function getBoardHash(b, h, t) {
   return s;
 }
 
-/* 千日手判定 */
+/* 千日手判定（御前試合・通常対戦完全対応） */
 function checkSennichite(targetNextTurn = turn) {
   const curHash = getBoardHash(board, hands, targetNextTurn);
   boardHashHistory.push(curHash);
@@ -2163,18 +2164,34 @@ function checkSennichite(targetNextTurn = turn) {
     updateTurnFocus(null);
 
     const exhModeTxt = (exhibitionSpeed === 'fast') ? '早指し戦' : '本将棋';
+    const sData = isExhibitionActive ? getTargetAIData(exhibitionSenteTarget) : null;
+    const gData = isExhibitionActive ? getTargetAIData(exhibitionGoteTarget) : null;
 
     if (stepCount >= 6 && playerAlwaysChecking && !aiAlwaysChecking) {
-      triggerCutin('連続王手の反則！ 敗戦に候！', true);
-      setOrderMessage('連続王手の千日手は反則！ 陣を立て直されよ。', false, 'alert');
-      showWarlordResultPlaque('AI');
-      saveBattleRecord(isExhibitionActive ? 'exhibition' : 'lose', isExhibitionActive ? `御前${exhModeTxt}(反則)` : '反則負け');
+      if (isExhibitionActive) {
+        triggerCutin(`先手・${sData.name}の連続王手反則！ 後手の勝利！`, true);
+        setOrderMessage({ line1: `【御前試合 決着】先手の連続王手千日手違反に候！`, line2: `後手・<b>${gData.name}</b>の反則勝ちとなりました！` }, false, 'settle');
+        showWarlordResultPlaque('AI');
+        saveBattleRecord('exhibition', `御前${exhModeTxt}：${gData.name}反則勝`);
+      } else {
+        triggerCutin('連続王手の反則！ 敗戦に候！', true);
+        setOrderMessage('連続王手の千日手は反則！ 陣を立て直されよ。', false, 'alert');
+        showWarlordResultPlaque('AI');
+        saveBattleRecord('lose', '反則負け');
+      }
     } else if (stepCount >= 6 && aiAlwaysChecking && !playerAlwaysChecking) {
-      triggerCutin('敵将の反則！ 我が軍の勝利！', true);
-      setOrderMessage('相手が連続王手の千日手を犯し候！ 勝利なり！', false, 'settle');
-      if (!isExhibitionActive) { saveProgress(currentAiLevel); launchFireworksCelebration(); }
-      showWarlordResultPlaque('PLAYER');
-      saveBattleRecord(isExhibitionActive ? 'exhibition' : 'win', isExhibitionActive ? `御前${exhModeTxt}(反則)` : '反則勝ち');
+      if (isExhibitionActive) {
+        triggerCutin(`後手・${gData.name}の連続王手反則！ 先手の勝利！`, true);
+        setOrderMessage({ line1: `【御前試合 決着】後手の連続王手千日手違反に候！`, line2: `先手・<b>${sData.name}</b>の反則勝ちとなりました！` }, false, 'settle');
+        showWarlordResultPlaque('PLAYER');
+        saveBattleRecord('exhibition', `御前${exhModeTxt}：${sData.name}反則勝`);
+      } else {
+        triggerCutin('敵将の反則！ 我が軍の勝利！', true);
+        setOrderMessage('相手が連続王手の千日手を犯し候！ 勝利なり！', false, 'settle');
+        saveProgress(currentAiLevel); launchFireworksCelebration();
+        showWarlordResultPlaque('PLAYER');
+        saveBattleRecord('win', '反則勝ち');
+      }
     } else {
       triggerCutin('千日手！ 痛み分けの引き分け！');
       setOrderMessage('同一局面四回にて引き分け（痛み分け）に候。', false, 'alert');
@@ -2188,7 +2205,7 @@ function checkSennichite(targetNextTurn = turn) {
 }
 
 function initBoardState() {
-  stopAutoReplay(); stopTurnTimer();
+  stopAutoReplay(); stopTurnTimer(); stopExhibitionTimer();
   if (!isExhibitionActive) isPastReplayActive = false;
   board = Array.from({length: 9}, () => Array(9).fill(null));
   hands = { PLAYER: {}, AI: {} };
@@ -2319,7 +2336,7 @@ function updateReviewModeUI() {
 
 function exitReplayMode() {
   playUiClickSound();
-  stopAutoReplay(); stopTurnTimer();
+  stopAutoReplay(); stopTurnTimer(); stopExhibitionTimer();
 
   if (savedActiveBattle) {
     const isSavedExhibition = !!savedActiveBattle.isExhibitionActive;
@@ -2540,7 +2557,7 @@ function openRivalryInGuide(targetKey = null) {
 }
 
 function openFurigomaModal() {
-  initAudio(); playUiClickSound(); stopAutoReplay(); stopTurnTimer();
+  initAudio(); playUiClickSound(); stopAutoReplay(); stopTurnTimer(); stopExhibitionTimer();
   savedActiveBattle = null; isPastReplayActive = false; isExhibitionActive = false;
 
   const m = document.getElementById('furigoma-modal');
@@ -2715,7 +2732,7 @@ function onHandClick(code) {
   if (isGameOver || turn !== 'PLAYER' || isAiThinking || isExhibitionActive || isPieceAnimating) return;
   stopAutoReplay();
   if (isReviewingPast()) {
-    setOrderMessage('下部バーの［⚔ 戻る］を押して実戦へお戻り下され。', false, 'player');
+    setOrderMessage('下部バーの［⚔ 対局へ戻る］を押して実戦へお戻り下され。', false, 'player');
     return;
   }
   initAudio(); playUiClickSound();
@@ -2735,7 +2752,7 @@ function onCellClick(r, c) {
   if (isGameOver || turn !== 'PLAYER' || isAiThinking || isExhibitionActive || isPieceAnimating) return;
   stopAutoReplay();
   if (isReviewingPast()) {
-    setOrderMessage('下部バーの［⚔ 戻る］を押して実戦へお戻り下され。', false, 'player');
+    setOrderMessage('下部バーの［⚔ 対局へ戻る］を押して実戦へお戻り下され。', false, 'player');
     return;
   }
   initAudio();
@@ -2879,7 +2896,8 @@ function executeMove(m, metric = null) {
 
   if (m.type === 'drop') {
     hands[m.owner][m.code]--;
-    board[m.to.r][move.to.c] = { code: m.code, owner: m.owner };
+    // 【バグ修正】未定義変数 move.to.c ではなく m.to.c を指定
+    board[m.to.r][m.to.c] = { code: m.code, owner: m.owner };
   } else {
     const fp = board[m.from.r][m.from.c], tp = board[m.to.r][m.to.c];
     if (tp) {
@@ -3050,6 +3068,7 @@ function cycleNextTacticsHint() {
 }
 
 function handleWorkerMessage(e) {
+  clearTimeout(exhibitionSafetyTimer);
   const data = e.data;
   const p = PLAYER_WARLORDS[currentMyWarlordId];
 
@@ -3118,6 +3137,7 @@ function handleWorkerMessage(e) {
 }
 
 function handleExternalWorkerMessage(e) {
+  clearTimeout(exhibitionSafetyTimer);
   const data = e.data;
   if (data.type === 'progress') {
     exhibitionAchievedDepth = data.depth || 1;
@@ -3175,7 +3195,7 @@ function showMasterHint() {
   if (isGameOver || turn !== 'PLAYER' || isHintThinking || isExhibitionActive || isPieceAnimating) return;
   stopAutoReplay();
   if (isReviewingPast()) {
-    setOrderMessage('下部バーの［⚔ 戻る］を押して実戦局面へお戻り下され。', false, 'player');
+    setOrderMessage('下部バーの［⚔ 対局へ戻る］を押して実戦局面へお戻り下され。', false, 'player');
     return;
   }
   playUiClickSound(); isHintThinking = true;
@@ -3233,7 +3253,7 @@ function undoMove() {
 
 function surrenderGame() {
   if (isGameOver || isExhibitionActive) return;
-  stopAutoReplay(); stopTurnTimer();
+  stopAutoReplay(); stopTurnTimer(); stopExhibitionTimer();
   isGameOver = true; triggerCutin('無念… 降伏いたす…');
   updateTurnFocus(null);
   
@@ -3250,6 +3270,26 @@ function surrenderGame() {
 }
 
 function checkGameOver(nextOwner) {
+  // 規定手数上限（256手）判定による無限対局・千手ループ防止
+  if (moveObjectsHistory.length >= 256) {
+    isGameOver = true;
+    stopAutoReplay(); stopTurnTimer();
+    if (isExhibitionActive) stopExhibitionTimer();
+    updateTurnFocus(null);
+    updateTroopsAndSituation();
+    clearWarlordResultPlaques();
+
+    const exhModeTxt = (exhibitionSpeed === 'fast') ? '早指し戦' : '通常本将棋';
+    triggerCutin('二百五十六手！ 両軍兵粮尽き引き分け！', true);
+    setOrderMessage({
+      line1: `第256手 ── <b>【合戦結び】両軍互角の死闘の末、規定手数に達し候！</b>`,
+      line2: `痛み分けの引き分け（合戦終局）にござる。`
+    }, false, 'settle');
+    saveBattleRecord(isExhibitionActive ? 'exhibition' : 'draw', isExhibitionActive ? `御前${exhModeTxt}(256手引分)` : '256手引分');
+    updateReviewModeUI();
+    return true;
+  }
+
   const isKingGone = checkGameOverState(nextOwner, board);
   const legalsEmpty = getLegalMoves(nextOwner).length === 0;
 
@@ -3536,7 +3576,7 @@ function switchExhibitionMobileTab(tabSide) {
 }
 
 function openExhibitionModal() {
-  initAudio(); playUiClickSound(); stopAutoReplay();
+  initAudio(); playUiClickSound(); stopAutoReplay(); stopExhibitionTimer();
   pickRandomStrategistWarlord();
   renderExhibitionVisualPickers();
   switchExhibitionMobileTab('sente');
@@ -3760,6 +3800,19 @@ function dispatchExhibitionTurn() {
 
   const safeLimit = EXHIBITION_TIME_LIMITS[exhibitionSpeed] || 8500;
 
+  // 【安全策】万が一Web Workerからの応答が途絶した場合のフォールバック・セーフティタイマー
+  clearTimeout(exhibitionSafetyTimer);
+  exhibitionSafetyTimer = setTimeout(() => {
+    if (isAiThinking && isExhibitionActive && !isGameOver) {
+      console.warn('御前試合AI思考制限時間超過検知：安全フォールバック発動');
+      const legals = getLegalMoves(targetSide);
+      if (legals.length > 0) {
+        const fallbackMove = legals[0];
+        handleWorkerMessage({ data: { type: 'done', bestMove: fallbackMove, depth: 1, targetDepth: 1, nodes: 0 } });
+      }
+    }
+  }, safeLimit + 2000);
+
   if (['nanban', 'kenshi', 'inja', 'sokei'].includes(targetKey)) {
     const payload = {
       board: cloneBoardState(board),
@@ -3832,6 +3885,10 @@ function stopExhibitionTimer() {
   if (exhibitionTimer) {
     clearTimeout(exhibitionTimer);
     exhibitionTimer = null;
+  }
+  if (exhibitionSafetyTimer) {
+    clearTimeout(exhibitionSafetyTimer);
+    exhibitionSafetyTimer = null;
   }
 }
 
@@ -4834,7 +4891,7 @@ function replayFromHistory(recordId, storageKey) {
   updateWarlordQuotes();
   updateReviewModeUI();
   
-  const pauseNotice = savedActiveBattle ? '（※進行中の対戦は一時中断中。［⚔ 戻る］でいつでも再開できます）' : '';
+  const pauseNotice = savedActiveBattle ? '（※進行中の対戦は一時中断中。［⚔ 対局へ戻る］でいつでも再開できます）' : '';
   setOrderMessage({
     line1: `【${rec.playerWarlordName} vs ${rec.enemyName}の合戦を再現中】`,
     line2: `［▶自動］や［◀］［▶］で一手ずつ鑑賞可能。${pauseNotice}`
@@ -4858,5 +4915,4 @@ document.addEventListener('touchstart', () => initAudio(), { once: true });
 loadProgress();
 setPlayerWarlord(currentMyWarlordId);
 initBoardState();
-
 
