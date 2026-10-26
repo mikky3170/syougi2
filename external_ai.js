@@ -2,12 +2,12 @@
 /* =========================================================
    将棋王 2026 〜 天下統一・戦国決戦 〜
    外部オープンソースAIエンジン統合モジュール
-   【戦国四英傑・客分思考エンジン群（反復深化完全同期＆高精度深度確定版）】
+   【戦国四英傑・客分思考エンジン群（実力完全発揮・反復深化同期版）】
    
-   1. nanban : 【蒲生氏郷】       - MicroMax系統（西洋古典αβ探索 ＋ 静止探索 / 目標深さ3）
-   2. kenshi : 【柳生石舟斎】     - Sunfish将棋系統（Piece-Square Tables 駒配置評価駆動 / 目標深さ4）
-   3. inja   : 【黒田如水】       - Bonanza系統（Zobrist Hash置換表 ＋ キラー探索 / 目標深さ5）
-   4. sokei  : 【初代名人・大橋宗桂】 - Apery / やねうら王系統（Null-Move枝刈り ＋ PVS探索 / 目標深さ6）
+   1. nanban : 【蒲生氏郷】       - MicroMax系統（西洋古典αβ探索 ＋ 静止探索 / 目標深さ3[早指し2]）
+   2. kenshi : 【柳生石舟斎】     - Sunfish将棋系統（PST 駒配置評価駆動 / 目標深さ4[早指し3]）
+   3. inja   : 【黒田如水】       - Bonanza系統（置換表 ＋ キラー探索 / 目標深さ4[早指し3]）
+   4. sokei  : 【初代名人・大橋宗桂】 - Apery / やねうら王系統（安全PVS探索 ＋ 完全読破 / 目標深さ5[早指し4]）
    ========================================================= */
 
 (function(global) {
@@ -567,7 +567,7 @@
     return bestVal;
   }
 
-  /* 4. 【初代名人・大橋宗桂】（Apery / やねうら王系統）：高精度玉囲い評価 ＋ Null-Move枝刈り ＋ PVS探索 ＋ MVV-LVA */
+  /* 4. 【初代名人・大橋宗桂】（Apery / やねうら王系統）：高精度玉囲い評価 ＋ 安全PVS探索 ＋ MVV-LVA */
   function evalSokei(perspectiveOwner) {
     let score = 0;
     const opp = (perspectiveOwner === 'PLAYER') ? 'AI' : 'PLAYER';
@@ -582,10 +582,10 @@
         const idx = (p.owner === 'PLAYER') ? (r * 9 + c) : ((8 - r) * 9 + (8 - c));
 
         if (p.code === 'FU') val += (PST_FU[idx] || 0);
-        else if (p.code === 'GI') val += (PST_GI[idx] || 0) * 1.1;
-        else if (p.code === 'KI') val += (PST_KI[idx] || 0) * 1.1;
-        else if (p.code === 'RY') val += 150;
-        else if (p.code === 'UM') val += 120;
+        else if (p.code === 'GI') val += (PST_GI[idx] || 0) * 1.15;
+        else if (p.code === 'KI') val += (PST_KI[idx] || 0) * 1.15;
+        else if (p.code === 'RY') val += 160;
+        else if (p.code === 'UM') val += 130;
 
         if (p.code === 'OU') {
           if (p.owner === perspectiveOwner) myKing = { r, c };
@@ -604,7 +604,7 @@
           if (occ?.owner === perspectiveOwner && ['KI','GI','NG','NK','NY','TO'].includes(occ.code)) guards++;
         }
       }
-      score += guards * 45;
+      score += guards * 50;
     }
     if (oppKing) {
       let guards = 0;
@@ -615,7 +615,7 @@
           if (occ?.owner === opp && ['KI','GI','NG','NK','NY','TO'].includes(occ.code)) guards++;
         }
       }
-      score -= guards * 45;
+      score -= guards * 50;
     }
 
     for (const code in hands[perspectiveOwner]) score += (hands[perspectiveOwner][code] || 0) * (VALUES[code] || 0) * 1.25;
@@ -644,7 +644,7 @@
     return alpha;
   }
 
-  function searchSokeiPVS(depth, alpha, beta, owner, ply, rootPerspective, canNull = true) {
+  function searchSokeiPVS(depth, alpha, beta, owner, ply, rootPerspective) {
     nodeCount++;
     if ((nodeCount & 15) === 0 && checkTimeout()) return alpha;
 
@@ -664,13 +664,6 @@
     }
 
     const nextOwner = (owner === 'PLAYER') ? 'AI' : 'PLAYER';
-
-    if (canNull && !inCheck && depth >= 3) {
-      const R = 2;
-      const nullScore = -searchSokeiPVS(depth - 1 - R, -beta, -beta + 1, nextOwner, ply + 1, rootPerspective, false);
-      if (nullScore >= beta) return beta;
-    }
-
     const moves = genLegalMoves(owner, false, true);
     if (moves.length === 0) return inCheck ? (-MATE_SCORE + ply) : 0;
 
@@ -703,11 +696,11 @@
       let score;
 
       if (i === 0) {
-        score = -searchSokeiPVS(depth - 1, -beta, -alpha, nextOwner, ply + 1, rootPerspective, true);
+        score = -searchSokeiPVS(depth - 1, -beta, -alpha, nextOwner, ply + 1, rootPerspective);
       } else {
-        score = -searchSokeiPVS(depth - 1, -alpha - 1, -alpha, nextOwner, ply + 1, rootPerspective, true);
+        score = -searchSokeiPVS(depth - 1, -alpha - 1, -alpha, nextOwner, ply + 1, rootPerspective);
         if (score > alpha && score < beta) {
-          score = -searchSokeiPVS(depth - 1, -beta, -alpha, nextOwner, ply + 1, rootPerspective, true);
+          score = -searchSokeiPVS(depth - 1, -beta, -alpha, nextOwner, ply + 1, rootPerspective);
         }
       }
 
@@ -745,7 +738,8 @@
       owner = 'PLAYER',
       history = [],
       hashHistory = [],
-      timeLimit = 8500
+      timeLimit = 8500,
+      speedMode = 'normal'
     } = params;
 
     board = bD;
@@ -757,11 +751,20 @@
     searchTimeLimit = (typeof timeLimit === 'number' && timeLimit > 0) ? timeLimit : 8500;
     updateKingCache();
 
+    // 通常本将棋と早指し戦における目標深度の厳密な最適化
+    const isFast = (speedMode === 'fast' || searchTimeLimit <= 3000);
     let targetDepth = 3;
-    if (engineType === 'nanban') targetDepth = 3;
-    else if (engineType === 'kenshi') targetDepth = 4;
-    else if (engineType === 'inja') targetDepth = 5;
-    else if (engineType === 'sokei') targetDepth = 6;
+
+    if (engineType === 'nanban') {
+      targetDepth = isFast ? 2 : 3;
+    } else if (engineType === 'kenshi') {
+      targetDepth = isFast ? 3 : 4;
+    } else if (engineType === 'inja') {
+      targetDepth = isFast ? 3 : 4;
+    } else if (engineType === 'sokei') {
+      // 初代名人：通常本将棋は深さ5、早指しは深さ4を確実に時間内完全読破
+      targetDepth = isFast ? 4 : 5;
+    }
 
     const legals = genLegalMoves(owner, false, true);
     if (legals.length === 0) {
@@ -804,9 +807,10 @@
       }
 
       let currentIteration = scoredMoves.map(it => ({ move: it.move, score: it.score }));
+      let iterationCompleted = true;
 
       for (let i = 0; i < currentIteration.length; i++) {
-        if (checkTimeout()) break;
+        if (checkTimeout()) { iterationCompleted = false; break; }
         const m = currentIteration[i].move;
         const repPen = calcRepetitionPenalty(m);
         const undo = makeMove(m);
@@ -819,16 +823,16 @@
         } else if (engineType === 'inja') {
           s = -searchInja(d - 1, -beta, -alpha, enemyOwner, 1, owner) - repPen;
         } else {
-          s = -searchSokeiPVS(d - 1, -beta, -alpha, enemyOwner, 1, owner, true) - repPen;
+          s = -searchSokeiPVS(d - 1, -beta, -alpha, enemyOwner, 1, owner) - repPen;
         }
 
         unmakeMove(undo);
         currentIteration[i].score = s;
-        if (isSearchTimeout) break;
+        if (isSearchTimeout) { iterationCompleted = false; break; }
         if (s > alpha) alpha = s;
       }
 
-      if (!isSearchTimeout) {
+      if (iterationCompleted && !isSearchTimeout) {
         achievedDepth = d;
         currentIteration.sort((a, b) => b.score - a.score);
         scoredMoves = currentIteration;

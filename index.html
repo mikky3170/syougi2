@@ -56,7 +56,7 @@
     <!-- 【上陣：敵軍／後手陣武将 ＆ 持ち駒台】 -->
     <div class="battle-section-top">
       <div class="board-hand-dock dock-enemy" id="dock-enemy-wrapper" title="上陣持ち駒台">
-        <div class="dock-label" id="ai-dock-label">☖ 敵駒</div>
+        <div class="dock-label" id="ai-dock-label">敵駒</div>
         <div class="warlord-hand-box hand-box-enemy" id="ai-hand"></div>
       </div>
 
@@ -169,7 +169,7 @@
         <!-- 自軍持ち駒台 -->
         <div class="board-hand-dock dock-player" id="dock-player-wrapper" title="下陣持ち駒台">
           <div class="warlord-hand-box hand-box-player" id="player-hand"></div>
-          <div class="dock-label" id="player-dock-label">☗ 自駒</div>
+          <div class="dock-label" id="player-dock-label">自駒</div>
         </div>
       </div>
 
@@ -280,13 +280,13 @@
     </div>
 
     <div class="exhibition-mobile-tab-bar" id="exhibition-mobile-tabs">
-      <button class="exhibition-mobile-tab-btn btn-3d active" id="btn-exh-tab-sente" onclick="switchExhibitionMobileTab('sente')">☗ 先手陣を選定</button>
-      <button class="exhibition-mobile-tab-btn btn-3d" id="btn-exh-tab-gote" onclick="switchExhibitionMobileTab('gote')">☖ 後手陣を選定</button>
+      <button class="exhibition-mobile-tab-btn btn-3d active" id="btn-exh-tab-sente" onclick="switchExhibitionMobileTab('sente')"></button>
+      <button class="exhibition-mobile-tab-btn btn-3d" id="btn-exh-tab-gote" onclick="switchExhibitionMobileTab('gote')"></button>
     </div>
 
     <div class="exhibition-vs-container" id="exhibition-vs-container">
       <div class="exhibition-side-col mobile-active-col" id="exhibition-col-sente">
-        <div class="exhibition-side-title">【先手陣】出陣AI</div>
+        <div class="exhibition-side-title" id="exhibition-side-title-sente">【先手陣】出陣AI</div>
         <div class="exhibition-warlord-preview-card" id="exhibition-sente-preview-card">
           <div class="preview-avatar-box" id="preview-sente-avatar"></div>
           <div class="preview-info-box">
@@ -301,7 +301,7 @@
       </div>
 
       <div class="exhibition-side-col" id="exhibition-col-gote">
-        <div class="exhibition-side-title">【後手陣】出陣AI</div>
+        <div class="exhibition-side-title" id="exhibition-side-title-gote">【後手陣】出陣AI</div>
         <div class="exhibition-warlord-preview-card" id="exhibition-gote-preview-card">
           <div class="preview-avatar-box" id="preview-gote-avatar"></div>
           <div class="preview-info-box">
@@ -509,7 +509,7 @@
     
     <div class="kifu-troops-confrontation-bar">
       <div class="kifu-troops-side side-player">
-        <span class="side-turn-tag" id="kifu-player-turn-tag">☗ 先手陣</span>
+        <span class="side-turn-tag" id="kifu-player-turn-tag">先手陣</span>
         <span class="side-warlord-tag" id="kifu-player-tag">我が軍</span>
         <span class="side-troops-val" id="kifu-player-troops-val">3,000 兵</span>
       </div>
@@ -518,7 +518,7 @@
         <span class="kifu-troops-diff-badge" id="kifu-troops-diff-disp">兵力差 ±0</span>
       </div>
       <div class="kifu-troops-side side-enemy">
-        <span class="side-turn-tag" id="kifu-enemy-turn-tag">☖ 後手陣</span>
+        <span class="side-turn-tag" id="kifu-enemy-turn-tag">後手陣</span>
         <span class="side-warlord-tag" id="kifu-enemy-tag">敵軍</span>
         <span class="side-troops-val" id="kifu-enemy-troops-val">3,000 兵</span>
       </div>
@@ -531,12 +531,12 @@
 
     <div class="chart-container territory-chart-box">
       <div class="chart-legend-top">
-        <span class="chart-tag-enemy" id="chart-enemy-name-tag">☖ 敵軍領地（上陣）</span>
+        <span class="chart-tag-enemy" id="chart-enemy-name-tag">後手陣領地（上陣）</span>
         <span id="chart-eval-num-top" class="chart-eval-troops-txt">領地支配 50%</span>
       </div>
       <div class="chart-tag-mid">── 中央決戦ライン（天下分水嶺） ──</div>
       <div class="chart-legend-bottom">
-        <span class="chart-tag-player" id="chart-player-name-tag">☗ 我が軍領地（下陣・優勢で上へ進撃拡大）</span>
+        <span class="chart-tag-player" id="chart-player-name-tag">先手陣領地（下陣・優勢で上へ進撃拡大）</span>
         <span id="chart-eval-num-bottom" class="chart-eval-troops-txt">領地支配 50%</span>
       </div>
       <canvas id="chart-canvas"></canvas>
@@ -607,7 +607,7 @@
             <button class="card-speech-btn btn-3d" onclick="toggleCardSpeech('guide-card-step-1')">🔊 朗読</button>
           </div>
           1. <b class="kw-gold">陣容の選定</b>：上下のパネルより「自将」と進軍先の「敵国」を決定します。敵将を討ち取るごとに兵力を吸収し、最大動員力が増強されます！<br>
-          2. <b class="kw-gold">振り駒の儀</b>：「⚜ 対局開始」を押すと、五枚の歩が一斉に舞い散り天運により<span class="kw-green">先手（☗）・後手（☖）</span>を定めます。<br>
+          2. <b class="kw-gold">振り駒の儀</b>：「⚜ 対局開始」を押すと、五枚の歩が一斉に舞い散り天運により<span class="kw-green">先手・後手</span>を定めます。<br>
           3. <b class="kw-gold">布陣と進撃</b>：盤上または手駒をタップすると、進めるマスが鮮やかな<span class="kw-green">若草色</span>、敵駒を取れるマスが<span class="kw-crimson">真金色</span>に輝きます。<br>
           4. <b class="kw-gold">成り（昇格）</b>：敵陣へ突入、敵陣内での移動、または敵陣から出る際、駒がひっくり返り流麗な<span class="kw-crimson">行書体の成駒（龍王・龍馬など）</span>へと覚醒します。<br>
           5. <b class="kw-gold">敵玉撃破（兵力壊滅）</b>：敵将の玉将を討ち取る（詰ます）ことで敵兵力を壊滅させ、天下平定へ一歩前進します！
@@ -726,8 +726,8 @@
           御前試合にて腕を競い合う、日ノ本屈指の客分英傑たちです：<br>
           ・<b class="kw-blue">蒲生氏郷</b>（アマ初段相当 ｜ 南蛮兵法・MicroMax系統・深さ3）<br>
           ・<b class="kw-gold">柳生石舟斎</b>（アマ二段相当 ｜ 新陰流剣聖・Sunfish系統・深さ4）<br>
-          ・<b class="kw-green">黒田如水</b>（アマ五段相当 ｜ 神算鬼謀の隠者・Bonanza系統・深さ5）<br>
-          ・<b class="kw-crimson">初代名人・大橋宗桂</b>（アマ八段〜九段相当 ｜ 一世名人・Apery/やねうら王系統・深さ6）
+          ・<b class="kw-green">黒田如水</b>（アマ五段相当 ｜ 神算鬼謀の隠者・Bonanza系統・深さ4）<br>
+          ・<b class="kw-crimson">初代名人・大橋宗桂</b>（アマ八段〜九段相当 ｜ 一世名人・Apery/やねうら王系統・深さ5）
         </div>
       </div>
 
@@ -821,11 +821,8 @@
   </div>
 </div>
 
-<!-- 分割ロード：①ゲームデータ ➡ ②思考エンジン ➡ ③メインゲーム制御 -->
-<script src="game_data.js"></script>
-<script src="ai_engine.js"></script>
+<!-- 分割ロード：メインゲーム制御スクリプト -->
 <script src="main.js"></script>
 </body>
 </html>
-
 
