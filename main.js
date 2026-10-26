@@ -1,3 +1,4 @@
+
 /* =========================================================
    将棋王 2026 〜 天下統一・戦国決戦 〜
    メインスクリプト（軍略・演出・思考エンジン・御前試合統合管理）
@@ -32,8 +33,7 @@ const LEVEL_CFG = {
   7:  { depth: 4, qDepth: 3 },
   8:  { depth: 4, qDepth: 3 },
   9:  { depth: 4, qDepth: 4 },
-  10: { depth: 5, qDepth: 4 },
-  11: { depth: 5, qDepth: 4 }
+  10: { depth: 5, qDepth: 4 }
 };
 
 function checkTimeout() {
@@ -244,7 +244,7 @@ function evaluatePosition(evalPerspective, evalLevel) {
         if (evalLevel === 7 && ['KI','GI'].includes(p.code) && relativeRank <= 2) score += 30;
         if (evalLevel === 8 && ['RY','UM'].includes(p.code)) val *= 1.35;
         if (evalLevel === 9 && ['KI','GI'].includes(p.code) && relativeRank >= 5) score += 35;
-        if (evalLevel === 11 && ['RY','UM','KE'].includes(p.code)) val *= 1.35;
+        if (evalLevel >= 10 && ['RY','UM','KE'].includes(p.code)) val *= 1.35;
       }
 
       score += sign * val;
@@ -306,7 +306,6 @@ function evaluatePosition(evalPerspective, evalLevel) {
 
   const handMul = (evalLevel >= 9) ? 1.30 : 1.15;
   for (const c in hands[evalPerspective]) score += (hands[evalPerspective][c] || 0) * (VALUES[c] || 0) * handMul;
-  // 【重要バグ修正】VALUES[code] -> VALUES[c] に修正し未定義エラーを根絶
   for (const c in hands[oppOwner])        score -= (hands[oppOwner][c] || 0) * (VALUES[c] || 0) * 1.15;
   return score;
 }
@@ -616,7 +615,6 @@ self.onmessage = function(e) {
 
 /* =========================================================
    安土桃山・黄金工芸 立体五角形将棋駒アイコン 生成エンジン
-   【漆黒金駒（先手＝黒）／ 純白銀駒（後手＝白）】
    ========================================================= */
 function getKomaMarkHtml(isSente, sizeType = 'normal') {
   let w = 11, h = 12, vAlign = '-1.5px', mRight = '3px';
@@ -660,7 +658,7 @@ function getKomaMarkHtml(isSente, sizeType = 'normal') {
 }
 
 /* =========================================================
-   最高峰二重音響エンジン
+   音響エンジン
    ========================================================= */
 let audioCtx = null, soundEnabled = true, isPageHidden = false;
 let realKomaAudioBuffer = null;
@@ -1017,7 +1015,7 @@ if ('speechSynthesis' in window) {
 }
 
 /* =========================================================
-   【視線誘導 ＆ 手番・思考タイマー管理エンジン（目標深さ表示完全同期版）】
+   【視線誘導 ＆ 手番・思考タイマー管理エンジン】
    ========================================================= */
 let turnStartTime = 0;
 let turnTimerInterval = null;
@@ -1027,7 +1025,6 @@ let currentThinkingName = '';
 let totalTimeSpentMs = { PLAYER: 0, AI: 0 };
 let movesCountBySide = { PLAYER: 0, AI: 0 };
 
-// 直近着手完了情報（先手・後手独立、いかなる過渡期も完全保護）
 let lastSettledMoveInfo = {
   PLAYER: null,
   AI: null
@@ -1040,7 +1037,6 @@ function formatTimeMinutesSeconds(totalSec) {
   return `${m}分${s.toString().padStart(2, '0')}秒`;
 }
 
-/* 手番フォーカス切り替え */
 function updateTurnFocus(activeTurn) {
   const pPanel = document.getElementById('player-panel');
   const aiPanel = document.getElementById('ai-panel');
@@ -1069,7 +1065,6 @@ function startTurnTimer(side, warlordName) {
   }, 100);
 }
 
-// 思考タイマー表示更新：思考中は (深さ 【目標深さ】) のみ表示（探索中表記は全廃止）
 function updateThinkingTimerDisplay() {
   if (isGameOver || isReviewingPast()) return;
   const elapsedSec = Math.max(0.1, (Date.now() - turnStartTime) / 1000).toFixed(1);
@@ -1107,7 +1102,6 @@ function updateThinkingTimerDisplay() {
       aiThinkDisp.style.display = 'inline-flex';
       aiThinkDisp.className = 'warlord-thinking-inline timer-gold-box';
       const targetD = WARLORDS_DATA[currentAiLevel]?.targetDepth || 1;
-      // 【仕様統一】思考中は目標深さのみを表示
       aiThinkDisp.innerHTML = `🧠 敵将熟慮 <b>${elapsedSec}秒</b> (深さ ${targetD})`;
     }
     if (pThinkDisp) {
@@ -1176,7 +1170,8 @@ function recordTurnTime(side, customElapsedMs = null) {
 }
 
 /* =========================================================
-   武将ポートレート・アバター表示管理（武将本人肖像最優先版）
+   武将ポートレート・アバター表示管理
+   【武将本人の肖像画最優先エンジン（軍師画像の誤表示を100%防止）】
    ========================================================= */
 let avatarViewMode = { player: 'face', ai: 'face' };
 
@@ -1188,30 +1183,32 @@ function toggleWarlordAvatarView(side) {
   if (box) box.classList.toggle('show-crest', avatarViewMode[side] === 'crest');
 }
 
-// 【武将肖像の修正】武将本人の画像を最優先とし、軍師AIカードの時のみ軍師画像を採用
 function getWarlordPortraitHtml(warlordData, isInteractive = false, side = null) {
   if (!warlordData) return '';
 
   const candidates = [];
   
-  if (warlordData.id && warlordData.id.startsWith('strategist_')) {
-    // 軍師AIカード出陣時のみ軍師画像を優先
-    if (warlordData.strategistImgId) candidates.push(`images/${warlordData.strategistImgId}`);
-    if (warlordData.customImg) candidates.push(warlordData.customImg);
-  } else {
-    // 通常の武将本人は武将画像（warlordData.id）を最優先
-    if (warlordData.customImg) candidates.push(warlordData.customImg);
-    if (warlordData.id) candidates.push(`images/${warlordData.id}`);
+  // 武将本人の識別子（id）または専用画像（customImg）を最優先で候補に追加
+  if (warlordData.customImg) candidates.push(warlordData.customImg);
+  if (warlordData.id) {
+    // 主役五傑（keiji, sanada等）または客分英傑
+    if (['sanada', 'keiji', 'masamune', 'kanetsugu', 'tadakatsu'].includes(warlordData.id)) {
+      candidates.push(`images/${warlordData.id}`);
+    } else if (warlordData.id === 'enemy_11') {
+      candidates.push('images/keiji');
+    } else {
+      candidates.push(`images/${warlordData.id}`);
+    }
   }
 
-  if (warlordData.id === 'enemy_11') candidates.push('images/keiji');
+  // 客分英傑の別名フォールバック
   if (warlordData.id === 'inst_nanban') { candidates.push('images/ujisato'); candidates.push('images/nanban'); }
   if (warlordData.id === 'inst_kenshi') { candidates.push('images/yagyu'); candidates.push('images/kenshi'); }
   if (warlordData.id === 'inst_inja')   { candidates.push('images/josui'); candidates.push('images/inja'); }
   if (warlordData.id === 'inst_sokei')  { candidates.push('images/sokei'); candidates.push('images/meijin'); }
 
-  const uniqueCandidates = [...new Set(candidates)];
-  const primarySrc = `${uniqueCandidates[0]}.png`;
+  const uniqueCandidates = [...new Set(candidates.filter(Boolean))];
+  const primarySrc = uniqueCandidates.length > 0 ? `${uniqueCandidates[0]}.png` : '';
   const fallbackListJson = JSON.stringify(uniqueCandidates).replace(/"/g, '&quot;');
   const showCrestClass = (isInteractive && side && avatarViewMode[side] === 'crest') ? 'show-crest' : '';
 
@@ -1255,7 +1252,7 @@ window.handlePortraitError = function(img) {
   }
 };
 
-/* 軍師小顔札レンダリング */
+/* 軍師小顔札レンダリング（伝令高札専用） */
 let cachedStrategistImgId = null;
 function getStrategistFaceHtml(imgId) {
   const base = `images/${imgId}`;
@@ -1294,7 +1291,7 @@ function getGunbaiIconHtml() {
 }
 
 /* =========================================================
-   客分四英傑データ（実在の戦国名将・剣聖・軍師・一世名人）
+   客分四英傑データ
    ========================================================= */
 const INSTRUCTORS_DATA = {
   nanban: {
@@ -1375,7 +1372,7 @@ const INSTRUCTORS_DATA = {
   }
 };
 
-/* 主役武将（主役五傑） */
+/* 主役武将（主役五傑：本人の肖像画IDを完全保証） */
 const PLAYER_WARLORDS = {
   sanada: {
     id: 'sanada', name: '真田幸村', clan: '信濃国 ｜ 真田赤備隊', themeColor: '#e61919',
@@ -1470,7 +1467,7 @@ const PLAYER_WARLORDS = {
    【パート 2 / 2】
    ========================================================= */
 
-/* 対戦武将十一人 */
+/* 対戦武将十将（天下統一絵巻：Lv.1〜Lv.10にて完結） */
 const WARLORDS_DATA = {
   1: {
     id: 'enemy_1', province: '尾張国', name: '木下藤吉郎', clan: '尾張国｜織田足軽隊', maxTroops: 3000, targetDepth: 1, depthSpec: '深さ1＋足軽速攻',
@@ -1621,22 +1618,6 @@ const WARLORDS_DATA = {
       adv: '「鳴くまで待った甲斐があったわ。天下泰平の刻ぞ！」'
     },
     defeatQuote: '「見事なり… 乱世を鎮むる真の器、確かに見届けた…！」', victoryQuote: '「忍耐の末に泰平あり。天下は徳川の掌中にあり！」'
-  },
-  11: {
-    id: 'enemy_11', province: '天下無双', name: '前田慶次', clan: '天下無双｜軍師AI：奥村助右衛門', maxTroops: 180000, targetDepth: 5, depthSpec: '深さ5＋神算鬼謀',
-    featureShort: '軍師AI搭載。豪快傾奇と神算鬼謀の極み。', tacticsHint: '助右衛門の神算が仕組む罠に警戒し、守りを固めてから挑まれよ！',
-    customImg: 'images/keiji',
-    portraitSvg: `<rect width="100" height="100" rx="6" fill="#301404"/><path d="M 20,80 L 80,20" stroke="#d41313" stroke-width="6" stroke-linecap="round"/><path d="M 32,45 Q 50,22 68,45 L 72,72 Q 50,80 28,72 Z" fill="#613808" stroke="#ffd700" stroke-width="2"/><circle cx="50" cy="45" r="9" fill="#ffd700"/><circle cx="50" cy="26" r="6" fill="#ffd700"/><circle cx="68" cy="38" r="6" fill="#ffd700"/><circle cx="62" cy="62" r="10" fill="#ffd700"/><circle cx="38" cy="62" r="10" fill="#ffd700"/><circle cx="32" cy="38" r="6" fill="#ffd700"/>`,
-    quotes: {
-      default: '「軍師・助右衛門の策と俺の槍！ 天下を傾け尽くしてくれるわ！」',
-      opening: '「助右衛門、面白い陣形を頼むぜ！ ど派手に傾こうじゃねえか！」',
-      midgame: '「天下無双の傾奇戦！ 助右衛門の読みと俺の突進を止められるか！」',
-      endgame: '「いよっ、大詰めだ！ 派手に散るか派手に勝つか、勝負勝負！」',
-      check: '「助右衛門、一手もらったぜ！ これぞ傾奇王手！」',
-      pinch: '「ハハハ！ 窮地ほど血が滾るわ！ ここからが本番よ！」',
-      adv: '「松風、駆け抜けろ！ 助右衛門、一気に仕留めるぞ！」'
-    },
-    defeatQuote: '「見事だ！ 天下一の傾きを見せてもらったぜ、完敗よ！」', victoryQuote: '「大武辺者の勝ちよ！ 助右衛門、美味い酒を呑もうぜ！」'
   }
 };
 
@@ -1674,7 +1655,16 @@ let isPastReplayActive = false, savedActiveBattle = null;
 let isExhibitionActive = false, exhibitionTimer = null, exhibitionSpeed = 'normal';
 const EXHIBITION_DELAYS = { normal: 1200, fast: 650 };
 const EXHIBITION_TIME_LIMITS = { normal: 8500, fast: 2500 };
-let exhibitionSenteTarget = 'lvl_1', exhibitionGoteTarget = 'lvl_10', exhibitionRandomStrategistWarlordKey = 'sanada';
+
+/* 御前試合選定キー：主役五傑（各武将本人）・十将・客分四英傑を完全配備 */
+const ALL_EXHIBITION_AI_KEYS = [
+  'sanada', 'keiji', 'masamune', 'kanetsugu', 'tadakatsu',
+  'lvl_1', 'lvl_2', 'lvl_3', 'lvl_4', 'lvl_5',
+  'lvl_6', 'lvl_7', 'lvl_8', 'lvl_9', 'lvl_10',
+  'nanban', 'kenshi', 'inja', 'sokei'
+];
+
+let exhibitionSenteTarget = 'sanada', exhibitionGoteTarget = 'lvl_10';
 let exhibitionMobileCurrentTab = 'sente';
 let exhibitionAchievedDepth = 1, exhibitionTargetDepth = 3, exhibitionTotalNodes = 0;
 
@@ -1690,11 +1680,6 @@ function initExternalAiWorker() {
   } catch (e) { externalAiWorker = null; }
 }
 initExternalAiWorker();
-
-function pickRandomStrategistWarlord() {
-  const keys = Object.keys(PLAYER_WARLORDS);
-  exhibitionRandomStrategistWarlordKey = keys[Math.floor(Math.random() * keys.length)];
-}
 
 function formatOfficialKifuMove(m, idx, isKifFile = false) {
   if (!m) return '';
@@ -1811,7 +1796,6 @@ function showWarlordResultPlaque(winnerSide) {
   }
 }
 
-// 【思考中・決断時深さ完全同期】思考中は目標深さのみを表示
 function updateExhibitionThinkingDisplay(isThinking = true) {
   if (!isExhibitionActive) return;
   const elapsedSec = Math.max(0.1, (Date.now() - turnStartTime) / 1000).toFixed(1);
@@ -1826,7 +1810,6 @@ function updateExhibitionThinkingDisplay(isThinking = true) {
     ? document.getElementById('ai-thinking-disp')
     : document.getElementById('player-thinking-disp');
 
-  // 相手側の直前決断銘板を完全に保護・静止維持して表示
   if (otherThinkingDisp) {
     const oppSide = isPlayerSide ? 'AI' : 'PLAYER';
     if (lastSettledMoveInfo[oppSide]) {
@@ -1841,13 +1824,11 @@ function updateExhibitionThinkingDisplay(isThinking = true) {
     }
   }
 
-  // 思考中側の表示
   if (targetThinkingDisp) {
     if (isThinking) {
       targetThinkingDisp.style.display = 'inline-flex';
       targetThinkingDisp.className = 'warlord-thinking-inline timer-gold-box';
       const maxTargetD = exhibitionTargetDepth || 4;
-      // 【仕様統一】思考中は目標深さのみを表示
       targetThinkingDisp.innerHTML = `🧠 神算熟慮 <b>${elapsedSec}秒</b> (深さ ${maxTargetD})`;
     } else {
       const mySide = isPlayerSide ? 'PLAYER' : 'AI';
@@ -1892,22 +1873,23 @@ const PIECE_WEIGHTS = { FU: 1.5, KY: 4.0, KE: 4.0, GI: 8.0, KI: 9.0, KA: 15.0, H
 const TOTAL_FORCE_POINTS = 95.5;
 
 function getTargetAIData(targetKey) {
+  // 客分四英傑
   if (INSTRUCTORS_DATA[targetKey]) return INSTRUCTORS_DATA[targetKey];
+  // 十将（Lv.1〜Lv.10）
   if (targetKey && targetKey.startsWith('lvl_')) {
     const lvl = parseInt(targetKey.replace('lvl_', ''), 10);
-    return WARLORDS_DATA[lvl];
+    return WARLORDS_DATA[lvl] || WARLORDS_DATA[1];
   }
-  if (targetKey === 'strategist') {
-    const p = PLAYER_WARLORDS[exhibitionRandomStrategistWarlordKey] || PLAYER_WARLORDS['sanada'];
+  // 主役五傑（武将本人肖像を完全保証）
+  if (PLAYER_WARLORDS[targetKey]) {
+    const p = PLAYER_WARLORDS[targetKey];
     return {
-      id: `strategist_${p.id}`,
-      name: `${p.name}（軍師:${p.strategistShort}）`,
-      clan: `${p.clan} ｜ 神算鬼謀・軍師AI`,
+      id: p.id,
+      name: p.name,
+      clan: `${p.clan} ｜ 神算軍師:${p.strategistShort}`,
       maxTroops: 180000, baseTroops: 180000, targetDepth: 5,
       depthSpec: `深さ5＋${p.strategistShort}の神算鬼謀`,
-      featureShort: '豪快傾奇・変幻自在の奇襲',
-      strategistImgId: p.strategistImgId,
-      customImg: `images/${p.strategistImgId}`,
+      featureShort: '主役武将。剛腕と知謀の極み。',
       quotes: p.quotes, portraitSvg: p.portraitSvg
     };
   }
@@ -2261,11 +2243,14 @@ function getLegalMoves(owner, capturesOnly = false, filterUchifuzume = true) {
   });
 }
 
+/* 天下布武進捗管理（Lv.1〜Lv.10：十将全平定で100%達成） */
 function loadProgress() {
   try {
     const s = localStorage.getItem('shogi_cleared_provinces');
     clearedProvinces = s !== null ? JSON.parse(s) : [];
-    currentAiLevel = clearedProvinces.length > 0 ? Math.min(11, Math.max(...clearedProvinces) + 1) : 1;
+    // 敵将は最大Lv.10まで
+    clearedProvinces = clearedProvinces.filter(lvl => lvl <= 10);
+    currentAiLevel = clearedProvinces.length > 0 ? Math.min(10, Math.max(...clearedProvinces) + 1) : 1;
     const mw = localStorage.getItem('shogi_my_warlord');
     if (mw && PLAYER_WARLORDS[mw]) currentMyWarlordId = mw;
   } catch (e) { clearedProvinces = []; currentAiLevel = 1; }
@@ -2273,12 +2258,12 @@ function loadProgress() {
 }
 
 function saveProgress(clearedLvl) {
-  if (isExhibitionActive) return;
+  if (isExhibitionActive || clearedLvl > 10) return;
   try {
     const s = localStorage.getItem('shogi_cleared_provinces');
     let stored = s !== null ? JSON.parse(s) : [];
     const mergedSet = new Set([...stored, ...clearedProvinces, clearedLvl]);
-    clearedProvinces = Array.from(mergedSet).sort((a,b) => a - b);
+    clearedProvinces = Array.from(mergedSet).filter(lvl => lvl <= 10).sort((a,b) => a - b);
     localStorage.setItem('shogi_cleared_provinces', JSON.stringify(clearedProvinces));
   } catch (e) {}
   updateConquestMapUI();
@@ -2287,7 +2272,7 @@ function saveProgress(clearedLvl) {
 window.addEventListener('storage', function(e) {
   if (e.key === 'shogi_cleared_provinces') {
     try {
-      clearedProvinces = JSON.parse(e.newValue || '[]');
+      clearedProvinces = JSON.parse(e.newValue || '[]').filter(lvl => lvl <= 10);
       updateConquestMapUI();
       if (!isExhibitionActive && !isGameOver) {
         const pMax = getPlayerMaxTroops();
@@ -2532,7 +2517,6 @@ function exitReplayMode() {
       exhibitionSenteTarget = savedActiveBattle.exhibitionSenteTarget;
       exhibitionGoteTarget = savedActiveBattle.exhibitionGoteTarget;
       exhibitionSpeed = savedActiveBattle.exhibitionSpeed || 'normal';
-      if (savedActiveBattle.exhibitionStrategistKey) exhibitionRandomStrategistWarlordKey = savedActiveBattle.exhibitionStrategistKey;
 
       board = cloneBoardState(savedActiveBattle.board);
       hands = JSON.parse(JSON.stringify(savedActiveBattle.hands));
@@ -3274,7 +3258,6 @@ function handleWorkerMessage(e) {
     return;
   }
 
-  // 【根本対策】決断時の即時タイマー停止 ＆ 競合上書きの完全遮断
   const movingSide = turn;
   stopTurnTimer();
   isAiThinking = false;
@@ -3285,7 +3268,6 @@ function handleWorkerMessage(e) {
   
   const elapsedSec = recordTurnTime(movingSide, data.timeSpentMs);
 
-  // 確定深度を手番別スロットに完全ロック保存
   lastSettledMoveInfo[movingSide] = {
     timeSec: elapsedSec,
     depth: exhibitionAchievedDepth,
@@ -3538,8 +3520,7 @@ function checkGameOver(nextOwner) {
       const growthNotice = isNewClear ? `【天下布武】領国平定！ 総動員力 +${earnedBonus.toLocaleString()} 兵 獲得！` : '';
 
       let victoryMsg1 = '';
-      if (currentAiLevel === 11) victoryMsg1 = `天下無双・前田慶次を討ち破り、日ノ本最強の覇王となり候！`;
-      else if (currentAiLevel === 10) victoryMsg1 = `徳川幕府を平定し、日ノ本の覇者となり候！ 誠に見事！`;
+      if (currentAiLevel === 10) victoryMsg1 = `徳川幕府を平定し、日ノ本の覇者となり候！ 天下統一の偉業を成し遂げたり！`;
       else victoryMsg1 = `${enemy.name}を討ち取り、${enemy.province}を平定いたし候！`;
 
       setOrderMessage({ line1: victoryMsg1, line2: growthNotice || '天下統一の偉業へまた一歩近づき候！' }, false, 'settle');
@@ -3752,14 +3733,6 @@ function cycleReplaySpeed() {
   }
 }
 
-/* 御前試合：選定対象（戦国武将10名 ＋ 客分四英傑 ＋ 軍師AI） */
-const ALL_EXHIBITION_AI_KEYS = [
-  'lvl_1', 'lvl_2', 'lvl_3', 'lvl_4', 'lvl_5',
-  'lvl_6', 'lvl_7', 'lvl_8', 'lvl_9', 'lvl_10',
-  'nanban', 'kenshi', 'inja', 'sokei',
-  'strategist'
-];
-
 function switchExhibitionMobileTab(tabSide) {
   playUiClickSound(); exhibitionMobileCurrentTab = tabSide;
   const btnSente = document.getElementById('btn-exh-tab-sente');
@@ -3781,7 +3754,6 @@ function switchExhibitionMobileTab(tabSide) {
 
 function openExhibitionModal() {
   initAudio(); playUiClickSound(); stopAutoReplay(); stopExhibitionTimer();
-  pickRandomStrategistWarlord();
   renderExhibitionVisualPickers();
   switchExhibitionMobileTab('sente');
   document.getElementById('exhibition-modal').style.display = 'flex';
@@ -3794,8 +3766,8 @@ function closeExhibitionModal() {
 function getAiBadgeHtml(k, data) {
   if (k === 'sokei') return `<span class="badge-ai-meijin">一世名人</span>`;
   if (['nanban', 'kenshi', 'inja'].includes(k)) return `<span class="badge-ai-dan">${data.rank || '指南役'}</span>`;
+  if (['sanada', 'keiji', 'masamune', 'kanetsugu', 'tadakatsu'].includes(k)) return `<span class="badge-ai-tactician">主役武将</span>`;
   if (k.startsWith('lvl_')) return `<span class="badge-ai-level">Lv.${k.replace('lvl_', '')}</span>`;
-  if (k === 'strategist') return `<span class="badge-ai-tactician">軍師AI</span>`;
   return `<span class="badge-ai-level">武将</span>`;
 }
 
@@ -3804,8 +3776,8 @@ function renderExhibitionVisualPickers() {
   const goteListEl = document.getElementById('exhibition-gote-pick-list');
   if (!senteListEl || !goteListEl) return;
 
-  senteListEl.innerHTML = `<div class="exhibition-list-header">📜 控え武将一覧（全十五傑より選定）</div>`;
-  goteListEl.innerHTML = `<div class="exhibition-list-header">📜 控え武将一覧（全十五傑より選定）</div>`;
+  senteListEl.innerHTML = `<div class="exhibition-list-header">📜 控え武将一覧（全十九傑より選定）</div>`;
+  goteListEl.innerHTML = `<div class="exhibition-list-header">📜 控え武将一覧（全十九傑より選定）</div>`;
 
   ALL_EXHIBITION_AI_KEYS.forEach(k => {
     const data = getTargetAIData(k);
@@ -3998,7 +3970,7 @@ function dispatchExhibitionTurn() {
   const targetData = getTargetAIData(targetKey);
 
   exhibitionAchievedDepth = 1;
-  exhibitionTargetDepth = targetData.targetDepth || (targetKey === 'strategist' ? 5 : 3);
+  exhibitionTargetDepth = targetData.targetDepth || 4;
 
   isAiThinking = true;
   startTurnTimer(targetSide, targetData.name);
@@ -4029,7 +4001,7 @@ function dispatchExhibitionTurn() {
   } else {
     let lvl = 1;
     if (targetKey.startsWith('lvl_')) lvl = parseInt(targetKey.replace('lvl_', ''), 10);
-    else if (targetKey === 'strategist') lvl = 11;
+    else if (['sanada', 'keiji', 'masamune', 'kanetsugu', 'tadakatsu'].includes(targetKey)) lvl = 10;
 
     aiWorker.postMessage({
       board, hands,
@@ -4305,7 +4277,7 @@ function drawTerritoryChart() {
   const dpr = window.devicePixelRatio || 1;
   const rect = cvs.getBoundingClientRect();
   cvs.width = (rect.width || 450) * dpr;
-  cvs.height = (rect.height || 125) * dpr;
+  cvs.height = (rect.height || 120) * dpr;
   const ctx = cvs.getContext('2d');
   const w = cvs.width, h = cvs.height;
   ctx.clearRect(0, 0, w, h);
@@ -4467,7 +4439,6 @@ function openPlayerWarlordModal() {
     const p = PLAYER_WARLORDS[k];
     const d = document.createElement('div');
     d.className = `warlord-select-card btn-3d ${k === currentMyWarlordId ? 'active' : ''}`;
-    // 【武将肖像の修正】自将選択モーダルでも武将本人の画像を確実に表示
     d.innerHTML = `
       <div class="card-avatar-mini" style="background:${p.bgGrad};">${getWarlordPortraitHtml(p, false)}</div>
       <div class="card-info-col">
@@ -4495,16 +4466,17 @@ function confirmPlayerWarlord() {
   playUiClickSound(); setPlayerWarlord(currentMyWarlordId); closePlayerWarlordModal();
 }
 
+/* 天下絵巻UI更新（Lv.1〜Lv.10にて100%全平定） */
 function updateConquestMapUI() {
   const clearedCount = clearedProvinces.length;
-  const pct = Math.round((clearedCount / 11) * 100);
+  const pct = Math.round((clearedCount / 10) * 100);
 
   const pctDisp = document.getElementById('conquest-pct-disp');
   const pctBar = document.getElementById('conquest-pct-bar');
   const clrCount = document.getElementById('conquest-cleared-count');
   if (pctDisp) pctDisp.textContent = `${pct}%`;
   if (pctBar) pctBar.style.width = `${pct}%`;
-  if (clrCount) clrCount.textContent = `${clearedCount} / 11 将平定`;
+  if (clrCount) clrCount.textContent = `${clearedCount} / 10 将平定`;
 
   const totalTroops = getPlayerMaxTroops();
   const baseTroops = PLAYER_WARLORDS[currentMyWarlordId]?.baseTroops || 3000;
@@ -4514,9 +4486,9 @@ function updateConquestMapUI() {
   if (growthDisp) growthDisp.textContent = `${totalTroops.toLocaleString()} 兵`;
   if (bonusDisp) bonusDisp.textContent = `（平定ボーナス：+${bonusTroops.toLocaleString()} 兵）`;
 
-  const maxAvailableLevel = clearedCount > 0 ? Math.min(11, Math.max(...clearedProvinces) + 1) : 1;
+  const maxAvailableLevel = clearedCount > 0 ? Math.min(10, Math.max(...clearedProvinces) + 1) : 1;
 
-  for(let i=1; i<=11; i++) {
+  for(let i=1; i<=10; i++) {
     const n = document.getElementById(`map-node-${i}`);
     if (n) {
       n.classList.remove('cleared', 'current', 'locked');
@@ -4529,7 +4501,7 @@ function updateConquestMapUI() {
   const l = document.getElementById('conquest-warlord-list');
   if (!l) return;
   l.innerHTML = '';
-  for(let i=1; i<=11; i++) {
+  for(let i=1; i<=10; i++) {
     const w = WARLORDS_DATA[i];
     const isCleared = clearedProvinces.includes(i);
     const isLocked = !isCleared && (i > maxAvailableLevel);
@@ -4560,17 +4532,18 @@ function updateConquestMapUI() {
 }
 
 function selectConquestProvince(lvl) {
+  const safeLvl = Math.min(10, lvl);
   const clearedCount = clearedProvinces.length;
-  const maxAvailableLevel = clearedCount > 0 ? Math.min(11, Math.max(...clearedProvinces) + 1) : 1;
-  if (!clearedProvinces.includes(lvl) && lvl > maxAvailableLevel) return;
+  const maxAvailableLevel = clearedCount > 0 ? Math.min(10, Math.max(...clearedProvinces) + 1) : 1;
+  if (!clearedProvinces.includes(safeLvl) && safeLvl > maxAvailableLevel) return;
 
-  currentAiLevel = lvl;
-  const w = WARLORDS_DATA[lvl];
+  currentAiLevel = safeLvl;
+  const w = WARLORDS_DATA[safeLvl];
   const p = PLAYER_WARLORDS[currentMyWarlordId];
   const pMax = getPlayerMaxTroops();
 
   document.getElementById('ai-name-disp').textContent = w.name;
-  document.getElementById('ai-clan-disp').textContent = `${w.clan} (Lv.${lvl})`;
+  document.getElementById('ai-clan-disp').textContent = `${w.clan} (Lv.${safeLvl})`;
   document.getElementById('ai-quote-disp').textContent = w.quotes.opening || w.quotes.default;
   document.getElementById('ai-troops-disp').textContent = `${w.maxTroops.toLocaleString()} / ${w.maxTroops.toLocaleString()} 兵`;
   document.getElementById('player-troops-disp').textContent = `${pMax.toLocaleString()} / ${pMax.toLocaleString()} 兵`;
@@ -4585,7 +4558,7 @@ function selectConquestProvince(lvl) {
   }
   
   updateTurnLabels();
-  updateWarlordBGM(lvl);
+  updateWarlordBGM(safeLvl);
   updateConquestMapUI();
 
   const rivalKey = `${currentMyWarlordId}_${currentAiLevel}`;
@@ -4617,7 +4590,6 @@ function setPlayerWarlord(k) {
   document.getElementById('player-quote-disp').textContent = p.quotes.opening || p.quotes.default;
   document.getElementById('player-troops-disp').textContent = `${pMax.toLocaleString()} / ${pMax.toLocaleString()} 兵`;
   
-  // 【武将肖像の修正】自陣パネルでも武将本人の画像を確実に表示
   const pBox = document.getElementById('player-avatar-container');
   if (pBox) pBox.innerHTML = getWarlordPortraitHtml(p, true, 'player');
 
@@ -4732,8 +4704,7 @@ function saveBattleRecord(resultType, resultLabel) {
     moveObjectsHistory: JSON.parse(JSON.stringify(moveObjectsHistory)),
     moveMetricsHistory: JSON.parse(JSON.stringify(moveMetricsHistory)),
     exhibitionSenteTarget: isExhibitionActive ? exhibitionSenteTarget : null,
-    exhibitionGoteTarget: isExhibitionActive ? exhibitionGoteTarget : null,
-    exhibitionStrategistKey: isExhibitionActive ? exhibitionRandomStrategistWarlordKey : null
+    exhibitionGoteTarget: isExhibitionActive ? exhibitionGoteTarget : null
   };
 
   try {
@@ -4833,13 +4804,17 @@ function switchHistoryTab(tab) {
         <option value="8">Lv.8 織田信長</option>
         <option value="9">Lv.9 豊臣秀吉</option>
         <option value="10">Lv.10 徳川家康</option>
-        <option value="11">Lv.11 前田慶次 (軍師AI)</option>
       `;
     }
   } else {
     if (wSelect) {
       wSelect.innerHTML = `
         <option value="all">すべての対陣</option>
+        <option value="sanada">真田幸村</option>
+        <option value="keiji">前田慶次</option>
+        <option value="masamune">伊達政宗</option>
+        <option value="kanetsugu">直江兼続</option>
+        <option value="tadakatsu">本多忠勝</option>
         <option value="lvl_1">Lv.1 木下藤吉郎</option>
         <option value="lvl_2">Lv.2 前田利家</option>
         <option value="lvl_3">Lv.3 柴田勝家</option>
@@ -4854,7 +4829,6 @@ function switchHistoryTab(tab) {
         <option value="kenshi">柳生石舟斎 (Sunfish系)</option>
         <option value="inja">黒田如水 (Bonanza系)</option>
         <option value="sokei">大橋宗桂 (初代名人)</option>
-        <option value="strategist">軍師AI</option>
       `;
     }
     if (eSelect) {
@@ -5054,7 +5028,6 @@ function replayFromHistory(recordId, storageKey) {
       exhibitionSenteTarget: isExhibitionActive ? exhibitionSenteTarget : null,
       exhibitionGoteTarget: isExhibitionActive ? exhibitionGoteTarget : null,
       exhibitionSpeed: isExhibitionActive ? exhibitionSpeed : 'normal',
-      exhibitionStrategistKey: isExhibitionActive ? exhibitionRandomStrategistWarlordKey : null,
       exhibitionAchievedDepth, exhibitionTargetDepth, exhibitionTotalNodes,
       currentMyWarlordId, currentAiLevel,
       board: cloneBoardState(board),
@@ -5087,11 +5060,10 @@ function replayFromHistory(recordId, storageKey) {
   if (isExhibitionActive) {
     exhibitionSenteTarget = rec.exhibitionSenteTarget || rec.playerWarlordId;
     exhibitionGoteTarget = rec.exhibitionGoteTarget || `lvl_${rec.enemyLevel}`;
-    if (rec.exhibitionStrategistKey) exhibitionRandomStrategistWarlordKey = rec.exhibitionStrategistKey;
     renderMainPortraits();
   } else {
     currentMyWarlordId = rec.playerWarlordId;
-    currentAiLevel = rec.enemyLevel;
+    currentAiLevel = Math.min(10, rec.enemyLevel);
     setPlayerWarlord(currentMyWarlordId);
     selectConquestProvince(currentAiLevel);
   }
