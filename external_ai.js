@@ -1,8 +1,7 @@
-
 /* =========================================================
    将棋王 2026 〜 天下統一・戦国決戦 〜
    外部オープンソースAIエンジン統合モジュール
-   【戦国四英傑・客分思考エンジン群（Web移植・完全同期版）】
+   【戦国四英傑・客分思考エンジン群（Web移植・完全実力発揮版）】
 
    ※注記：本モジュールに搭載されている客分四英傑の思考ルーチンは、
    オープンソース将棋・チェスエンジン（MicroMax, Sunfish, Bonanza, Apery/やねうら王）の
@@ -91,7 +90,6 @@
     return false;
   }
 
-  // 完全規格化：マスからの合法移動可能リスト取得
   function getValidBoardMoves(r, c, owner) {
     const item = board[r][c];
     if (!item) return [];
@@ -139,7 +137,6 @@
     return null;
   }
 
-  // 完全規格化：王手判定（馬・竜の1マス近接や香車の突き刺さり等も100%見逃さない）
   function isCheckState(owner) {
     const kp = findKing(owner);
     if (!kp) return true;
@@ -284,7 +281,6 @@
     return legalList;
   }
 
-  // 衝突ゼロの完全局面ハッシュキー生成（手番＋盤面配置＋持ち駒枚数）
   function getZobristHash(b, h, t) {
     let s = t + ':';
     for (let r = 0; r < 9; r++) {
@@ -364,7 +360,7 @@
     return alpha;
   }
 
-  /* 2. 柳生石舟斎（Sunfish将棋系統）：PST座標正当化評価（新陰流の端正な布陣） */
+  /* 2. 柳生石舟斎（Sunfish将棋系統）：PST座標正当化評価 */
   function evalKenshi(perspectiveOwner) {
     let score = 0;
     const opp = (perspectiveOwner === 'PLAYER') ? 'AI' : 'PLAYER';
@@ -375,7 +371,6 @@
         let val = VALUES[p.code] || 0;
         const sign = (p.owner === perspectiveOwner ? 1 : -1);
         
-        // 【重要修正】先手はそのまま、後手は「段(縦)」のみ反転し、「筋(横)」はそのまま参照する
         const mappedRow = (p.owner === 'PLAYER') ? r : (8 - r);
         const idx = mappedRow * 9 + c;
 
@@ -640,7 +635,6 @@
     return alpha;
   }
 
-  // PVS探索：符号反転ミスを完全修正
   function searchSokeiPVS(depth, alpha, beta, owner, ply, rootPerspective) {
     nodeCount++;
     if ((nodeCount & 15) === 0 && checkTimeout()) return alpha;
@@ -727,7 +721,7 @@
     return bestVal;
   }
 
-  // 反復深化メインディスパッチャー
+  // 反復深化メインディスパッチャー（中断保護 ＆ 実績深度・目標深度の確実な返却）
   function executeSearch(params) {
     const {
       board: bD,
@@ -763,7 +757,7 @@
 
     const legals = genLegalMoves(owner, false, true);
     if (legals.length === 0) {
-      return { type: 'done', bestMove: null, evalScore: -MATE_SCORE, depth: 0, targetDepth, nodes: 0, engineType, timeSpentMs: 10 };
+      return { type: 'done', bestMove: null, evalScore: -MATE_SCORE, depth: 0, targetDepth: targetDepth, nodes: 0, engineType, timeSpentMs: 10 };
     }
 
     const enemyOwner = (owner === 'PLAYER') ? 'AI' : 'PLAYER';
@@ -785,10 +779,6 @@
 
     for (let d = 1; d <= targetDepth; d++) {
       if (checkTimeout()) break;
-
-      if (typeof self !== 'undefined' && typeof window === 'undefined') {
-        self.postMessage({ type: 'progress', depth: d, targetDepth, nodes: nodeCount, evalScore: confirmedScore });
-      }
 
       let alpha = -Infinity, beta = Infinity;
 
@@ -827,16 +817,13 @@
         if (s > alpha) alpha = s;
       }
 
+      // 深さ d を読み切った場合に確定結果として保存
       if (iterationCompleted && !isSearchTimeout) {
         achievedDepth = d;
         currentIteration.sort((a, b) => b.score - a.score);
         scoredMoves = currentIteration;
         confirmedBestMove = scoredMoves[0].move;
         confirmedScore = scoredMoves[0].score;
-
-        if (typeof self !== 'undefined' && typeof window === 'undefined') {
-          self.postMessage({ type: 'progress', depth: d, targetDepth, nodes: nodeCount, evalScore: confirmedScore });
-        }
       }
       if (checkTimeout()) break;
     }
@@ -848,7 +835,7 @@
       bestMove: confirmedBestMove || legals[0],
       evalScore: confirmedScore,
       depth: achievedDepth,
-      targetDepth,
+      targetDepth: targetDepth,
       nodes: nodeCount,
       engineType,
       timeSpentMs: elapsed
