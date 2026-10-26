@@ -2,9 +2,14 @@
 /* =========================================================
    将棋王 2026 〜 天下統一・戦国決戦 〜
    外部オープンソースAIエンジン統合モジュール
-   【戦国四英傑・客分思考エンジン群（実力完全発揮・反復深化同期版）】
+   【戦国四英傑・客分思考エンジン群（Web移植・完全同期版）】
+
+   ※注記：本モジュールに搭載されている客分四英傑の思考ルーチンは、
+   オープンソース将棋・チェスエンジン（MicroMax, Sunfish, Bonanza, Apery/やねうら王）の
+   探索アルゴリズムや評価思想をベースに、Webブラウザ（JavaScript環境）向けに
+   独自に移植・再構築した専用エンジンです。
    
-   1. nanban : 【蒲生氏郷】       - MicroMax系統（西洋古典αβ探索 ＋ 静止探索 / 目標深さ3[早指し2]）
+   1. nanban : 【蒲生氏郷】       - MicroMax系統（古典的αβ探索 ＋ 静止探索 / 目標深さ3[早指し2]）
    2. kenshi : 【柳生石舟斎】     - Sunfish将棋系統（PST 駒配置評価駆動 / 目標深さ4[早指し3]）
    3. inja   : 【黒田如水】       - Bonanza系統（置換表 ＋ キラー探索 / 目標深さ4[早指し3]）
    4. sokei  : 【初代名人・大橋宗桂】 - Apery / やねうら王系統（安全PVS探索 ＋ 完全読破 / 目標深さ5[早指し4]）
@@ -27,7 +32,8 @@
   };
   const MATE_SCORE = 100000;
 
-  // Sunfish / LesserKai 由来 Piece-Square Tables (PST：駒配置評価テーブル)
+  // Sunfish / LesserKai 由来 Piece-Square Tables (PST：駒配置評価テーブル - 9x9)
+  // 先手視点（上方向へ進む）。後手視点は段のみ反転 (8 - r) で参照。
   const PST_FU = [
     0,  0,  0,  0,  0,  0,  0,  0,  0,
     20, 20, 25, 30, 30, 30, 25, 20, 20,
@@ -67,7 +73,6 @@
   let board = [];
   let hands = { PLAYER: {}, AI: {} };
   let nodeCount = 0;
-  let kingPosCache = { PLAYER: null, AI: null };
   let pastHashes = [];
   let searchStartTime = 0;
   let searchTimeLimit = 8500;
@@ -86,17 +91,7 @@
     return false;
   }
 
-  function updateKingCache() {
-    kingPosCache.PLAYER = null;
-    kingPosCache.AI = null;
-    for (let r = 0; r < 9; r++) {
-      for (let c = 0; c < 9; c++) {
-        const p = board[r][c];
-        if (p && p.code === 'OU') kingPosCache[p.owner] = { r, c };
-      }
-    }
-  }
-
+  // 完全規格化：マスからの合法移動可能リスト取得
   function getValidBoardMoves(r, c, owner) {
     const item = board[r][c];
     if (!item) return [];
@@ -136,94 +131,28 @@
   }
 
   function findKing(owner) {
-    if (kingPosCache[owner]) {
-      const kp = kingPosCache[owner];
-      if (board[kp.r] && board[kp.r][kp.c]?.code === 'OU' && board[kp.r][kp.c]?.owner === owner) {
-        return kp;
-      }
-    }
     for (let r = 0; r < 9; r++) {
       for (let c = 0; c < 9; c++) {
-        if (board[r][c]?.owner === owner && board[r][c]?.code === 'OU') {
-          kingPosCache[owner] = { r, c };
-          return { r, c };
-        }
+        if (board[r][c]?.owner === owner && board[r][c]?.code === 'OU') return { r, c };
       }
     }
     return null;
   }
 
+  // 完全規格化：王手判定（馬・竜の1マス近接や香車の突き刺さり等も100%見逃さない）
   function isCheckState(owner) {
     const kp = findKing(owner);
     if (!kp) return true;
     const kr = kp.r, kc = kp.c, enemy = (owner === 'PLAYER') ? 'AI' : 'PLAYER';
-    const enemyDir = (enemy === 'AI') ? 1 : -1;
 
-    const adjDirs = [
-      [-1,-1], [-1,0], [-1,1],
-      [ 0,-1],         [ 0,1],
-      [ 1,-1], [ 1,0], [ 1,1]
-    ];
-    for (let i = 0; i < adjDirs.length; i++) {
-      const nr = kr + adjDirs[i][0], nc = kc + adjDirs[i][1];
-      if (nr >= 0 && nr < 9 && nc >= 0 && nc < 9) {
-        const p = board[nr][nc];
-        if (p && p.owner === enemy) {
-          if (p.code === 'OU') return true;
-          if (p.code === 'FU' && nr === kr - enemyDir && nc === kc) return true;
-          if (['KI','TO','NY','NK','NG'].includes(p.code)) {
-            const dr = kr - nr, dc = kc - nc;
-            if ((dr === enemyDir && Math.abs(dc) <= 1) || (dr === 0 && Math.abs(dc) === 1) || (dr === -enemyDir && dc === 0)) return true;
-          }
-          if (p.code === 'GI') {
-            const dr = kr - nr, dc = kc - nc;
-            if ((dr === enemyDir && Math.abs(dc) <= 1) || (dr === -enemyDir && Math.abs(dc) === 1)) return true;
-          }
-          if (p.code === 'RY' || p.code === 'UM') return true;
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        if (board[r][c]?.owner === enemy) {
+          const moves = getValidBoardMoves(r, c, enemy);
+          if (moves.some(m => m.r === kr && m.c === kc)) return true;
         }
       }
     }
-
-    const keDirs = [[-enemyDir * 2, -1], [-enemyDir * 2, 1]];
-    for (let i = 0; i < keDirs.length; i++) {
-      const nr = kr + keDirs[i][0], nc = kc + keDirs[i][1];
-      if (nr >= 0 && nr < 9 && nc >= 0 && nc < 9) {
-        const p = board[nr][nc];
-        if (p && p.owner === enemy && p.code === 'KE') return true;
-      }
-    }
-
-    const ortho = [[-1,0],[1,0],[0,-1],[0,1]];
-    for (let i = 0; i < ortho.length; i++) {
-      const dr = ortho[i][0], dc = ortho[i][1];
-      let nr = kr + dr, nc = kc + dc;
-      while (nr >= 0 && nr < 9 && nc >= 0 && nc < 9) {
-        const p = board[nr][nc];
-        if (p) {
-          if (p.owner === enemy) {
-            if (p.code === 'HI' || p.code === 'RY') return true;
-            if (p.code === 'KY' && dr === -enemyDir && dc === 0) return true;
-          }
-          break;
-        }
-        nr += dr; nc += dc;
-      }
-    }
-
-    const diag = [[-1,-1],[-1,1],[1,-1],[1,1]];
-    for (let i = 0; i < diag.length; i++) {
-      const dr = diag[i][0], dc = diag[i][1];
-      let nr = kr + dr, nc = kc + dc;
-      while (nr >= 0 && nr < 9 && nc >= 0 && nc < 9) {
-        const p = board[nr][nc];
-        if (p) {
-          if (p.owner === enemy && (p.code === 'KA' || p.code === 'UM')) return true;
-          break;
-        }
-        nr += dr; nc += dc;
-      }
-    }
-
     return false;
   }
 
@@ -246,7 +175,6 @@
       if (move.promote) item.code = PROMOTE_MAP[item.code];
       board[move.to.r][move.to.c] = item;
       board[move.from.r][move.from.c] = null;
-      if (item.code === 'OU') kingPosCache[owner] = { r: move.to.r, c: move.to.c };
     }
     return undo;
   }
@@ -263,8 +191,9 @@
       if (undo.capturedCode) {
         board[move.to.r][move.to.c] = { code: undo.capturedCode, owner: owner === 'AI' ? 'PLAYER' : 'AI' };
         if (undo.capturedCode !== 'OU') hands[owner][UNPROMOTE_MAP[undo.capturedCode]]--;
-      } else board[move.to.r][move.to.c] = null;
-      if (item.code === 'OU') kingPosCache[owner] = { r: move.from.r, c: move.from.c };
+      } else {
+        board[move.to.r][move.to.c] = null;
+      }
     }
   }
 
@@ -355,33 +284,41 @@
     return legalList;
   }
 
+  // 衝突ゼロの完全局面ハッシュキー生成（手番＋盤面配置＋持ち駒枚数）
   function getZobristHash(b, h, t) {
-    let s = t[0];
+    let s = t + ':';
     for (let r = 0; r < 9; r++) {
       for (let c = 0; c < 9; c++) {
         const p = b[r][c];
-        if (p) s += '' + r + c + p.code + p.owner[0];
+        if (p) s += r + '' + c + p.code + p.owner[0] + '|';
       }
     }
-    for (const k in h.PLAYER) if (h.PLAYER[k] > 0) s += 'P' + k + h.PLAYER[k];
-    for (const k in h.AI) if (h.AI[k] > 0) s += 'A' + k + h.AI[k];
+    for (const ow of ['PLAYER', 'AI']) {
+      for (const k in h[ow]) {
+        if (h[ow][k] > 0) s += ow[0] + k + h[ow][k];
+      }
+    }
     return s;
   }
 
-  /* 1. 蒲生氏郷（MicroMax系統）：古典的評価関数 */
+  /* 1. 蒲生氏郷（MicroMax系統）：的確な素材価値＋前進評価 */
   function evalNanban(perspectiveOwner) {
     let score = 0;
+    const opp = (perspectiveOwner === 'PLAYER') ? 'AI' : 'PLAYER';
     for (let r = 0; r < 9; r++) {
       for (let c = 0; c < 9; c++) {
         const p = board[r][c];
         if (!p) continue;
         const sign = (p.owner === perspectiveOwner) ? 1 : -1;
-        score += sign * (VALUES[p.code] || 0);
+        let val = VALUES[p.code] || 0;
+        const relRank = (p.owner === 'AI') ? r : (8 - r);
+        if (p.code === 'FU') val += relRank * 15;
+        if (p.code === 'GI') val += relRank * 12;
+        score += sign * val;
       }
     }
-    const opp = (perspectiveOwner === 'PLAYER') ? 'AI' : 'PLAYER';
-    for (const code in hands[perspectiveOwner]) score += (hands[perspectiveOwner][code] || 0) * (VALUES[code] || 0);
-    for (const code in hands[opp])              score -= (hands[opp][code] || 0) * (VALUES[code] || 0);
+    for (const code in hands[perspectiveOwner]) score += (hands[perspectiveOwner][code] || 0) * (VALUES[code] || 0) * 1.15;
+    for (const code in hands[opp])              score -= (hands[opp][code] || 0) * (VALUES[code] || 0) * 1.15;
     return score;
   }
 
@@ -427,23 +364,28 @@
     return alpha;
   }
 
-  /* 2. 柳生石舟斎（Sunfish将棋系統）：PST評価関数 */
+  /* 2. 柳生石舟斎（Sunfish将棋系統）：PST座標正当化評価（新陰流の端正な布陣） */
   function evalKenshi(perspectiveOwner) {
     let score = 0;
+    const opp = (perspectiveOwner === 'PLAYER') ? 'AI' : 'PLAYER';
     for (let r = 0; r < 9; r++) {
       for (let c = 0; c < 9; c++) {
         const p = board[r][c];
         if (!p) continue;
         let val = VALUES[p.code] || 0;
         const sign = (p.owner === perspectiveOwner ? 1 : -1);
-        const idx = (p.owner === 'PLAYER') ? (r * 9 + c) : ((8 - r) * 9 + (8 - c));
+        
+        // 【重要修正】先手はそのまま、後手は「段(縦)」のみ反転し、「筋(横)」はそのまま参照する
+        const mappedRow = (p.owner === 'PLAYER') ? r : (8 - r);
+        const idx = mappedRow * 9 + c;
+
         if (p.code === 'FU') val += (PST_FU[idx] || 0);
         else if (p.code === 'GI') val += (PST_GI[idx] || 0);
         else if (p.code === 'KI') val += (PST_KI[idx] || 0);
+
         score += sign * val;
       }
     }
-    const opp = (perspectiveOwner === 'PLAYER') ? 'AI' : 'PLAYER';
     for (const code in hands[perspectiveOwner]) score += (hands[perspectiveOwner][code] || 0) * (VALUES[code] || 0) * 1.15;
     for (const code in hands[opp])              score -= (hands[opp][code] || 0) * (VALUES[code] || 0) * 1.15;
     return score;
@@ -491,7 +433,59 @@
     return alpha;
   }
 
-  /* 3. 黒田如水（Bonanza系統）：置換表 ＋ キラー探索 ＋ MVV-LVA */
+  /* 3. 黒田如水（Bonanza系統）：厳密置換表 ＋ キラー探索 ＋ 玉防備 */
+  function evalInja(perspectiveOwner) {
+    let score = evalKenshi(perspectiveOwner);
+    const opp = (perspectiveOwner === 'PLAYER') ? 'AI' : 'PLAYER';
+    const myKing = findKing(perspectiveOwner);
+    const oppKing = findKing(opp);
+
+    if (myKing) {
+      let g = 0;
+      for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+        const nr = myKing.r + dr, nc = myKing.c + dc;
+        if (nr >= 0 && nr < 9 && nc >= 0 && nc < 9) {
+          const occ = board[nr][nc];
+          if (occ?.owner === perspectiveOwner && ['KI','GI','NG','NK','NY','TO'].includes(occ.code)) g++;
+        }
+      }
+      score += g * 45;
+    }
+    if (oppKing) {
+      let g = 0;
+      for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+        const nr = oppKing.r + dr, nc = oppKing.c + dc;
+        if (nr >= 0 && nr < 9 && nc >= 0 && nc < 9) {
+          const occ = board[nr][nc];
+          if (occ?.owner === opp && ['KI','GI','NG','NK','NY','TO'].includes(occ.code)) g++;
+        }
+      }
+      score -= g * 45;
+    }
+    return score;
+  }
+
+  function quiescenceInja(alpha, beta, owner, qDepth, rootPerspective) {
+    nodeCount++;
+    if ((nodeCount & 15) === 0 && checkTimeout()) return alpha;
+    const standPat = evalInja(rootPerspective) * (owner === rootPerspective ? 1 : -1);
+    if (qDepth >= 3) return standPat;
+    if (standPat >= beta) return beta;
+    if (standPat > alpha) alpha = standPat;
+
+    const caps = genLegalMoves(owner, true, true);
+    const nextOwner = (owner === 'PLAYER') ? 'AI' : 'PLAYER';
+    for (let i = 0; i < caps.length; i++) {
+      const undo = makeMove(caps[i]);
+      const score = -quiescenceInja(-beta, -alpha, nextOwner, qDepth + 1, rootPerspective);
+      unmakeMove(undo);
+      if (isSearchTimeout) break;
+      if (score >= beta) return beta;
+      if (score > alpha) alpha = score;
+    }
+    return alpha;
+  }
+
   function searchInja(depth, alpha, beta, owner, ply, rootPerspective) {
     nodeCount++;
     if ((nodeCount & 15) === 0 && checkTimeout()) return alpha;
@@ -507,7 +501,7 @@
       }
     }
 
-    if (depth <= 0) return quiescenceKenshi(alpha, beta, owner, 0, rootPerspective);
+    if (depth <= 0) return quiescenceInja(alpha, beta, owner, 0, rootPerspective);
 
     const inCheck = isCheckState(owner);
     const moves = genLegalMoves(owner, false, true);
@@ -567,7 +561,7 @@
     return bestVal;
   }
 
-  /* 4. 【初代名人・大橋宗桂】（Apery / やねうら王系統）：高精度玉囲い評価 ＋ 安全PVS探索 ＋ MVV-LVA */
+  /* 4. 【初代名人・大橋宗桂】（Apery / やねうら王系統）：最高精度玉囲い評価 ＋ 安全PVS探索 */
   function evalSokei(perspectiveOwner) {
     let score = 0;
     const opp = (perspectiveOwner === 'PLAYER') ? 'AI' : 'PLAYER';
@@ -579,7 +573,9 @@
         if (!p) continue;
         let val = VALUES[p.code] || 0;
         const sign = (p.owner === perspectiveOwner ? 1 : -1);
-        const idx = (p.owner === 'PLAYER') ? (r * 9 + c) : ((8 - r) * 9 + (8 - c));
+        
+        const mappedRow = (p.owner === 'PLAYER') ? r : (8 - r);
+        const idx = mappedRow * 9 + c;
 
         if (p.code === 'FU') val += (PST_FU[idx] || 0);
         else if (p.code === 'GI') val += (PST_GI[idx] || 0) * 1.15;
@@ -604,7 +600,7 @@
           if (occ?.owner === perspectiveOwner && ['KI','GI','NG','NK','NY','TO'].includes(occ.code)) guards++;
         }
       }
-      score += guards * 50;
+      score += guards * 65;
     }
     if (oppKing) {
       let guards = 0;
@@ -615,7 +611,7 @@
           if (occ?.owner === opp && ['KI','GI','NG','NK','NY','TO'].includes(occ.code)) guards++;
         }
       }
-      score -= guards * 50;
+      score -= guards * 65;
     }
 
     for (const code in hands[perspectiveOwner]) score += (hands[perspectiveOwner][code] || 0) * (VALUES[code] || 0) * 1.25;
@@ -644,6 +640,7 @@
     return alpha;
   }
 
+  // PVS探索：符号反転ミスを完全修正
   function searchSokeiPVS(depth, alpha, beta, owner, ply, rootPerspective) {
     nodeCount++;
     if ((nodeCount & 15) === 0 && checkTimeout()) return alpha;
@@ -730,6 +727,7 @@
     return bestVal;
   }
 
+  // 反復深化メインディスパッチャー
   function executeSearch(params) {
     const {
       board: bD,
@@ -749,9 +747,7 @@
     isSearchTimeout = false;
     searchStartTime = Date.now();
     searchTimeLimit = (typeof timeLimit === 'number' && timeLimit > 0) ? timeLimit : 8500;
-    updateKingCache();
 
-    // 通常本将棋と早指し戦における目標深度の厳密な最適化
     const isFast = (speedMode === 'fast' || searchTimeLimit <= 3000);
     let targetDepth = 3;
 
@@ -762,7 +758,6 @@
     } else if (engineType === 'inja') {
       targetDepth = isFast ? 3 : 4;
     } else if (engineType === 'sokei') {
-      // 初代名人：通常本将棋は深さ5、早指しは深さ4を確実に時間内完全読破
       targetDepth = isFast ? 4 : 5;
     }
 
@@ -874,5 +869,4 @@
   }
 
 })(typeof self !== 'undefined' ? self : this);
-
 

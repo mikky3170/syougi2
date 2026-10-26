@@ -4,7 +4,7 @@
    【パート 1 / 2】
    ========================================================= */
 
-// AI Web Workerコード（思考エンジン：探索深さ維持＋気風前進強化＆膠着防止＋目標/決定深さ完全同期版）
+// AI Web Workerコード（通常対局・軍師思考エンジン：深さ厳格維持＋気風ボーナス＆膠着防止）
 const workerScriptContent = `
 const PIECE_CODES = ['OU','HI','KA','KI','GI','KE','KY','FU','RY','UM','NG','NK','NY','TO'];
 const VALUES = { OU: 30000, HI: 1050, KA: 880, KI: 580, GI: 480, KE: 380, KY: 280, FU: 100, RY: 1450, UM: 1250, NG: 570, NK: 490, NY: 430, TO: 430 };
@@ -195,7 +195,7 @@ function isUchifuzume(move) {
   return enemyLegals.length === 0;
 }
 
-// 評価関数（探索深さは維持したまま、攻め気・気風・前進ボーナスと膠着抑止を実装）
+// 評価関数（探索深さは維持、武将ごとの気風・前進ボーナスと膠着抑止）
 function evaluatePosition(evalPerspective, evalLevel) {
   let score = 0;
   const oppOwner = (evalPerspective === 'PLAYER') ? 'AI' : 'PLAYER';
@@ -220,7 +220,6 @@ function evaluatePosition(evalPerspective, evalLevel) {
       const sign = (p.owner === evalPerspective) ? 1 : -1;
       const relativeRank = (p.owner === 'AI') ? r : (8 - r);
       
-      // 武将ごとの攻め気・気風ボーナス
       if (p.owner === evalPerspective) {
         if (evalLevel === 1) {
           if (p.code === 'FU') {
@@ -619,7 +618,7 @@ self.onmessage = function(e) {
 
 /* =========================================================
    安土桃山・黄金工芸 立体五角形将棋駒アイコン 生成エンジン
-   【直感判定版：漆黒金駒（先手＝黒）／ 純白銀駒（後手＝白）】
+   【漆黒金駒（先手＝黒）／ 純白銀駒（後手＝白）】
    ========================================================= */
 function getKomaMarkHtml(isSente, sizeType = 'normal') {
   let w = 11, h = 12, vAlign = '-1.5px', mRight = '3px';
@@ -632,7 +631,6 @@ function getKomaMarkHtml(isSente, sizeType = 'normal') {
   const baseStyle = `display:inline-block; vertical-align:${vAlign}; width:${w}px !important; height:${h}px !important; max-width:${w}px !important; max-height:${h}px !important; margin-right:${mRight}; flex-shrink:0; pointer-events:none;`;
 
   if (isSente) {
-    // 先手：【漆黒（黒）】の地に黄金の蒔絵縁取り ＝ 誰が見ても将棋の「黒（☗）」
     return `<svg viewBox="0 0 100 115" width="${w}" height="${h}" class="koma-icon-svg" style="${baseStyle}">
       <defs>
         <linearGradient id="koma-sente-gold-${w}" x1="0" y1="0" x2="1" y2="1">
@@ -642,13 +640,11 @@ function getKomaMarkHtml(isSente, sizeType = 'normal') {
           <stop offset="100%" stop-color="#7a4e05"/>
         </linearGradient>
       </defs>
-      <!-- 漆黒の本体 ＋ 純金蒔絵の輪郭線 -->
       <polygon points="50,4 94,24 82,110 18,110 6,24" fill="#080301" stroke="url(#koma-sente-gold-${w})" stroke-width="8" stroke-linejoin="round"/>
       <polygon points="50,16 82,30 72,98 28,98 18,30" fill="#140702" stroke="#cca114" stroke-width="2.5"/>
       <polygon points="50,26 74,36 66,88 34,88 26,36" fill="#000000"/>
     </svg>`;
   } else {
-    // 後手：【純白（白）】の地に白銀の縁取り ＋ 逆向き ＝ 誰が見ても将棋の「白（☖）」
     return `<svg viewBox="0 0 100 115" width="${w}" height="${h}" class="koma-icon-svg" style="${baseStyle} transform:rotate(180deg);">
       <defs>
         <linearGradient id="koma-gote-silver-${w}" x1="0" y1="0" x2="1" y2="1">
@@ -658,7 +654,6 @@ function getKomaMarkHtml(isSente, sizeType = 'normal') {
           <stop offset="100%" stop-color="#556c8a"/>
         </linearGradient>
       </defs>
-      <!-- 純白の本体 ＋ 銀箔象嵌の輪郭線 -->
       <polygon points="50,4 94,24 82,110 18,110 6,24" fill="#f8fafc" stroke="url(#koma-gote-silver-${w})" stroke-width="8" stroke-linejoin="round"/>
       <polygon points="50,16 82,30 72,98 28,98 18,30" fill="#ffffff" stroke="#cbd5e1" stroke-width="2.5"/>
       <polygon points="50,26 74,36 66,88 34,88 26,36" fill="#e2e8f0"/>
@@ -1097,7 +1092,6 @@ function updateThinkingTimerDisplay() {
       pThinkDisp.className = 'warlord-thinking-inline timer-gold-box';
       pThinkDisp.innerHTML = `🪭 采配思案 <b>${elapsedSec}秒</b>`;
     }
-    // 相手側（AI）は直前の着手確定情報を維持：(深さ 〇/●)
     if (aiThinkDisp) {
       if (lastSettledMoveInfo.AI) {
         aiThinkDisp.style.display = 'inline-flex';
@@ -1115,7 +1109,6 @@ function updateThinkingTimerDisplay() {
       const targetD = WARLORDS_DATA[currentAiLevel]?.targetDepth || 1;
       aiThinkDisp.innerHTML = `🧠 敵将熟慮 <b>${elapsedSec}秒</b> (深さ ${targetD})`;
     }
-    // プレイヤー側は直前の着手確定情報を維持
     if (pThinkDisp) {
       if (lastSettledMoveInfo.PLAYER) {
         pThinkDisp.style.display = 'inline-flex';
@@ -1299,11 +1292,12 @@ function getGunbaiIconHtml() {
 
 /* =========================================================
    客分四英傑データ（実在の戦国名将・剣聖・軍師・一世名人）
+   ※オープンソース将棋・チェスエンジンをWebブラウザ向けに独自移植・再構築
    ========================================================= */
 const INSTRUCTORS_DATA = {
   nanban: {
     id: 'inst_nanban', name: '蒲生氏郷', rank: 'アマ初段相当', clan: '会津国 ｜ 南蛮兵法・深さ3',
-    sourceEngine: 'MicroMax / 西洋古典αβ探索',
+    sourceEngine: 'MicroMax (Web移植版) / 西洋古典αβ探索',
     engineType: 'nanban', baseTroops: 15000, targetDepth: 3,
     depthSpec: '深さ3＋静止探索',
     featureShort: '信長公直伝の南蛮兵法と前進速攻。',
@@ -1322,7 +1316,7 @@ const INSTRUCTORS_DATA = {
   },
   kenshi: {
     id: 'inst_kenshi', name: '柳生石舟斎', rank: 'アマ二段相当', clan: '大和国 ｜ 新陰流剣聖・深さ4',
-    sourceEngine: 'Sunfish将棋 / LesserKai PST駆動',
+    sourceEngine: 'Sunfish将棋 (Web移植版) / PST配置評価駆動',
     engineType: 'kenshi', baseTroops: 30000, targetDepth: 4,
     depthSpec: '深さ4＋PST配置評価',
     featureShort: '新陰流無刀取り。基本に忠実で隙なき構え。',
@@ -1341,7 +1335,7 @@ const INSTRUCTORS_DATA = {
   },
   inja: {
     id: 'inst_inja', name: '黒田如水', rank: 'アマ五段相当', clan: '播磨国 ｜ 神算鬼謀の隠者・深さ4',
-    sourceEngine: 'Bonanza系統 置換表＆キラー探索',
+    sourceEngine: 'Bonanza (Web移植版) / 厳密置換表＆キラー探索',
     engineType: 'inja', baseTroops: 60000, targetDepth: 4,
     depthSpec: '深さ4＋置換表＋キラー探索',
     featureShort: '天下の天才軍師。相手の手を先読みし罠へ誘い込む。',
@@ -1360,7 +1354,7 @@ const INSTRUCTORS_DATA = {
   },
   sokei: {
     id: 'inst_sokei', name: '大橋宗桂', titleHonor: '初代名人', rank: 'アマ八段〜九段相当', clan: '山城国 ｜ 将棋一世名人・深さ5',
-    sourceEngine: 'Apery / やねうら王系統 Null-Move＋PVS探索',
+    sourceEngine: 'Apery/やねうら王 (Web移植版) / 安全PVS探索',
     engineType: 'sokei', baseTroops: 100000, targetDepth: 5,
     depthSpec: '深さ5＋完全読破＋PVS探索',
     featureShort: '信長・家康公より名人を賜りし開祖。最高峰の極致。',
@@ -1700,7 +1694,7 @@ function pickRandomStrategistWarlord() {
   exhibitionRandomStrategistWarlordKey = keys[Math.floor(Math.random() * keys.length)];
 }
 
-/* 日本将棋連盟・公式棋譜フォーマット変換エンジン（テキスト規格完全保持） */
+/* 日本将棋連盟・公式棋譜フォーマット変換エンジン */
 function formatOfficialKifuMove(m, idx, isKifFile = false) {
   if (!m) return '';
   const isSenteMove = (m.owner === (battleStartTurn === 'PLAYER' ? 'PLAYER' : 'AI'));
@@ -1742,7 +1736,6 @@ function formatOfficialKifuMove(m, idx, isKifFile = false) {
   return `${markChar}${squareTxt}${actionTxt}`;
 }
 
-/* 武将名と称号の安全な分離フォーマッタ */
 function getWarlordDisplayNameHtml(data) {
   if (!data) return '';
   if (data.titleHonor) {
@@ -1751,7 +1744,6 @@ function getWarlordDisplayNameHtml(data) {
   return data.name;
 }
 
-/* 先手・後手 ＆ 駒台・手番表示の動的整合性エンジン（漆黒金駒／純白銀駒アイコン埋め込み版） */
 function updateTurnLabels() {
   const pDock = document.getElementById('player-dock-label');
   const aiDock = document.getElementById('ai-dock-label');
@@ -1783,7 +1775,6 @@ function updateTurnLabels() {
   if (aiNameEl) aiNameEl.innerHTML = `${aiIcon}${w.name}`;
 }
 
-/* 勝敗視認性：武将名横インライン銘板掲揚 ＆ オーラ制御 */
 function clearWarlordResultPlaques() {
   const pPlaque = document.getElementById('player-result-plaque');
   const aiPlaque = document.getElementById('ai-result-plaque');
@@ -1819,7 +1810,7 @@ function showWarlordResultPlaque(winnerSide) {
   }
 }
 
-/* 御前試合：公儀軍監実況解説エンジン（思考中：目標深さ、決断時：深さ 〇/●） */
+/* 御前試合：公儀軍監実況解説エンジン（思考中：深さ●、決断時：深さ 〇/●） */
 function updateExhibitionThinkingDisplay(isThinking = true) {
   if (!isExhibitionActive) return;
   const elapsedSec = Math.max(0.1, (Date.now() - turnStartTime) / 1000).toFixed(1);
@@ -2020,7 +2011,6 @@ function calculateTroopsPercentages(bd, hd) {
   return { pPct, aiPct };
 }
 
-/* 戦況連動型・動的セリフ切り替えシステム */
 function updateWarlordQuotes() {
   if (isReviewingPast()) return;
 
@@ -2096,7 +2086,6 @@ function updateWarlordQuotes() {
   }
 }
 
-/* 将棋ルール判定関数群 */
 function getValidBoardMoves(r, c, owner, targetBoard = board) {
   const item = targetBoard[r][c]; if (!item) return [];
   const dir = owner === 'AI' ? 1 : -1, moves = [];
@@ -2275,7 +2264,6 @@ function loadProgress() {
   updateConquestMapUI();
 }
 
-/* 複数画面安全合体保存エンジン */
 function saveProgress(clearedLvl) {
   if (isExhibitionActive) return;
   try {
@@ -2323,7 +2311,6 @@ function getBoardHash(b, h, t) {
   return s;
 }
 
-/* 千日手判定（連続王手千日手反則負け判定完全対応） */
 function checkSennichite(targetNextTurn = turn) {
   const curHash = getBoardHash(board, hands, targetNextTurn);
   boardHashHistory.push(curHash);
@@ -2441,7 +2428,6 @@ function initBoardState() {
   updateRivalryButton();
   updateReviewModeUI();
 
-  // 日本将棋連盟・公式初期配置
   board[0] = [{code:'KY',owner:'AI'},{code:'KE',owner:'AI'},{code:'GI',owner:'AI'},{code:'KI',owner:'AI'},{code:'OU',owner:'AI'},{code:'KI',owner:'AI'},{code:'GI',owner:'AI'},{code:'KE',owner:'AI'},{code:'KY',owner:'AI'}];
   board[1][1] = {code:'KA',owner:'AI'}; board[1][7] = {code:'HI',owner:'AI'};
   for(let c=0; c<9; c++) board[2][c] = {code:'FU',owner:'AI'};
@@ -2500,7 +2486,6 @@ function isReviewingPast() {
   return isPastReplayActive || (reviewingIndex !== -1 && reviewingIndex !== historyStates.length - 1);
 }
 
-// 鑑賞・合戦再現モードUI更新（タブレット用・スマホ用の両バーを確実に同期表示）
 function updateReviewModeUI() {
   const sitBadge = document.getElementById('situation-badge');
   const sitText = document.getElementById('situation-text');
@@ -2655,7 +2640,6 @@ function exitReplayMode() {
   }
 }
 
-/* 伝令・軍令高札更新 */
 function setOrderMessage(msgData, isMyTurn = false, category = 'player') {
   const bannerEl = document.getElementById('order-message-banner');
   const linePrimaryEl = document.getElementById('order-line-primary');
@@ -3089,7 +3073,7 @@ function executeMove(m, metric = null) {
 
   if (m.type === 'drop') {
     hands[m.owner][m.code]--;
-    board[m.to.r][m.to.c] = { code: m.code, owner: m.owner };
+    board[moveObjectsHistory[moveObjectsHistory.length - 1].to.r][moveObjectsHistory[moveObjectsHistory.length - 1].to.c] = { code: m.code, owner: m.owner };
   } else {
     const fp = board[m.from.r][m.from.c], tp = board[m.to.r][m.to.c];
     if (tp) {
@@ -3333,6 +3317,7 @@ function handleWorkerMessage(e) {
   });
 }
 
+// 【重要修正】外部AIメッセージハンドラ：深さ1固定上書きバグを解消し、真の達成深度を画面へ反映
 function handleExternalWorkerMessage(e) {
   clearTimeout(exhibitionSafetyTimer);
   const data = e.data;
@@ -3345,6 +3330,7 @@ function handleExternalWorkerMessage(e) {
   }
 
   isAiThinking = false;
+  // 外部AIが実際に達成した探索深さをそのまま採用
   exhibitionAchievedDepth = data.depth || 1;
   exhibitionTargetDepth = data.targetDepth || exhibitionTargetDepth;
   exhibitionTotalNodes = data.nodes || exhibitionTotalNodes;
@@ -4107,7 +4093,6 @@ function stopExhibitionTimer() {
   }
 }
 
-/* 当局・合戦絵巻（棋譜モーダル）リアルタイム自動追従システム */
 function updateKifuModalLive() {
   const isPlayerSente = (battleStartTurn === 'PLAYER');
   let p = null, e = null;
@@ -4656,7 +4641,6 @@ function setPlayerWarlord(k) {
   selectConquestProvince(currentAiLevel);
 }
 
-/* 日本将棋連盟・柿木将棋公式規格 KIF保存機能（テキスト規格完全保持） */
 function downloadKifu() {
   playUiClickSound();
   const isPlayerSente = (battleStartTurn === 'PLAYER');
