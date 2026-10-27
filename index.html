@@ -263,7 +263,7 @@
   </div>
 </div>
 
-<!-- 御前試合モーダル -->
+<!-- 御前試合モーダル（重複を排除しスッキリ整理した見出し体系） -->
 <div id="exhibition-modal" class="modal-overlay" style="display: none;">
   <div class="modal-content exhibition-modal-box">
     <div class="modal-gold-plaque">
@@ -276,7 +276,7 @@
     
     <div class="exhibition-guide-plaque">
       <span>💡</span>
-      <span>戦国武将・客分英傑・名人の<b>【肖像・家紋】</b>を選定して御前試合を開始します。<br>※両軍の読み筋・公儀軍監の実況解説を特等席で鑑賞できます。</span>
+      <span>戦国武将・オープンソース思考エンジンをWebブラウザへ独自移植した客分英傑・一世名人より【先手・後手】を選定し、天下分け目の御前試合を鑑賞できます。</span>
     </div>
 
     <div class="exhibition-mobile-tab-bar" id="exhibition-mobile-tabs">
@@ -284,34 +284,17 @@
       <button class="exhibition-mobile-tab-btn btn-3d" id="btn-exh-tab-gote" onclick="switchExhibitionMobileTab('gote')"></button>
     </div>
 
+    <!-- 左右2列：説明の重複を解消し、タイトルはシンプルに【先手陣】/【後手陣】のみ表示 -->
     <div class="exhibition-vs-container" id="exhibition-vs-container">
       <div class="exhibition-side-col mobile-active-col" id="exhibition-col-sente">
-        <div class="exhibition-side-title" id="exhibition-side-title-sente">【先手陣】出陣AI</div>
-        <div class="exhibition-warlord-preview-card" id="exhibition-sente-preview-card">
-          <div class="preview-avatar-box" id="preview-sente-avatar"></div>
-          <div class="preview-info-box">
-            <div class="card-top-header">
-              <span class="card-inst-name" id="preview-sente-name">先手AI</span>
-              <span class="badge-inst-rank" id="preview-sente-badge">先手陣</span>
-            </div>
-            <div class="card-inst-desc" id="preview-sente-desc">先手陣の解説が表示されます。</div>
-          </div>
-        </div>
+        <div class="exhibition-side-title" id="exhibition-side-title-sente">【先手陣】</div>
+        <div class="exhibition-list-header-fixed">📜 控え武将一覧（全十九傑）</div>
         <div class="exhibition-avatar-pick-list" id="exhibition-sente-pick-list"></div>
       </div>
 
       <div class="exhibition-side-col" id="exhibition-col-gote">
-        <div class="exhibition-side-title" id="exhibition-side-title-gote">【後手陣】出陣AI</div>
-        <div class="exhibition-warlord-preview-card" id="exhibition-gote-preview-card">
-          <div class="preview-avatar-box" id="preview-gote-avatar"></div>
-          <div class="preview-info-box">
-            <div class="card-top-header">
-              <span class="card-inst-name" id="preview-gote-name">後手AI</span>
-              <span class="badge-inst-rank" id="preview-gote-badge">後手陣</span>
-            </div>
-            <div class="card-inst-desc" id="preview-gote-desc">後手陣の解説が表示されます。</div>
-          </div>
-        </div>
+        <div class="exhibition-side-title" id="exhibition-side-title-gote">【後手陣】</div>
+        <div class="exhibition-list-header-fixed">📜 控え武将一覧（全十九傑）</div>
         <div class="exhibition-avatar-pick-list" id="exhibition-gote-pick-list"></div>
       </div>
     </div>
@@ -704,27 +687,27 @@
             <h4>🏯 二、対戦武将十将と気風・動員録</h4>
             <button class="card-speech-btn btn-3d" onclick="toggleCardSpeech('guide-card-warlords-2')">🔊 朗読</button>
           </div>
-          <div class="enemy-line-item"><span class="enemy-line-left">Lv.1 尾張｜木下藤吉郎</span><span class="enemy-line-right">足軽乱戦（動員 3,000兵）</span></div>
-          <div class="enemy-line-item"><span class="enemy-line-left">Lv.2 加賀｜前田利家</span><span class="enemy-line-right">中央突破の槍（動員 8,000兵）</span></div>
-          <div class="enemy-line-item"><span class="enemy-line-left">Lv.3 越前｜柴田勝家</span><span class="enemy-line-right">剛腕の突進（動員 15,000兵）</span></div>
-          <div class="enemy-line-item"><span class="enemy-line-left">Lv.4 近江｜浅井長政</span><span class="enemy-line-right">堅守の三間飛車（動員 25,000兵）</span></div>
-          <div class="enemy-line-item"><span class="enemy-line-left">Lv.5 美濃｜明智光秀</span><span class="enemy-line-right">隙を突く知謀（動員 40,000兵）</span></div>
-          <div class="enemy-line-item"><span class="enemy-line-left">Lv.6 越後｜上杉謙信</span><span class="enemy-line-right">軍神の遠距離射線（動員 60,000兵）</span></div>
-          <div class="enemy-line-item"><span class="enemy-line-left">Lv.7 甲斐｜武田信玄</span><span class="enemy-line-right">風林火山の要塞（動員 80,000兵）</span></div>
-          <div class="enemy-line-item"><span class="enemy-line-left">Lv.8 安土｜織田信長</span><span class="enemy-line-right">成駒電撃戦（動員 110,000兵）</span></div>
-          <div class="enemy-line-item"><span class="enemy-line-left">Lv.9 大坂｜豊臣秀吉</span><span class="enemy-line-right">持ち駒包囲戦（動員 150,000兵）</span></div>
-          <div class="enemy-line-item"><span class="enemy-line-left">Lv.10 江戸｜徳川家康</span><span class="enemy-line-right">最深探索の鉄壁（動員 200,000兵）</span></div>
+          <div class="enemy-line-item"><span class="enemy-line-left">Lv.1 尾張｜木下藤吉郎</span><span class="enemy-line-right">足軽乱戦（動員 3,000兵・アマ10級相当）</span></div>
+          <div class="enemy-line-item"><span class="enemy-line-left">Lv.2 加賀｜前田利家</span><span class="enemy-line-right">中央突破の槍（動員 8,000兵・アマ8級相当）</span></div>
+          <div class="enemy-line-item"><span class="enemy-line-left">Lv.3 越前｜柴田勝家</span><span class="enemy-line-right">剛腕の突進（動員 15,000兵・アマ6級相当）</span></div>
+          <div class="enemy-line-item"><span class="enemy-line-left">Lv.4 近江｜浅井長政</span><span class="enemy-line-right">堅守の三間飛車（動員 25,000兵・アマ4級相当）</span></div>
+          <div class="enemy-line-item"><span class="enemy-line-left">Lv.5 美濃｜明智光秀</span><span class="enemy-line-right">隙を突く知謀（動員 40,000兵・アマ2級相当）</span></div>
+          <div class="enemy-line-item"><span class="enemy-line-left">Lv.6 越後｜上杉謙信</span><span class="enemy-line-right">軍神の遠距離射線（動員 60,000兵・アマ初段相当）</span></div>
+          <div class="enemy-line-item"><span class="enemy-line-left">Lv.7 甲斐｜武田信玄</span><span class="enemy-line-right">風林火山の要塞（動員 80,000兵・アマ二段相当）</span></div>
+          <div class="enemy-line-item"><span class="enemy-line-left">Lv.8 安土｜織田信長</span><span class="enemy-line-right">成駒電撃戦（動員 110,000兵・アマ三段相当）</span></div>
+          <div class="enemy-line-item"><span class="enemy-line-left">Lv.9 大坂｜豊臣秀吉</span><span class="enemy-line-right">持ち駒包囲戦（動員 150,000兵・アマ四段相当）</span></div>
+          <div class="enemy-line-item"><span class="enemy-line-left">Lv.10 江戸｜徳川家康</span><span class="enemy-line-right">最深探索の鉄壁（動員 200,000兵・アマ五段〜六段相当）</span></div>
         </div>
         <div class="guide-card-box" id="guide-card-warlords-instructors">
           <div class="guide-card-header-row">
-            <h4>⚔ 三、客分四英傑（御前試合・外部思考エンジン）</h4>
+            <h4>⚔ 三、客分四英傑（御前試合・オープンソース思考エンジンWeb移植録）</h4>
             <button class="card-speech-btn btn-3d" onclick="toggleCardSpeech('guide-card-warlords-instructors')">🔊 朗読</button>
           </div>
-          御前試合にて腕を競い合う、日ノ本屈指の客分英傑たちです：<br>
-          ・<b class="kw-blue">蒲生氏郷</b>（アマ初段相当 ｜ 南蛮兵法・MicroMax系統・深さ3）<br>
-          ・<b class="kw-gold">柳生石舟斎</b>（アマ二段相当 ｜ 新陰流剣聖・Sunfish系統・深さ4）<br>
-          ・<b class="kw-green">黒田如水</b>（アマ五段相当 ｜ 神算鬼謀の隠者・Bonanza系統・深さ4）<br>
-          ・<b class="kw-crimson">初代名人・大橋宗桂</b>（アマ八段〜九段相当 ｜ 一世名人・Apery/やねうら王系統・深さ5）
+          ※御前試合に参戦する客分四英傑は、世界のオープンソース将棋・チェス思考エンジンをベースに、Webブラウザ（JavaScript）環境へ独自移植・再構築した専用思考ルーチンです：<br><br>
+          ・<b class="kw-blue">蒲生氏郷</b>［MicroMax系］（アマ初段相当 ｜ 南蛮兵法・西洋古典αβ探索＋静止探索・深さ3）<br>
+          ・<b class="kw-gold">柳生石舟斎</b>［Sunfish系］（アマ二段相当 ｜ 新陰流剣聖・PST配置評価駆動・深さ4）<br>
+          ・<b class="kw-green">黒田如水</b>［Bonanza系］（アマ五段相当 ｜ 神算鬼謀の隠者・置換表＋キラー探索・深さ4）<br>
+          ・<b class="kw-crimson">初代名人・大橋宗桂</b>［Apery/やねうら王系］（アマ八段〜九段相当 ｜ 一世名人・安全PVS探索＋玉囲い完全評価・深さ5）
         </div>
       </div>
 

@@ -1,5 +1,3 @@
-
-
 /* =========================================================
    将棋王 2026 〜 天下統一・戦国決戦 〜
    メインスクリプト（軍略・演出・思考エンジン・御前試合統合管理）
@@ -239,7 +237,7 @@ function evaluatePosition(evalPerspective, evalLevel) {
         }
 
         if (evalLevel === 3 && (p.code === 'GI' || p.code === 'FU')) val += relativeRank * 22;
-        if (evalLevel === 4 && p.code === 'HI' && c === 2) score += 45; // 7筋(c=2)への三間飛車指向
+        if (evalLevel === 4 && p.code === 'HI' && c === 2) score += 45;
         if (evalLevel === 5 && p.code === 'FU' && relativeRank >= 5) score += 25;
         if (evalLevel === 6 && (p.code === 'KA' || p.code === 'UM')) val *= 1.25;
         if (evalLevel === 7 && ['KI','GI'].includes(p.code) && relativeRank <= 2) score += 30;
@@ -618,11 +616,11 @@ self.onmessage = function(e) {
    安土桃山・黄金工芸 立体五角形将棋駒アイコン 生成エンジン
    ========================================================= */
 function getKomaMarkHtml(isSente, sizeType = 'normal') {
-  let w = 11, h = 12, vAlign = '-1.5px', mRight = '3px';
+  let w = 12, h = 13, vAlign = '-1.5px', mRight = '3px';
   if (sizeType === 'mini') {
-    w = 10; h = 11; vAlign = '-1px'; mRight = '2px';
+    w = 11; h = 12; vAlign = '-1px'; mRight = '2px';
   } else if (sizeType === 'tiny') {
-    w = 9; h = 10; vAlign = '-1px'; mRight = '2px';
+    w = 10; h = 11; vAlign = '-1px'; mRight = '2px';
   }
 
   const baseStyle = `display:inline-block; vertical-align:${vAlign}; width:${w}px !important; height:${h}px !important; max-width:${w}px !important; max-height:${h}px !important; margin-right:${mRight}; flex-shrink:0; pointer-events:none;`;
@@ -1289,12 +1287,12 @@ function getGunbaiIconHtml() {
 }
 
 /* =========================================================
-   客分四英傑データ
+   客分四英傑データ（キーワードバッジ用 engineTag を設定）
    ========================================================= */
 const INSTRUCTORS_DATA = {
   nanban: {
     id: 'inst_nanban', name: '蒲生氏郷', rank: 'アマ初段相当', clan: '会津国 ｜ 南蛮兵法・深さ3',
-    sourceEngine: 'MicroMax (Web移植版) / 西洋古典αβ探索',
+    engineTag: 'MicroMax系',
     engineType: 'nanban', baseTroops: 15000, targetDepth: 3,
     depthSpec: '深さ3＋静止探索',
     featureShort: '信長公直伝の南蛮兵法と前進速攻。',
@@ -1313,7 +1311,7 @@ const INSTRUCTORS_DATA = {
   },
   kenshi: {
     id: 'inst_kenshi', name: '柳生石舟斎', rank: 'アマ二段相当', clan: '大和国 ｜ 新陰流剣聖・深さ4',
-    sourceEngine: 'Sunfish将棋 (Web移植版) / PST配置評価駆動',
+    engineTag: 'Sunfish系',
     engineType: 'kenshi', baseTroops: 30000, targetDepth: 4,
     depthSpec: '深さ4＋PST配置評価',
     featureShort: '新陰流無刀取り。基本に忠実で隙なき構え。',
@@ -1332,7 +1330,7 @@ const INSTRUCTORS_DATA = {
   },
   inja: {
     id: 'inst_inja', name: '黒田如水', rank: 'アマ五段相当', clan: '播磨国 ｜ 神算鬼謀の隠者・深さ4',
-    sourceEngine: 'Bonanza (Web移植版) / 厳密置換表＆キラー探索',
+    engineTag: 'Bonanza系',
     engineType: 'inja', baseTroops: 60000, targetDepth: 4,
     depthSpec: '深さ4＋置換表＋キラー探索',
     featureShort: '天下の天才軍師。相手の手を先読みし罠へ誘い込む。',
@@ -1350,8 +1348,8 @@ const INSTRUCTORS_DATA = {
     portraitSvg: `<rect width="100" height="100" rx="6" fill="#10061e"/><circle cx="50" cy="50" r="28" fill="none" stroke="#ba68c8" stroke-width="2.5" stroke-dasharray="4,4"/><path d="M 32,30 Q 50,12 68,30 L 74,70 Q 50,82 26,70 Z" fill="#b31212" stroke="#ffd700" stroke-width="1.8"/><circle cx="50" cy="50" r="9" fill="#ffd700"/>`
   },
   sokei: {
-    id: 'inst_sokei', name: '大橋宗桂', titleHonor: '初代名人', rank: 'アマ八段〜九段相当', clan: '山城国 ｜ 将棋一世名人・深さ5',
-    sourceEngine: 'Apery/やねうら王 (Web移植版) / 安全PVS探索',
+    id: 'inst_sokei', name: '大橋宗桂', titleHonor: '初代名人', rank: 'アマ八段相当', clan: '山城国 ｜ 将棋一世名人・深さ5',
+    engineTag: 'Apery系',
     engineType: 'sokei', baseTroops: 100000, targetDepth: 5,
     depthSpec: '深さ5＋完全読破＋PVS探索',
     featureShort: '信長・家康公より名人を賜りし開祖。最高峰の極致。',
@@ -1370,7 +1368,7 @@ const INSTRUCTORS_DATA = {
   }
 };
 
-/* 主役武将（主役五傑：本人の肖像画IDを完全保証） */
+/* 主役武将（主役五傑・軍師AI） */
 const PLAYER_WARLORDS = {
   sanada: {
     id: 'sanada', name: '真田幸村', clan: '信濃国 ｜ 真田赤備隊', themeColor: '#e61919',
@@ -1460,17 +1458,16 @@ const PLAYER_WARLORDS = {
 };
 
 
-
 /* =========================================================
    将棋王 2026 〜 天下統一・戦国決戦 〜
    メインスクリプト（軍略・演出・思考エンジン・御前試合統合管理）
    【パート 2 / 2】
    ========================================================= */
 
-/* 対戦武将十将（天下統一絵巻：Lv.1〜Lv.10にて完結） */
+/* 対戦武将十将（天下統一絵巻：Lv.1〜Lv.10にて完結 / 各段級位設定） */
 const WARLORDS_DATA = {
   1: {
-    id: 'enemy_1', province: '尾張国', name: '木下藤吉郎', clan: '尾張国｜織田足軽隊', maxTroops: 3000, targetDepth: 1, depthSpec: '深さ1＋足軽速攻',
+    id: 'enemy_1', province: '尾張国', name: '木下藤吉郎', rank: 'アマ10級相当', clan: '尾張国｜織田足軽隊', maxTroops: 3000, targetDepth: 1, depthSpec: '深さ1＋足軽速攻',
     featureShort: '足軽戦法。前進重視。', tacticsHint: '駒にヒモをつけ、角・飛車の道を開いて突入されよ！',
     portraitSvg: `<rect width="100" height="100" rx="6" fill="#140d06"/><path d="M50 20 Q56 28 50 36 Q44 28 50 20 Z M50 36 Q62 50 50 68 Q38 50 50 68 Z M50 68 Q68 85 50 94 Q32 85 50 68 Z" fill="#ffd700"/>`,
     quotes: {
@@ -1485,7 +1482,7 @@ const WARLORDS_DATA = {
     defeatQuote: '「参り申した…！ されど猿は何度でも木を登り候！」', victoryQuote: '「勝ったぞ！ 信長様、藤吉郎やりましたぞ！」'
   },
   2: {
-    id: 'enemy_2', province: '加賀国', name: '前田利家', clan: '加賀国｜槍の又左', maxTroops: 8000, targetDepth: 1, depthSpec: '深さ1＋槍の突破',
+    id: 'enemy_2', province: '加賀国', name: '前田利家', rank: 'アマ8級相当', clan: '加賀国｜槍の又左', maxTroops: 8000, targetDepth: 1, depthSpec: '深さ1＋槍の突破',
     featureShort: '中央5筋から飛車で突進。', tacticsHint: '真ん中に金銀を配して防壁を築き、飛車の突撃を跳ね返されよ！',
     portraitSvg: `<rect width="100" height="100" rx="6" fill="#180707"/><circle cx="50" cy="50" r="10" fill="#ffd700"/><circle cx="50" cy="24" r="8" fill="#ffd700"/><circle cx="75" cy="42" r="8" fill="#ffd700"/><circle cx="65" cy="74" r="8" fill="#ffd700"/><circle cx="35" cy="74" r="8" fill="#ffd700"/><circle cx="25" cy="42" r="8" fill="#ffd700"/>`,
     quotes: {
@@ -1500,7 +1497,7 @@ const WARLORDS_DATA = {
     defeatQuote: '「見事な槍さばき… 前田の当主として完敗を認めよう！」', victoryQuote: '「槍の又左の前に敵なし！ 百万石の礎となれ！」'
   },
   3: {
-    id: 'enemy_3', province: '越前国', name: '柴田勝家', clan: '越前国｜鬼柴田', maxTroops: 15000, targetDepth: 2, depthSpec: '深さ2＋瓶割り突進',
+    id: 'enemy_3', province: '越前国', name: '柴田勝家', rank: 'アマ6級相当', clan: '越前国｜鬼柴田', maxTroops: 15000, targetDepth: 2, depthSpec: '深さ2＋瓶割り突進',
     featureShort: '歩と銀で正面突破。', tacticsHint: '横から飛車・角の射線で銀の首を狙い撃たれよ！',
     portraitSvg: `<rect width="100" height="100" rx="6" fill="#150a04"/><path d="M30 40 Q50 25 70 40 Q50 48 30 40 Z M30 65 Q50 50 70 65 Q50 73 30 65 Z" fill="#ffd700"/>`,
     quotes: {
@@ -1515,7 +1512,7 @@ const WARLORDS_DATA = {
     defeatQuote: '「無念…！ 瓶を割れども、貴殿の策を砕けなんだか…！」', victoryQuote: '「ガハハ！ 鬼柴田の突進を止められる者などおらぬわ！」'
   },
   4: {
-    id: 'enemy_4', province: '近江国', name: '浅井長政', clan: '近江国｜浅井軍総帥', maxTroops: 25000, targetDepth: 2, depthSpec: '深さ2＋三間飛車',
+    id: 'enemy_4', province: '近江国', name: '浅井長政', rank: 'アマ4級相当', clan: '近江国｜浅井軍総帥', maxTroops: 25000, targetDepth: 2, depthSpec: '深さ2＋三間飛車',
     featureShort: '三間飛車の持久戦。', tacticsHint: '自玉を美濃囲い等に囲ってからじっくり攻略されよ。',
     portraitSvg: `<rect width="100" height="100" rx="6" fill="#0d1824"/><g fill="none" stroke="#ffd700" stroke-width="3"><polygon points="50,18 64,26 64,42 50,50 36,42 36,26"/><polygon points="36,44 50,52 50,68 36,76 22,68 22,52"/><polygon points="64,44 78,52 78,68 64,76 50,68 50,52"/></g>`,
     quotes: {
@@ -1530,7 +1527,7 @@ const WARLORDS_DATA = {
     defeatQuote: '「浅井の誇り、盤上に散る… お市、許せよ…」', victoryQuote: '「信義は勝てり！ 近江の誇りは揺るぎなし！」'
   },
   5: {
-    id: 'enemy_5', province: '美濃国', name: '明智光秀', clan: '美濃国｜智謀の軍総帥', maxTroops: 40000, targetDepth: 3, depthSpec: '深さ3＋静止探索',
+    id: 'enemy_5', province: '美濃国', name: '明智光秀', rank: 'アマ2級相当', clan: '美濃国｜智謀の軍総帥', maxTroops: 40000, targetDepth: 3, depthSpec: '深さ3＋静止探索',
     featureShort: '隙を突く知謀。', tacticsHint: '自陣の駒同士を常に連結させ、隙を作らぬよう戦われよ。',
     portraitSvg: `<rect width="100" height="100" rx="6" fill="#09141c"/><polygon points="50,18 60,38 82,38 65,52 72,74 50,60 28,74 35,52 18,38 40,38" fill="#ffd700"/>`,
     quotes: {
@@ -1545,7 +1542,7 @@ const WARLORDS_DATA = {
     defeatQuote: '「我が天運の尽きる刻… 貴殿の軍略、誠にお見事…」', victoryQuote: '「時は今！ 天下を統べるは、この光秀よ！」'
   },
   6: {
-    id: 'enemy_6', province: '越後国', name: '上杉謙信', clan: '越後国｜越後の龍・軍神', maxTroops: 60000, targetDepth: 3, depthSpec: '深さ3＋車懸り射線',
+    id: 'enemy_6', province: '越後国', name: '上杉謙信', rank: 'アマ初段相当', clan: '越後国｜越後の龍・軍神', maxTroops: 60000, targetDepth: 3, depthSpec: '深さ3＋車懸り射線',
     featureShort: '角行と龍馬の遠距離砲撃。', tacticsHint: '斜めの射線上に自軍の大事な駒を置かぬよう注意されよ。',
     portraitSvg: `<rect width="100" height="100" rx="6" fill="#14061a"/><path d="M 26,45 Q 50,18 74,45 L 76,78 Q 50,86 24,78 Z" fill="#e8e8e8" stroke="#ffd700" stroke-width="1.8"/><circle cx="50" cy="46" r="16" fill="#1c0a24"/><text x="50" y="52" font-size="14" font-weight="900" fill="#ffd700" text-anchor="middle">毘</text>`,
     quotes: {
@@ -1560,7 +1557,7 @@ const WARLORDS_DATA = {
     defeatQuote: '「極楽も地獄も先は有明の… 義戦を尽くし、悔いはなし！」', victoryQuote: '「毘沙門天の御前、悪は滅び義は輝かん！」'
   },
   7: {
-    id: 'enemy_7', province: '甲斐国', name: '武田信玄', clan: '甲斐国｜甲斐の虎', maxTroops: 80000, targetDepth: 4, depthSpec: '深さ4＋風林火山要塞',
+    id: 'enemy_7', province: '甲斐国', name: '武田信玄', rank: 'アマ二段相当', clan: '甲斐国｜甲斐の虎', maxTroops: 80000, targetDepth: 4, depthSpec: '深さ4＋風林火山要塞',
     featureShort: '金銀要塞の風林火山。', tacticsHint: '端攻め（1筋や9筋）から崩すのが妙手。',
     portraitSvg: `<rect width="100" height="100" rx="6" fill="#1f0303"/><path d="M 22,34 Q 50,10 78,34 Q 90,60 76,76 Q 50,88 24,76 Q 10,60 22,34 Z" fill="#e0d6c3" stroke="#ffd700" stroke-width="1.8"/><polygon points="50,30 60,42 50,54 40,42" fill="#ffd700"/><polygon points="40,44 50,56 40,68 30,56" fill="#ffd700"/><polygon points="60,44 70,56 60,68 50,56" fill="#ffd700"/>`,
     quotes: {
@@ -1575,7 +1572,7 @@ const WARLORDS_DATA = {
     defeatQuote: '「人は城、人は石垣… 儂の石垣が崩れるとは… 見事！」', victoryQuote: '「風林火山の旗靡くところ、天下平定の道あり！」'
   },
   8: {
-    id: 'enemy_8', province: '近江安土', name: '織田信長', clan: '近江安土｜第六天魔王', maxTroops: 110000, targetDepth: 4, depthSpec: '深さ4＋成駒電撃戦',
+    id: 'enemy_8', province: '近江安土', name: '織田信長', rank: 'アマ三段相当', clan: '近江安土｜第六天魔王', maxTroops: 110000, targetDepth: 4, depthSpec: '深さ4＋成駒電撃戦',
     featureShort: '龍王・龍馬の電撃速攻。', tacticsHint: '自玉を深く囲い、成駒の突入に耐え反撃せよ。',
     portraitSvg: `<rect width="100" height="100" rx="6" fill="#140606"/><path d="M 28,42 Q 50,20 72,42 L 76,76 Q 50,86 24,76 Z" fill="#3b0808" stroke="#ffd700" stroke-width="2"/><circle cx="50" cy="27" r="10" fill="#ffd700"/><circle cx="68" cy="40" r="10" fill="#ffd700"/><circle cx="62" cy="62" r="10" fill="#ffd700"/><circle cx="38" cy="62" r="10" fill="#ffd700"/><circle cx="32" cy="40" r="10" fill="#ffd700"/><circle cx="50" cy="48" r="11" fill="#9b111e" stroke="#ffd700" stroke-width="1.5"/>`,
     quotes: {
@@ -1590,7 +1587,7 @@ const WARLORDS_DATA = {
     defeatQuote: '「是非に及ばず…！ 新たなる天下人よ、乱世を束ねよ！」', victoryQuote: '「天下布武！ 我が覇道に従わぬ者に明日はない！」'
   },
   9: {
-    id: 'enemy_9', province: '摂津大坂', name: '豊臣秀吉', clan: '摂津大坂｜天下人・太閤', maxTroops: 150000, targetDepth: 4, depthSpec: '深さ4＋持ち駒包囲網',
+    id: 'enemy_9', province: '摂津大坂', name: '豊臣秀吉', rank: 'アマ四段相当', clan: '摂津大坂｜天下人・太閤', maxTroops: 150000, targetDepth: 4, depthSpec: '深さ4＋持ち駒包囲網',
     featureShort: '持ち駒包囲戦。', tacticsHint: '無駄な駒交換を避けて盤上を制圧せよ。',
     portraitSvg: `<rect width="100" height="100" rx="6" fill="#241904"/><g stroke="#ffd700" stroke-width="2"><line x1="50" y1="45" x2="50" y2="8"/><line x1="50" y1="45" x2="25" y2="15"/><line x1="50" y1="45" x2="75" y2="15"/><line x1="50" y1="45" x2="10" y2="30"/><line x1="50" y1="45" x2="90" y2="30"/></g><path d="M 30,46 Q 50,30 70,46 L 74,75 Q 50,84 26,75 Z" fill="#694a08" stroke="#ffd700" stroke-width="2"/><circle cx="50" cy="56" r="10" fill="#ffd700"/>`,
     quotes: {
@@ -1605,7 +1602,7 @@ const WARLORDS_DATA = {
     defeatQuote: '「露と落ち露と消えにし我が身かな… 天下の夢、託し申す！」', victoryQuote: '「天下人はこの秀吉よ！ 日輪の光、誰にも遮れぬ！」'
   },
   10: {
-    id: 'enemy_10', province: '武蔵江戸', name: '徳川家康', clan: '武蔵江戸｜天下の覇者', maxTroops: 200000, targetDepth: 5, depthSpec: '深さ5＋鉄壁探索',
+    id: 'enemy_10', province: '武蔵江戸', name: '徳川家康', rank: 'アマ五段〜六段相当', clan: '武蔵江戸｜天下の覇者', maxTroops: 200000, targetDepth: 5, depthSpec: '深さ5＋鉄壁探索',
     featureShort: '最深探索の鉄壁。', tacticsHint: '軍師の【覚醒進言】と連携し神算鬼謀の一撃を狙うべし。',
     portraitSvg: `<rect width="100" height="100" rx="6" fill="#080f1f"/><path d="M 32,24 Q 50,14 68,24 Q 80,38 74,62 Q 50,78 26,62 Q 20,38 32,24 Z" fill="#1b2a47" stroke="#ffd700" stroke-width="2"/><circle cx="50" cy="50" r="18" fill="none" stroke="#ffd700" stroke-width="2.5"/><path d="M50 48 C44 32, 36 24, 50 18 C64 24, 56 32, 50 48 Z" fill="#ffd700"/><path d="M49 52 C33 50, 24 60, 26 74 C38 74, 46 64, 49 52 Z" fill="#ffd700"/><path d="M51 52 C67 50, 76 60, 74 74 C62 74, 54 64, 51 52 Z" fill="#ffd700"/>`,
     quotes: {
@@ -1656,12 +1653,15 @@ let isExhibitionActive = false, exhibitionTimer = null, exhibitionSpeed = 'norma
 const EXHIBITION_DELAYS = { normal: 1200, fast: 650 };
 const EXHIBITION_TIME_LIMITS = { normal: 8500, fast: 2500 };
 
-/* 御前試合選定キー：主役五傑（各武将本人）・十将・客分四英傑を完全配備 */
+/* 御前試合選定キー：
+   ① 戦国武将十将（Lv.1〜Lv.10）
+   ② 客分四英傑（外部AI）
+   ③ 主役五傑（軍師AI：外部AIの直下に配置） */
 const ALL_EXHIBITION_AI_KEYS = [
-  'sanada', 'keiji', 'masamune', 'kanetsugu', 'tadakatsu',
   'lvl_1', 'lvl_2', 'lvl_3', 'lvl_4', 'lvl_5',
   'lvl_6', 'lvl_7', 'lvl_8', 'lvl_9', 'lvl_10',
-  'nanban', 'kenshi', 'inja', 'sokei'
+  'nanban', 'kenshi', 'inja', 'sokei',
+  'sanada', 'keiji', 'masamune', 'kanetsugu', 'tadakatsu'
 ];
 
 let exhibitionSenteTarget = 'sanada', exhibitionGoteTarget = 'lvl_10';
@@ -1883,7 +1883,8 @@ function getTargetAIData(targetKey) {
     return {
       id: p.id,
       name: p.name,
-      clan: `${p.clan} ｜ 神算軍師:${p.strategistShort}`,
+      rank: 'アマ五段相当',
+      clan: `${p.clan} ｜ 軍師:${p.strategistShort}`,
       maxTroops: 180000, baseTroops: 180000, targetDepth: 5,
       depthSpec: `深さ5＋${p.strategistShort}の神算鬼謀`,
       featureShort: '主役武将。剛腕と知謀の極み。',
@@ -2417,13 +2418,11 @@ function initBoardState() {
   updateRivalryButton();
   updateReviewModeUI();
 
-  // 【初期配置：正確な将棋の配置】
-  // AI側（上陣）：8二（c=1）に飛車、2二（c=7）に角行
+  // 初期配置：正確な将棋の配置
   board[0] = [{code:'KY',owner:'AI'},{code:'KE',owner:'AI'},{code:'GI',owner:'AI'},{code:'KI',owner:'AI'},{code:'OU',owner:'AI'},{code:'KI',owner:'AI'},{code:'GI',owner:'AI'},{code:'KE',owner:'AI'},{code:'KY',owner:'AI'}];
   board[1][1] = {code:'HI',owner:'AI'}; board[1][7] = {code:'KA',owner:'AI'};
   for(let c=0; c<9; c++) board[2][c] = {code:'FU',owner:'AI'};
   
-  // プレイヤー側（下陣）：8八（c=1）に角行、2八（c=7）に飛車
   for(let c=0; c<9; c++) board[6][c] = {code:'FU',owner:'PLAYER'};
   board[7][1] = {code:'KA',owner:'PLAYER'}; board[7][7] = {code:'HI',owner:'PLAYER'};
   board[8] = [{code:'KY',owner:'PLAYER'},{code:'KE',owner:'PLAYER'},{code:'GI',owner:'PLAYER'},{code:'KI',owner:'PLAYER'},{code:'OU',owner:'PLAYER'},{code:'KI',owner:'PLAYER'},{code:'GI',owner:'PLAYER'},{code:'KE',owner:'PLAYER'},{code:'KY',owner:'PLAYER'}];
@@ -2525,8 +2524,8 @@ function exitReplayMode() {
       moveObjectsHistory = JSON.parse(JSON.stringify(savedActiveBattle.moveObjectsHistory));
       historyStates = JSON.parse(JSON.stringify(savedActiveBattle.historyStates));
       evalScoresHistory = JSON.parse(JSON.stringify(savedActiveBattle.evalScoresHistory));
-      boardHashHistory = JSON.parse(JSON.stringify(savedActiveBattle.boardHashHistory));
-      checkHistory = JSON.parse(JSON.stringify(savedActiveBattle.checkHistory));
+      boardHashHistory = JSON.parse(JSON.stringify(boardHashHistory));
+      checkHistory = JSON.parse(JSON.stringify(checkHistory));
       moveMetricsHistory = JSON.parse(JSON.stringify(savedActiveBattle.moveMetricsHistory || []));
       lastMove = savedActiveBattle.lastMove;
       reviewingIndex = historyStates.length - 1;
@@ -2580,8 +2579,8 @@ function exitReplayMode() {
       moveObjectsHistory = JSON.parse(JSON.stringify(savedActiveBattle.moveObjectsHistory));
       historyStates = JSON.parse(JSON.stringify(savedActiveBattle.historyStates));
       evalScoresHistory = JSON.parse(JSON.stringify(savedActiveBattle.evalScoresHistory));
-      boardHashHistory = JSON.parse(JSON.stringify(savedActiveBattle.boardHashHistory));
-      checkHistory = JSON.parse(JSON.stringify(savedActiveBattle.checkHistory));
+      boardHashHistory = JSON.parse(JSON.stringify(boardHashHistory));
+      checkHistory = JSON.parse(JSON.stringify(checkHistory));
       moveMetricsHistory = JSON.parse(JSON.stringify(savedActiveBattle.moveMetricsHistory || []));
       lastMove = savedActiveBattle.lastMove;
       reviewingIndex = historyStates.length - 1;
@@ -2991,11 +2990,18 @@ document.getElementById('btn-promote-no').onclick = () => {
 
 function animateAndExecuteMove(m, metric = null, onComplete = null) {
   isPieceAnimating = true;
+
+  const safeComplete = () => {
+    isPieceAnimating = false;
+    if (onComplete) {
+      try { onComplete(); } catch (e) { console.error('onComplete error:', e); }
+    }
+  };
+
   const targetCellEl = document.querySelector(`#board .cell[data-r="${m.to.r}"][data-c="${m.to.c}"]`);
   if (!targetCellEl) {
-    executeMove(m, metric);
-    isPieceAnimating = false;
-    if (onComplete) onComplete();
+    try { executeMove(m, metric); } catch (e) { console.error('executeMove error:', e); }
+    safeComplete();
     return;
   }
   const toRect = targetCellEl.getBoundingClientRect();
@@ -3015,9 +3021,8 @@ function animateAndExecuteMove(m, metric = null, onComplete = null) {
   }
 
   if (!fromRect) {
-    executeMove(m, metric);
-    isPieceAnimating = false;
-    if (onComplete) onComplete();
+    try { executeMove(m, metric); } catch (e) { console.error('executeMove error:', e); }
+    safeComplete();
     return;
   }
 
@@ -3043,18 +3048,24 @@ function animateAndExecuteMove(m, metric = null, onComplete = null) {
   setTimeout(() => {
     playPieceSound();
     if (animPiece && animPiece.parentElement) animPiece.remove();
-    executeMove(m, metric);
-    updateWarlordQuotes();
-    isPieceAnimating = false;
-    if (onComplete) onComplete();
+    try {
+      executeMove(m, metric);
+      updateWarlordQuotes();
+    } catch (e) {
+      console.error('executeMove inside timeout error:', e);
+    } finally {
+      safeComplete();
+    }
   }, flyTime);
 }
 
+// 【11手目停止バグ完全解消版：owner変数の完全統一 ＆ 座標参照の正規化】
 function executeMove(m, metric = null) {
   if (m.type === 'move' && !m.code && board[m.from.r][m.from.c]) {
     m.code = board[m.from.r][m.from.c].code;
   }
 
+  const owner = m.owner; // スコープを完全固定
   moveObjectsHistory.push(m);
   lastMove = m;
   const recordMetric = metric || { timeSec: '0.1', depth: 1 };
@@ -3063,8 +3074,8 @@ function executeMove(m, metric = null) {
   let isKingCaptured = false, capturedKingOwner = null;
 
   if (m.type === 'drop') {
-    hands[m.owner][m.code]--;
-    board[m.to.r][moveObjectsHistory[moveObjectsHistory.length - 1].to.c] = { code: m.code, owner: m.owner };
+    hands[owner][m.code]--;
+    board[m.to.r][m.to.c] = { code: m.code, owner };
   } else {
     const fp = board[m.from.r][m.from.c], tp = board[m.to.r][m.to.c];
     if (tp) {
@@ -3072,7 +3083,7 @@ function executeMove(m, metric = null) {
         isKingCaptured = true; capturedKingOwner = tp.owner;
       } else {
         const raw = UNPROMOTE_MAP[tp.code];
-        hands[m.owner][raw] = (hands[m.owner][raw] || 0) + 1;
+        hands[owner][raw] = (hands[owner][raw] || 0) + 1; // 安全に加算
       }
     }
     if (m.promote) {
@@ -3084,7 +3095,7 @@ function executeMove(m, metric = null) {
     board[m.from.r][m.from.c] = null;
   }
 
-  historyStates.push({ board: cloneBoardState(board), hands: JSON.parse(JSON.stringify(hands)), turn: m.owner === 'PLAYER' ? 'AI' : 'PLAYER', moveObjectsHistory: JSON.parse(JSON.stringify(moveObjectsHistory)) });
+  historyStates.push({ board: cloneBoardState(board), hands: JSON.parse(JSON.stringify(hands)), turn: owner === 'PLAYER' ? 'AI' : 'PLAYER', moveObjectsHistory: JSON.parse(JSON.stringify(moveObjectsHistory)) });
   reviewingIndex = historyStates.length - 1;
   renderBoard();
   updateTroopsAndSituation();
@@ -3762,127 +3773,129 @@ function closeExhibitionModal() {
   document.getElementById('exhibition-modal').style.display = 'none';
 }
 
+// 【バッジ縦2段配置ロジック：上段にLv/系統、下段に〇〇相当】
 function getAiBadgeHtml(k, data) {
-  if (k === 'sokei') return `<span class="badge-ai-meijin">一世名人</span>`;
-  if (['nanban', 'kenshi', 'inja'].includes(k)) return `<span class="badge-ai-dan">${data.rank || '指南役'}</span>`;
-  if (['sanada', 'keiji', 'masamune', 'kanetsugu', 'tadakatsu'].includes(k)) return `<span class="badge-ai-tactician">主役武将</span>`;
-  if (k.startsWith('lvl_')) return `<span class="badge-ai-level">Lv.${k.replace('lvl_', '')}</span>`;
-  return `<span class="badge-ai-level">武将</span>`;
+  let topBadge = '';
+  let bottomBadge = '';
+
+  if (k === 'sokei') {
+    topBadge = `<span class="badge-ai-meijin">${data.engineTag || 'Apery系'}</span>`;
+    bottomBadge = `<span class="badge-ai-dan">${data.rank || 'アマ八段相当'}</span>`;
+  } else if (['nanban', 'kenshi', 'inja'].includes(k)) {
+    topBadge = `<span class="badge-engine-tag">${data.engineTag || '名作AI'}</span>`;
+    bottomBadge = `<span class="badge-ai-dan">${data.rank || '指南役'}</span>`;
+  } else if (['sanada', 'keiji', 'masamune', 'kanetsugu', 'tadakatsu'].includes(k)) {
+    topBadge = `<span class="badge-ai-tactician">軍師AI</span>`;
+    bottomBadge = `<span class="badge-ai-dan">${data.rank || 'アマ五段相当'}</span>`;
+  } else if (k.startsWith('lvl_')) {
+    const lvlNum = k.replace('lvl_', '');
+    topBadge = `<span class="badge-ai-level">Lv.${lvlNum}</span>`;
+    bottomBadge = `<span class="badge-ai-dan">${data.rank || 'アマ級相当'}</span>`;
+  } else {
+    topBadge = `<span class="badge-ai-level">武将</span>`;
+    bottomBadge = `<span class="badge-ai-dan">挑戦者</span>`;
+  }
+
+  return `
+    <div class="pick-badges-group">
+      ${topBadge}
+      ${bottomBadge}
+    </div>
+  `;
 }
 
+// 【御前試合選定リスト：排他制御（同キャラ選択禁止＆グレーアウト）】
 function renderExhibitionVisualPickers() {
   const senteListEl = document.getElementById('exhibition-sente-pick-list');
   const goteListEl = document.getElementById('exhibition-gote-pick-list');
   if (!senteListEl || !goteListEl) return;
 
-  senteListEl.innerHTML = `<div class="exhibition-list-header">📜 控え武将一覧（全十九傑より選定）</div>`;
-  goteListEl.innerHTML = `<div class="exhibition-list-header">📜 控え武将一覧（全十九傑より選定）</div>`;
+  senteListEl.innerHTML = '';
+  goteListEl.innerHTML = '';
 
   ALL_EXHIBITION_AI_KEYS.forEach(k => {
     const data = getTargetAIData(k);
     const badgeHtml = getAiBadgeHtml(k, data);
     const troopsNum = (data.maxTroops || data.baseTroops || 10000).toLocaleString();
     const depthTxt = data.depthSpec || '深さ3＋静止探索';
-    const sourceTxt = data.sourceEngine ? `<span class="badge-source-tag">技術出典: ${data.sourceEngine}</span>` : '';
     const tacticTxt = data.featureShort || data.clan || '正道布陣';
 
+    // 先手陣リスト生成
     const isSenteActive = (exhibitionSenteTarget === k);
+    const isSelectedAsGote = (exhibitionGoteTarget === k); // 後手で選択中
     const senteItem = document.createElement('div');
-    senteItem.className = `pick-avatar-item ${isSenteActive ? 'active' : ''}`;
+    senteItem.className = `pick-avatar-item ${isSenteActive ? 'active' : ''} ${isSelectedAsGote ? 'is-selected-other' : ''}`;
+    
+    let senteStatusHtml = '';
+    if (isSenteActive) {
+      senteStatusHtml = '<span class="badge-active-stamp">✔ 出陣決定</span>';
+    } else if (isSelectedAsGote) {
+      senteStatusHtml = '<span class="badge-other-stamp">後手選定中</span>';
+    }
+
     senteItem.innerHTML = `
       <div class="pick-thumb-box">${getWarlordPortraitHtml(data, false)}</div>
       <div class="pick-info-col">
         <div class="pick-name-row">
           <span class="pick-name-txt">${getWarlordDisplayNameHtml(data)}</span>
-          ${isSenteActive ? '<span class="badge-active-stamp">✔ 出陣決定</span>' : ''}
+          ${senteStatusHtml}
           ${badgeHtml}
         </div>
         <div class="pick-stats-row">
           <span class="badge-ai-troops">⚔ ${troopsNum} 兵</span>
           <span class="badge-ai-depth">🧠 ${depthTxt}</span>
-          ${sourceTxt}
         </div>
         <div class="pick-desc-txt">兵法：${tacticTxt}</div>
       </div>
     `;
-    senteItem.onclick = () => { playUiClickSound(); exhibitionSenteTarget = k; renderExhibitionVisualPickers(); };
+
+    if (!isSelectedAsGote) {
+      senteItem.onclick = () => {
+        playUiClickSound();
+        exhibitionSenteTarget = k;
+        renderExhibitionVisualPickers();
+      };
+    }
     senteListEl.appendChild(senteItem);
 
+    // 後手陣リスト生成
     const isGoteActive = (exhibitionGoteTarget === k);
+    const isSelectedAsSente = (exhibitionSenteTarget === k); // 先手で選択中
     const goteItem = document.createElement('div');
-    goteItem.className = `pick-avatar-item ${isGoteActive ? 'active' : ''}`;
+    goteItem.className = `pick-avatar-item ${isGoteActive ? 'active' : ''} ${isSelectedAsSente ? 'is-selected-other' : ''}`;
+
+    let goteStatusHtml = '';
+    if (isGoteActive) {
+      goteStatusHtml = '<span class="badge-active-stamp">✔ 出陣決定</span>';
+    } else if (isSelectedAsSente) {
+      goteStatusHtml = '<span class="badge-other-stamp">先手選定中</span>';
+    }
+
     goteItem.innerHTML = `
       <div class="pick-thumb-box">${getWarlordPortraitHtml(data, false)}</div>
       <div class="pick-info-col">
         <div class="pick-name-row">
           <span class="pick-name-txt">${getWarlordDisplayNameHtml(data)}</span>
-          ${isGoteActive ? '<span class="badge-active-stamp">✔ 出陣決定</span>' : ''}
+          ${goteStatusHtml}
           ${badgeHtml}
         </div>
         <div class="pick-stats-row">
           <span class="badge-ai-troops">⚔ ${troopsNum} 兵</span>
           <span class="badge-ai-depth">🧠 ${depthTxt}</span>
-          ${sourceTxt}
         </div>
         <div class="pick-desc-txt">兵法：${tacticTxt}</div>
       </div>
     `;
-    goteItem.onclick = () => { playUiClickSound(); exhibitionGoteTarget = k; renderExhibitionVisualPickers(); };
+
+    if (!isSelectedAsSente) {
+      goteItem.onclick = () => {
+        playUiClickSound();
+        exhibitionGoteTarget = k;
+        renderExhibitionVisualPickers();
+      };
+    }
     goteListEl.appendChild(goteItem);
   });
-
-  updateExhibitionPreviewCards();
-}
-
-function updateExhibitionPreviewCards() {
-  const sData = getTargetAIData(exhibitionSenteTarget);
-  const gData = getTargetAIData(exhibitionGoteTarget);
-
-  const sBox = document.getElementById('preview-sente-avatar');
-  const gBox = document.getElementById('preview-gote-avatar');
-  if (sBox) sBox.innerHTML = getWarlordPortraitHtml(sData, false);
-  if (gBox) gBox.innerHTML = getWarlordPortraitHtml(gData, false);
-
-  const sTitle = document.getElementById('exhibition-side-title-sente');
-  const gTitle = document.getElementById('exhibition-side-title-gote');
-  if (sTitle) sTitle.innerHTML = `${getKomaMarkHtml(true)}【先手陣】出陣AI`;
-  if (gTitle) gTitle.innerHTML = `${getKomaMarkHtml(false)}【後手陣】出陣AI`;
-
-  const sName = document.getElementById('preview-sente-name');
-  const sBadge = document.getElementById('preview-sente-badge');
-  const sDesc = document.getElementById('preview-sente-desc');
-  const sTroops = (sData.baseTroops || sData.maxTroops || 10000).toLocaleString();
-  const sDepth = sData.depthSpec || '深さ3＋静止探索';
-  const sSource = sData.sourceEngine ? `<div class="preview-stat-row"><span>技術出典：</span><span class="preview-spec-highlight" style="color:#a8e6cf;">${sData.sourceEngine}</span></div>` : '';
-
-  if (sName) sName.innerHTML = `${getKomaMarkHtml(true)}${getWarlordDisplayNameHtml(sData)}`;
-  if (sBadge) sBadge.textContent = sData.rank || (sData.province ? `${sData.province}` : '出陣');
-  if (sDesc) {
-    sDesc.innerHTML = `
-      <div class="preview-stat-grid">
-        <div class="preview-stat-row"><span>総動員力：</span><span class="preview-troops-highlight">⚔ ${sTroops} 兵</span></div>
-        <div class="preview-stat-row"><span>思考仕様：</span><span class="preview-spec-highlight">${sDepth}</span></div>
-        ${sSource}
-      </div>`;
-  }
-
-  const gName = document.getElementById('preview-gote-name');
-  const gBadge = document.getElementById('preview-gote-badge');
-  const gDesc = document.getElementById('preview-gote-desc');
-  const gTroops = (gData.maxTroops || gData.baseTroops || 10000).toLocaleString();
-  const gDepth = gData.depthSpec || '深さ3＋静止探索';
-  const gSource = gData.sourceEngine ? `<div class="preview-stat-row"><span>技術出典：</span><span class="preview-spec-highlight" style="color:#a8e6cf;">${gData.sourceEngine}</span></div>` : '';
-
-  if (gName) gName.innerHTML = `${getKomaMarkHtml(false)}${getWarlordDisplayNameHtml(gData)}`;
-  if (gBadge) gBadge.textContent = gData.rank || (gData.province ? `${gData.province}` : '出陣');
-  if (gDesc) {
-    gDesc.innerHTML = `
-      <div class="preview-stat-grid">
-        <div class="preview-stat-row"><span>総動員力：</span><span class="preview-troops-highlight">⚔ ${gTroops} 兵</span></div>
-        <div class="preview-stat-row"><span>思考仕様：</span><span class="preview-spec-highlight">${gDepth}</span></div>
-        ${sSource}
-      </div>`;
-  }
 }
 
 function setExhibitionModalSpeed(speed) {
@@ -3895,6 +3908,12 @@ function setExhibitionModalSpeed(speed) {
 }
 
 function startExhibitionFromModal() {
+  // 先手と後手が同じになっていないか最終安全チェック
+  if (exhibitionSenteTarget === exhibitionGoteTarget) {
+    triggerCutin('先手と後手は異なる武将を選ばれよ！', true);
+    return;
+  }
+
   closeExhibitionModal();
   stopAutoReplay(); stopExhibitionTimer(); stopTurnTimer();
   playUiClickSound();
@@ -4719,13 +4738,10 @@ function rebuildHistoryStatesFromMoves(moves) {
   const rBoard = Array.from({length: 9}, () => Array(9).fill(null));
   const rHands = { PLAYER: {}, AI: {} };
 
-  // 【初期配置：正確な将棋の配置】
-  // AI側（上陣）：8二（c=1）に飛車、2二（c=7）に角行
   rBoard[0] = [{code:'KY',owner:'AI'},{code:'KE',owner:'AI'},{code:'GI',owner:'AI'},{code:'KI',owner:'AI'},{code:'OU',owner:'AI'},{code:'KI',owner:'AI'},{code:'GI',owner:'AI'},{code:'KE',owner:'AI'},{code:'KY',owner:'AI'}];
   rBoard[1][1] = {code:'HI',owner:'AI'}; rBoard[1][7] = {code:'KA',owner:'AI'};
   for(let c=0; c<9; c++) rBoard[2][c] = {code:'FU',owner:'AI'};
 
-  // プレイヤー側（下陣）：8八（c=1）に角行、2八（c=7）に飛車
   for(let c=0; c<9; c++) rBoard[6][c] = {code:'FU',owner:'PLAYER'};
   rBoard[7][1] = {code:'KA',owner:'PLAYER'}; rBoard[7][7] = {code:'HI',owner:'PLAYER'};
   rBoard[8] = [{code:'KY',owner:'PLAYER'},{code:'KE',owner:'PLAYER'},{code:'GI',owner:'PLAYER'},{code:'KI',owner:'PLAYER'},{code:'OU',owner:'PLAYER'},{code:'KI',owner:'PLAYER'},{code:'GI',owner:'PLAYER'},{code:'KE',owner:'PLAYER'},{code:'KY',owner:'PLAYER'}];
@@ -4813,11 +4829,6 @@ function switchHistoryTab(tab) {
     if (wSelect) {
       wSelect.innerHTML = `
         <option value="all">すべての対陣</option>
-        <option value="sanada">真田幸村</option>
-        <option value="keiji">前田慶次</option>
-        <option value="masamune">伊達政宗</option>
-        <option value="kanetsugu">直江兼続</option>
-        <option value="tadakatsu">本多忠勝</option>
         <option value="lvl_1">Lv.1 木下藤吉郎</option>
         <option value="lvl_2">Lv.2 前田利家</option>
         <option value="lvl_3">Lv.3 柴田勝家</option>
@@ -4828,10 +4839,15 @@ function switchHistoryTab(tab) {
         <option value="lvl_8">Lv.8 織田信長</option>
         <option value="lvl_9">Lv.9 豊臣秀吉</option>
         <option value="lvl_10">Lv.10 徳川家康</option>
-        <option value="nanban">蒲生氏郷 (MicroMax系)</option>
-        <option value="kenshi">柳生石舟斎 (Sunfish系)</option>
-        <option value="inja">黒田如水 (Bonanza系)</option>
-        <option value="sokei">大橋宗桂 (初代名人)</option>
+        <option value="nanban">蒲生氏郷 [MicroMax系]</option>
+        <option value="kenshi">柳生石舟斎 [Sunfish系]</option>
+        <option value="inja">黒田如水 [Bonanza系]</option>
+        <option value="sokei">大橋宗桂 [Apery系]</option>
+        <option value="sanada">真田幸村 (軍師AI)</option>
+        <option value="keiji">前田慶次 (軍師AI)</option>
+        <option value="masamune">伊達政宗 (軍師AI)</option>
+        <option value="kanetsugu">直江兼続 (軍師AI)</option>
+        <option value="tadakatsu">本多忠勝 (軍師AI)</option>
       `;
     }
     if (eSelect) {
