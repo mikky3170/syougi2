@@ -1,4 +1,5 @@
 
+
 /* =========================================================
    将棋王 2026 〜 天下統一・戦国決戦 〜
    メインスクリプト（軍略・演出・思考エンジン・御前試合統合管理）
@@ -238,7 +239,7 @@ function evaluatePosition(evalPerspective, evalLevel) {
         }
 
         if (evalLevel === 3 && (p.code === 'GI' || p.code === 'FU')) val += relativeRank * 22;
-        if (evalLevel === 4 && p.code === 'HI' && c === 2) score += 45;
+        if (evalLevel === 4 && p.code === 'HI' && c === 2) score += 45; // 7筋(c=2)への三間飛車指向
         if (evalLevel === 5 && p.code === 'FU' && relativeRank >= 5) score += 25;
         if (evalLevel === 6 && (p.code === 'KA' || p.code === 'UM')) val *= 1.25;
         if (evalLevel === 7 && ['KI','GI'].includes(p.code) && relativeRank <= 2) score += 30;
@@ -1188,10 +1189,8 @@ function getWarlordPortraitHtml(warlordData, isInteractive = false, side = null)
 
   const candidates = [];
   
-  // 武将本人の識別子（id）または専用画像（customImg）を最優先で候補に追加
   if (warlordData.customImg) candidates.push(warlordData.customImg);
   if (warlordData.id) {
-    // 主役五傑（keiji, sanada等）または客分英傑
     if (['sanada', 'keiji', 'masamune', 'kanetsugu', 'tadakatsu'].includes(warlordData.id)) {
       candidates.push(`images/${warlordData.id}`);
     } else if (warlordData.id === 'enemy_11') {
@@ -1201,7 +1200,6 @@ function getWarlordPortraitHtml(warlordData, isInteractive = false, side = null)
     }
   }
 
-  // 客分英傑の別名フォールバック
   if (warlordData.id === 'inst_nanban') { candidates.push('images/ujisato'); candidates.push('images/nanban'); }
   if (warlordData.id === 'inst_kenshi') { candidates.push('images/yagyu'); candidates.push('images/kenshi'); }
   if (warlordData.id === 'inst_inja')   { candidates.push('images/josui'); candidates.push('images/inja'); }
@@ -1460,6 +1458,8 @@ const PLAYER_WARLORDS = {
     portraitSvg: `<rect width="100" height="100" rx="6" fill="#1f1103"/><path d="M 22,25 Q 12,46 32,54 Q 18,36 28,26 Z" fill="#ffd700"/><path d="M 78,25 Q 88,46 68,54 Q 82,36 72,26 Z" fill="#ffd700"/><path d="M 30,48 Q 50,30 70,48 L 74,76 Q 50,84 26,76 Z" fill="#241505" stroke="#ffd700" stroke-width="1.8"/><circle cx="50" cy="62" r="14" fill="none" stroke="#ffd700" stroke-width="3.5" stroke-dasharray="3,3"/>`
   }
 };
+
+
 
 /* =========================================================
    将棋王 2026 〜 天下統一・戦国決戦 〜
@@ -1873,14 +1873,11 @@ const PIECE_WEIGHTS = { FU: 1.5, KY: 4.0, KE: 4.0, GI: 8.0, KI: 9.0, KA: 15.0, H
 const TOTAL_FORCE_POINTS = 95.5;
 
 function getTargetAIData(targetKey) {
-  // 客分四英傑
   if (INSTRUCTORS_DATA[targetKey]) return INSTRUCTORS_DATA[targetKey];
-  // 十将（Lv.1〜Lv.10）
   if (targetKey && targetKey.startsWith('lvl_')) {
     const lvl = parseInt(targetKey.replace('lvl_', ''), 10);
     return WARLORDS_DATA[lvl] || WARLORDS_DATA[1];
   }
-  // 主役五傑（武将本人肖像を完全保証）
   if (PLAYER_WARLORDS[targetKey]) {
     const p = PLAYER_WARLORDS[targetKey];
     return {
@@ -2248,7 +2245,6 @@ function loadProgress() {
   try {
     const s = localStorage.getItem('shogi_cleared_provinces');
     clearedProvinces = s !== null ? JSON.parse(s) : [];
-    // 敵将は最大Lv.10まで
     clearedProvinces = clearedProvinces.filter(lvl => lvl <= 10);
     currentAiLevel = clearedProvinces.length > 0 ? Math.min(10, Math.max(...clearedProvinces) + 1) : 1;
     const mw = localStorage.getItem('shogi_my_warlord');
@@ -2421,10 +2417,13 @@ function initBoardState() {
   updateRivalryButton();
   updateReviewModeUI();
 
+  // 【初期配置：正確な将棋の配置】
+  // AI側（上陣）：8二（c=1）に飛車、2二（c=7）に角行
   board[0] = [{code:'KY',owner:'AI'},{code:'KE',owner:'AI'},{code:'GI',owner:'AI'},{code:'KI',owner:'AI'},{code:'OU',owner:'AI'},{code:'KI',owner:'AI'},{code:'GI',owner:'AI'},{code:'KE',owner:'AI'},{code:'KY',owner:'AI'}];
-  board[1][1] = {code:'KA',owner:'AI'}; board[1][7] = {code:'HI',owner:'AI'};
+  board[1][1] = {code:'HI',owner:'AI'}; board[1][7] = {code:'KA',owner:'AI'};
   for(let c=0; c<9; c++) board[2][c] = {code:'FU',owner:'AI'};
   
+  // プレイヤー側（下陣）：8八（c=1）に角行、2八（c=7）に飛車
   for(let c=0; c<9; c++) board[6][c] = {code:'FU',owner:'PLAYER'};
   board[7][1] = {code:'KA',owner:'PLAYER'}; board[7][7] = {code:'HI',owner:'PLAYER'};
   board[8] = [{code:'KY',owner:'PLAYER'},{code:'KE',owner:'PLAYER'},{code:'GI',owner:'PLAYER'},{code:'KI',owner:'PLAYER'},{code:'OU',owner:'PLAYER'},{code:'KI',owner:'PLAYER'},{code:'GI',owner:'PLAYER'},{code:'KE',owner:'PLAYER'},{code:'KY',owner:'PLAYER'}];
@@ -3359,7 +3358,7 @@ function aiTurn() {
     level: currentAiLevel,
     history: moveObjectsHistory,
     hashHistory: boardHashHistory,
-    isExhibition: isExhibitionActive,
+    isExhibition: true,
     targetOwner: 'AI',
     timeLimit: safeLimit
   });
@@ -4720,9 +4719,13 @@ function rebuildHistoryStatesFromMoves(moves) {
   const rBoard = Array.from({length: 9}, () => Array(9).fill(null));
   const rHands = { PLAYER: {}, AI: {} };
 
+  // 【初期配置：正確な将棋の配置】
+  // AI側（上陣）：8二（c=1）に飛車、2二（c=7）に角行
   rBoard[0] = [{code:'KY',owner:'AI'},{code:'KE',owner:'AI'},{code:'GI',owner:'AI'},{code:'KI',owner:'AI'},{code:'OU',owner:'AI'},{code:'KI',owner:'AI'},{code:'GI',owner:'AI'},{code:'KE',owner:'AI'},{code:'KY',owner:'AI'}];
-  rBoard[1][1] = {code:'KA',owner:'AI'}; rBoard[1][7] = {code:'HI',owner:'AI'};
+  rBoard[1][1] = {code:'HI',owner:'AI'}; rBoard[1][7] = {code:'KA',owner:'AI'};
   for(let c=0; c<9; c++) rBoard[2][c] = {code:'FU',owner:'AI'};
+
+  // プレイヤー側（下陣）：8八（c=1）に角行、2八（c=7）に飛車
   for(let c=0; c<9; c++) rBoard[6][c] = {code:'FU',owner:'PLAYER'};
   rBoard[7][1] = {code:'KA',owner:'PLAYER'}; rBoard[7][7] = {code:'HI',owner:'PLAYER'};
   rBoard[8] = [{code:'KY',owner:'PLAYER'},{code:'KE',owner:'PLAYER'},{code:'GI',owner:'PLAYER'},{code:'KI',owner:'PLAYER'},{code:'OU',owner:'PLAYER'},{code:'KI',owner:'PLAYER'},{code:'GI',owner:'PLAYER'},{code:'KE',owner:'PLAYER'},{code:'KY',owner:'PLAYER'}];
