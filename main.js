@@ -1015,6 +1015,7 @@ if ('speechSynthesis' in window) {
 
 /* =========================================================
    【視線誘導 ＆ 手番・思考タイマー・直前指し手管理エンジン】
+   （直前の指し手＝上段、決断／思考時間＝真下に固定配置）
    ========================================================= */
 let turnStartTime = 0;
 let turnTimerInterval = null;
@@ -1291,7 +1292,7 @@ function getGunbaiIconHtml() {
 }
 
 /* =========================================================
-   客分四英傑データ（所属肩書から不要な深さ表記を完全に撤去）
+   客分四英傑データ
    ========================================================= */
 const INSTRUCTORS_DATA = {
   nanban: {
@@ -1460,6 +1461,7 @@ const PLAYER_WARLORDS = {
     portraitSvg: `<rect width="100" height="100" rx="6" fill="#1f1103"/><path d="M 22,25 Q 12,46 32,54 Q 18,36 28,26 Z" fill="#ffd700"/><path d="M 78,25 Q 88,46 68,54 Q 82,36 72,26 Z" fill="#ffd700"/><path d="M 30,48 Q 50,30 70,48 L 74,76 Q 50,84 26,76 Z" fill="#241505" stroke="#ffd700" stroke-width="1.8"/><circle cx="50" cy="62" r="14" fill="none" stroke="#ffd700" stroke-width="3.5" stroke-dasharray="3,3"/>`
   }
 };
+
 
 /* =========================================================
    将棋王 2026 〜 天下統一・戦国決戦 〜
@@ -1928,7 +1930,7 @@ function getTargetAIData(targetKey) {
       id: p.id,
       name: p.name,
       rank: 'アマ五段相当',
-      clan: p.clan, // 【2段目汚染の解消】：軍師表記を結合せず純粋なclanのまま保持
+      clan: p.clan,
       strategistShort: p.strategistShort,
       maxTroops: 180000, baseTroops: 180000, targetDepth: 5,
       depthSpec: `深さ5＋${p.strategistShort}の神算鬼謀`,
@@ -2501,7 +2503,7 @@ function renderMainPortraits() {
   if (aiBox) aiBox.innerHTML = getWarlordPortraitHtml(w, true, 'ai');
 }
 
-/* 【軍師バッジ更新：御前試合でも1段目（名前の右隣）に美しく整列】 */
+/* 【軍師バッジ更新】 */
 function updateStrategistUI() {
   const pBadge = document.getElementById('player-strategist-badge');
   const aiBadge = document.getElementById('ai-strategist-badge');
@@ -2802,7 +2804,7 @@ function openRivalryInGuide(targetKey = null) {
 }
 
 function openFurigomaModal() {
-  if (!isGameOver && !isReviewingPast()) return; // 合戦中の誤動作を物理ガード
+  if (!isGameOver && !isReviewingPast()) return;
   initAudio(); playUiClickSound(); stopAutoReplay(); stopTurnTimer(); stopExhibitionTimer();
   savedActiveBattle = null; isPastReplayActive = false; isExhibitionActive = false;
 
@@ -3142,7 +3144,7 @@ function animateAndExecuteMove(m, metric = null, onComplete = null) {
   }, flyTime);
 }
 
-// 【着手実行エンジン：直前の指し手リアルタイム表示を同時点灯】
+// 【着手実行エンジン：直前の指し手（上段）と決断／経過時間（真下）を完全定位置管理】
 function executeMove(m, metric = null) {
   if (m.type === 'move' && !m.code && board[m.from.r][m.from.c]) {
     m.code = board[m.from.r][m.from.c].code;
@@ -3178,7 +3180,7 @@ function executeMove(m, metric = null) {
     board[m.from.r][m.from.c] = null;
   }
 
-  // 【直前の指し手（例：☗７六歩）を武将パネルに同時表示】
+  // 【直前の指し手（上段）を武将パネルの定位置に同時表示】
   const currentMoveIdx = moveObjectsHistory.length - 1;
   const officialMoveTxt = formatOfficialKifuMove(m, currentMoveIdx, false);
   const lastMoveDispId = (owner === 'PLAYER') ? 'player-last-move-disp' : 'ai-last-move-disp';
@@ -3866,7 +3868,7 @@ function switchExhibitionMobileTab(tabSide) {
 }
 
 function openExhibitionModal() {
-  if (!isGameOver && !isReviewingPast()) return; // 合戦中の誤動作を物理ガード
+  if (!isGameOver && !isReviewingPast()) return;
   initAudio(); playUiClickSound(); stopAutoReplay(); stopExhibitionTimer();
   renderExhibitionVisualPickers();
   switchExhibitionMobileTab('sente');
@@ -4548,7 +4550,7 @@ function closeConquestMapModal() {
   document.getElementById('conquest-modal').style.display = 'none';
 }
 function confirmConquestTarget() {
-  if (!isGameOver && !isReviewingPast()) return; // 合戦中の変更を物理ガード
+  if (!isGameOver && !isReviewingPast()) return;
   playUiClickSound(); selectConquestProvince(currentAiLevel); closeConquestMapModal();
 }
 
@@ -4588,7 +4590,7 @@ function closePlayerWarlordModal() {
   document.getElementById('player-warlord-modal').style.display = 'none';
 }
 function confirmPlayerWarlord() {
-  if (!isGameOver && !isReviewingPast()) return; // 合戦中の変更を物理ガード
+  if (!isGameOver && !isReviewingPast()) return;
   playUiClickSound(); setPlayerWarlord(currentMyWarlordId); closePlayerWarlordModal();
 }
 
@@ -4658,7 +4660,7 @@ function updateConquestMapUI() {
 }
 
 function selectConquestProvince(lvl) {
-  if (!isGameOver && !isReviewingPast()) return; // 合戦中の変更を物理ガード
+  if (!isGameOver && !isReviewingPast()) return;
   const safeLvl = Math.min(10, lvl);
   const clearedCount = clearedProvinces.length;
   const maxAvailableLevel = clearedCount > 0 ? Math.min(10, Math.max(...clearedProvinces) + 1) : 1;
@@ -4707,7 +4709,7 @@ function selectConquestProvince(lvl) {
 }
 
 function setPlayerWarlord(k) {
-  if (!isGameOver && !isReviewingPast()) return; // 合戦中の変更を物理ガード
+  if (!isGameOver && !isReviewingPast()) return;
   currentMyWarlordId = k;
   try { localStorage.setItem('shogi_my_warlord', k); } catch(e){}
   const p = PLAYER_WARLORDS[k];
@@ -5123,7 +5125,7 @@ function renderBattleHistoryList() {
         </div>
       </div>
 
-　    <div class="card-tier-footer">
+      <div class="card-tier-footer">
         <div class="tier-footer-stats">
           <span class="footer-stat-pill">⏱ 合戦刻: <b>${durationStr}</b></span>
           ${honorBadgeHtml}
