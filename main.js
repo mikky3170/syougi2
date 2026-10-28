@@ -1015,7 +1015,7 @@ if ('speechSynthesis' in window) {
 
 /* =========================================================
    【視線誘導 ＆ 手番・思考タイマー・直前指し手管理エンジン】
-   （直前の指し手＝上段、決断／思考時間＝真下に固定配置）
+   （上段：直前の指し手、下段：決断／思案時間 で完全縦積み固定）
    ========================================================= */
 let turnStartTime = 0;
 let turnTimerInterval = null;
@@ -1057,7 +1057,7 @@ function startTurnTimer(side, warlordName) {
   currentThinkingName = warlordName;
   turnStartTime = Date.now();
 
-  // 【直前の指し手自動消去】：思考が始まった側の前回の指し手札を消去
+  // 【直前の指し手自動消去】：思案が始まった側の前回の指し手札を消去
   const lastMoveDispId = (side === 'PLAYER') ? 'player-last-move-disp' : 'ai-last-move-disp';
   const lastMoveEl = document.getElementById(lastMoveDispId);
   if (lastMoveEl) lastMoveEl.style.display = 'none';
@@ -1461,7 +1461,6 @@ const PLAYER_WARLORDS = {
     portraitSvg: `<rect width="100" height="100" rx="6" fill="#1f1103"/><path d="M 22,25 Q 12,46 32,54 Q 18,36 28,26 Z" fill="#ffd700"/><path d="M 78,25 Q 88,46 68,54 Q 82,36 72,26 Z" fill="#ffd700"/><path d="M 30,48 Q 50,30 70,48 L 74,76 Q 50,84 26,76 Z" fill="#241505" stroke="#ffd700" stroke-width="1.8"/><circle cx="50" cy="62" r="14" fill="none" stroke="#ffd700" stroke-width="3.5" stroke-dasharray="3,3"/>`
   }
 };
-
 
 /* =========================================================
    将棋王 2026 〜 天下統一・戦国決戦 〜
@@ -2473,7 +2472,7 @@ function initBoardState() {
   updateReviewModeUI();
   updateButtonStates();
 
-  // 初期配置：正確な将棋の配置
+  // 初期配置
   board[0] = [{code:'KY',owner:'AI'},{code:'KE',owner:'AI'},{code:'GI',owner:'AI'},{code:'KI',owner:'AI'},{code:'OU',owner:'AI'},{code:'KI',owner:'AI'},{code:'GI',owner:'AI'},{code:'KE',owner:'AI'},{code:'KY',owner:'AI'}];
   board[1][1] = {code:'HI',owner:'AI'}; board[1][7] = {code:'KA',owner:'AI'};
   for(let c=0; c<9; c++) board[2][c] = {code:'FU',owner:'AI'};
@@ -2585,6 +2584,9 @@ function updateReviewModeUI() {
   updateButtonStates();
 }
 
+/* =========================================================
+   【対局へ戻る：完全初期化・戦況ゾーン同期復帰システム】
+   ========================================================= */
 function exitReplayMode() {
   playUiClickSound();
   stopAutoReplay(); stopTurnTimer(); stopExhibitionTimer();
@@ -2693,9 +2695,15 @@ function exitReplayMode() {
     }
 
   } else {
+    // 進行中の合戦がない場合：完全な初期状態へと立ち返る
     isPastReplayActive = false;
     isExhibitionActive = false;
     isGameOver = true;
+    turn = null;
+    reviewingIndex = -1;
+    evalScoresHistory = [0];
+    moveObjectsHistory = [];
+    moveMetricsHistory = [];
     
     const enemyChangeBtn = document.getElementById('btn-enemy-change');
     const playerChangeBtn = document.getElementById('btn-player-change');
@@ -2705,6 +2713,29 @@ function exitReplayMode() {
     setPlayerWarlord(currentMyWarlordId);
     selectConquestProvince(currentAiLevel);
     initBoardState();
+
+    // 【重要】戦況ゾーンの完全初期化（バッジ・テキスト・兵力残存）
+    const sitBadge = document.getElementById('situation-badge');
+    const sitText = document.getElementById('situation-text');
+    if (sitBadge) {
+      sitBadge.className = 'situation-badge badge-gokaku';
+      sitBadge.textContent = '【互角】';
+    }
+    if (sitText) {
+      sitText.textContent = '両軍ともに布陣堅牢、白兵戦の機を伺っております。';
+    }
+
+    const pMax = getPlayerMaxTroops();
+    const aiMax = getAiMaxTroops();
+    const pBar = document.getElementById('player-troops-bar');
+    const aiBar = document.getElementById('ai-troops-bar');
+    const pDisp = document.getElementById('player-troops-disp');
+    const aiDisp = document.getElementById('ai-troops-disp');
+    if (pBar) pBar.style.width = '100%';
+    if (aiBar) aiBar.style.width = '100%';
+    if (pDisp) pDisp.textContent = `${pMax.toLocaleString()} / ${pMax.toLocaleString()} 兵`;
+    if (aiDisp) aiDisp.textContent = `${aiMax.toLocaleString()} / ${aiMax.toLocaleString()} 兵`;
+
     triggerCutin('初期布陣へと立ち返り候', false);
     setOrderMessage({
       line1: '合戦絵巻の鑑賞が結びとなり候。',
@@ -2712,6 +2743,12 @@ function exitReplayMode() {
     }, false, 'player');
   }
 }
+
+/* =========================================================
+   将棋王 2026 〜 天下統一・戦国決戦 〜
+   メインスクリプト（軍略・演出・思考エンジン・御前試合統合管理）
+   【パート 2 / 2 - 続き】
+   ========================================================= */
 
 function setOrderMessage(msgData, isMyTurn = false, category = 'player') {
   const bannerEl = document.getElementById('order-message-banner');
@@ -3144,7 +3181,7 @@ function animateAndExecuteMove(m, metric = null, onComplete = null) {
   }, flyTime);
 }
 
-// 【着手実行エンジン：直前の指し手（上段）と決断／経過時間（真下）を完全定位置管理】
+// 【着手実行エンジン：上段の打手と下段のタイマーを完全定位置管理】
 function executeMove(m, metric = null) {
   if (m.type === 'move' && !m.code && board[m.from.r][m.from.c]) {
     m.code = board[m.from.r][m.from.c].code;
@@ -3180,7 +3217,7 @@ function executeMove(m, metric = null) {
     board[m.from.r][m.from.c] = null;
   }
 
-  // 【直前の指し手（上段）を武将パネルの定位置に同時表示】
+  // 【直前の指し手（上段固定）の更新】
   const currentMoveIdx = moveObjectsHistory.length - 1;
   const officialMoveTxt = formatOfficialKifuMove(m, currentMoveIdx, false);
   const lastMoveDispId = (owner === 'PLAYER') ? 'player-last-move-disp' : 'ai-last-move-disp';

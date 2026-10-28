@@ -73,12 +73,18 @@
               </div>
               <div class="warlord-desc-line">
                 <span class="warlord-desc" id="ai-clan-disp">尾張国｜織田足軽隊</span>
-                <span class="warlord-last-move-pill" id="ai-last-move-disp" style="display:none;"></span>
-                <span class="warlord-thinking-inline timer-gold-box" id="ai-thinking-disp" style="display:none;"></span>
               </div>
             </div>
-            <div class="warlord-time-action-block">
-              <button class="panel-select-btn btn-3d btn-select-enemy" onclick="openConquestMapModal()" id="btn-enemy-change" title="対戦する敵将を選定">⚔ 敵将変更</button>
+
+            <!-- 【位置固定コンテナ】上段：棋譜の打手 / 下段：思案中・決断時間（右寄せ・幅固定） -->
+            <div class="warlord-move-time-stack" id="ai-move-time-stack">
+              <div class="stack-slot-top">
+                <span class="warlord-last-move-pill" id="ai-last-move-disp" style="display:none;"></span>
+              </div>
+              <div class="stack-slot-bottom">
+                <span class="warlord-thinking-inline timer-gold-box" id="ai-thinking-disp" style="display:none;"></span>
+                <button class="panel-select-btn btn-3d btn-select-enemy" onclick="openConquestMapModal()" id="btn-enemy-change" title="対戦する敵将を選定">⚔ 敵将変更</button>
+              </div>
             </div>
           </div>
 
@@ -188,12 +194,18 @@
               </div>
               <div class="warlord-desc-line">
                 <span class="warlord-desc" id="player-clan-disp">信濃国 ｜ 真田赤備隊</span>
-                <span class="warlord-last-move-pill" id="player-last-move-disp" style="display:none;"></span>
-                <span class="warlord-thinking-inline timer-gold-box" id="player-thinking-disp" style="display:none;"></span>
               </div>
             </div>
-            <div class="warlord-time-action-block">
-              <button class="panel-select-btn btn-3d btn-select-player" onclick="openPlayerWarlordModal()" id="btn-player-change" title="自将を変更">🪭 自将変更</button>
+
+            <!-- 【位置固定コンテナ】上段：棋譜の打手 / 下段：思案中・決断時間（右寄せ・幅固定） -->
+            <div class="warlord-move-time-stack" id="player-move-time-stack">
+              <div class="stack-slot-top">
+                <span class="warlord-last-move-pill" id="player-last-move-disp" style="display:none;"></span>
+              </div>
+              <div class="stack-slot-bottom">
+                <span class="warlord-thinking-inline timer-gold-box" id="player-thinking-disp" style="display:none;"></span>
+                <button class="panel-select-btn btn-3d btn-select-player" onclick="openPlayerWarlordModal()" id="btn-player-change" title="自将を変更">🪭 自将変更</button>
+              </div>
             </div>
           </div>
 
@@ -706,7 +718,7 @@
             <h4>⚔ 三、客分四英傑（御前試合・オープンソース思考エンジンWeb移植録）</h4>
             <button class="card-speech-btn btn-3d" onclick="toggleCardSpeech('guide-card-warlords-instructors')">🔊 朗読</button>
           </div>
-          ※御前試合に参戦する客分四英傑は、世界のオープンソース将棋・チェス思考エンジンをベースに、Webブラウザ（JavaScript）環境へ独自移植・再構築した専用思考ルーチンです：<br><br>
+          ※御前試合に参戦する客分四英傑は、世界のオープンソース将棋・チェスエンジンをベースに、Webブラウザ（JavaScript）環境へ独自移植・再構築した専用思考ルーチンです：<br><br>
           ・<b class="kw-blue">蒲生氏郷</b>［MicroMax系］（アマ初段相当 ｜ 南蛮兵法・西洋古典αβ探索＋静止探索・深さ3）<br>
           ・<b class="kw-gold">柳生石舟斎</b>［Sunfish系］（アマ二段相当 ｜ 新陰流剣聖・PST配置評価駆動・深さ4）<br>
           ・<b class="kw-green">黒田如水</b>［Bonanza系］（アマ五段相当 ｜ 神算鬼謀の隠者・置換表＋キラー探索・深さ4）<br>
@@ -809,4 +821,5 @@
 <script src="main.js"></script>
 </body>
 </html>
+
 
