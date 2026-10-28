@@ -337,7 +337,7 @@
   </div>
 </div>
 
-<!-- 天下統一・国盗り絵巻マップ（Lv.1〜Lv.10で完全平定・十将仕様） -->
+<!-- 天下統一・国盗り絵巻マップ（閉じる導線配備） -->
 <div id="conquest-modal" class="modal-overlay" style="display: none;">
   <div class="modal-content conquest-modal-box">
     <div class="modal-gold-plaque" style="justify-content:space-between;">
@@ -397,11 +397,14 @@
     </div>
 
     <div class="conquest-warlord-list" id="conquest-warlord-list"></div>
-    <div class="modal-buttons"><button class="btn-3d modal-action-btn" id="btn-conquest-confirm" onclick="confirmConquestTarget()">この敵将へ進軍</button></div>
+    <div class="modal-buttons" style="justify-content:space-between;">
+      <button class="btn-3d modal-action-btn" id="btn-conquest-confirm" onclick="confirmConquestTarget()">この敵将へ進軍</button>
+      <button class="btn-3d modal-close-btn" onclick="closeConquestMapModal()">閉じる</button>
+    </div>
   </div>
 </div>
 
-<!-- 自将選択モーダル -->
+<!-- 自将選択モーダル（閉じる導線配備） -->
 <div id="player-warlord-modal" class="modal-overlay" style="display: none;">
   <div class="modal-content my-warlord-modal-box">
     <div class="modal-gold-plaque">
@@ -412,7 +415,10 @@
       <h3 class="modal-title-shikkoku">🪭 我が武将を選択せよ（主役五傑 ＆ 専属軍師）</h3>
     </div>
     <div class="warlord-card-list" id="player-warlord-list"></div>
-    <div class="modal-buttons"><button class="btn-3d modal-action-btn" id="btn-player-warlord-confirm" onclick="confirmPlayerWarlord()">この武将で出陣</button></div>
+    <div class="modal-buttons" style="justify-content:space-between;">
+      <button class="btn-3d modal-action-btn" id="btn-player-warlord-confirm" onclick="confirmPlayerWarlord()">この武将で出陣</button>
+      <button class="btn-3d modal-close-btn" onclick="closePlayerWarlordModal()">閉じる</button>
+    </div>
   </div>
 </div>
 
