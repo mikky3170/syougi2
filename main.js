@@ -1,4 +1,5 @@
 
+
 /* =========================================================
    将棋王 2026 〜 天下統一・戦国決戦 〜
    メインスクリプト（軍略・演出・思考エンジン・御前試合統合管理）
@@ -305,8 +306,8 @@ function evaluatePosition(evalPerspective, evalLevel) {
   }
 
   const handMul = (evalLevel >= 9) ? 1.30 : 1.15;
-  for (const c in hands[evalPerspective]) score += (hands[evalPerspective][c] || 0) * (VALUES[c] || 0) * handMul;
-  for (const c in hands[oppOwner])        score -= (hands[oppOwner][c] || 0) * (VALUES[c] || 0) * 1.15;
+  for (const hCode in hands[evalPerspective]) score += (hands[evalPerspective][hCode] || 0) * (VALUES[hCode] || 0) * handMul;
+  for (const hCode in hands[oppOwner])        score -= (hands[oppOwner][hCode] || 0) * (VALUES[hCode] || 0) * 1.15;
   return score;
 }
 
@@ -779,6 +780,7 @@ function handleVisibilityChange() {
     stopGuideSpeech();
     stopAutoReplay();
     stopTurnTimer();
+    stopExhibitionTimer(); // バックグラウンド移行時の御前試合裏暴走を防止
     if (audioCtx && audioCtx.state === 'suspended') audioCtx.suspend().catch(() => {});
   } else {
     isPageHidden = false;
@@ -786,11 +788,12 @@ function handleVisibilityChange() {
       if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
       startBgm();
     }
-    if (!isGameOver) resumeTurnTimer();
+    if (!isGameOver && !isExhibitionActive) resumeTurnTimer();
+    else if (!isGameOver && isExhibitionActive && !isAiThinking) scheduleNextExhibitionTurn();
   }
 }
 document.addEventListener('visibilitychange', handleVisibilityChange);
-window.addEventListener('pagehide', () => { isPageHidden = true; pauseBgm(); stopGuideSpeech(); stopAutoReplay(); stopTurnTimer(); });
+window.addEventListener('pagehide', () => { isPageHidden = true; pauseBgm(); stopGuideSpeech(); stopAutoReplay(); stopTurnTimer(); stopExhibitionTimer(); });
 window.addEventListener('pageshow', () => { isPageHidden = false; if (soundEnabled) startBgm(); });
 
 function playPieceSound() {
@@ -1501,6 +1504,7 @@ const PLAYER_WARLORDS = {
     portraitSvg: `<rect width="100" height="100" rx="6" fill="#1f1103"/><path d="M 22,25 Q 12,46 32,54 Q 18,36 28,26 Z" fill="#ffd700"/><path d="M 78,25 Q 88,46 68,54 Q 82,36 72,26 Z" fill="#ffd700"/><path d="M 30,48 Q 50,30 70,48 L 74,76 Q 50,84 26,76 Z" fill="#241505" stroke="#ffd700" stroke-width="1.8"/><circle cx="50" cy="62" r="14" fill="none" stroke="#ffd700" stroke-width="3.5" stroke-dasharray="3,3"/>`
   }
 };
+
 
 
 /* =========================================================
@@ -3072,6 +3076,7 @@ function setPlayerWarlord(k) {
 }
 
 
+
 /* =========================================================
    将棋王 2026 〜 天下統一・戦国決戦 〜
    メインスクリプト（軍略・演出・思考エンジン・御前試合統合管理）
@@ -3101,7 +3106,7 @@ function downloadKifu() {
   moveObjectsHistory.forEach((m, i) => {
     const isSenteMove = (i % 2 === 0);
     const sideKey = isSenteMove ? 'SENTE' : 'GOTE';
-    const metric = moveMetricsHistory[i] || { timeSec: '1' };
+    const metric = moveMetricsHistory[i] || { timeSec: '1', depth: 1 };
     const stepSec = Math.max(1, Math.round(parseFloat(metric.timeSec) || 1));
     totalSec[sideKey] += stepSec;
 
@@ -3765,15 +3770,15 @@ function executePlayerMove(targetCoord) {
                         (piece.code === 'KE' && targetCoord.r <= 1);
 
     if (mustPromote) {
-      applyMove({ type: 'move', code: piece.code, from, to: targetCoord, owner: 'PLAYER', promote: true });
+      applyMove({ type: 'move', code: piece.code, from, to: targetCoord, owner: 'PLAYER', promote: true }, { depth: 1, targetDepth: 1 });
     } else if (canPromote) {
       pendingMove = { type: 'move', code: piece.code, from, to: targetCoord, owner: 'PLAYER' };
       document.getElementById('promote-modal').style.display = 'flex';
     } else {
-      applyMove({ type: 'move', code: piece.code, from, to: targetCoord, owner: 'PLAYER', promote: false });
+      applyMove({ type: 'move', code: piece.code, from, to: targetCoord, owner: 'PLAYER', promote: false }, { depth: 1, targetDepth: 1 });
     }
   } else if (selectedPos.type === 'hand') {
-    applyMove({ type: 'drop', code: selectedPos.code, to: targetCoord, owner: 'PLAYER' });
+    applyMove({ type: 'drop', code: selectedPos.code, to: targetCoord, owner: 'PLAYER' }, { depth: 1, targetDepth: 1 });
   }
 
   selectedPos = null;
@@ -3785,7 +3790,7 @@ document.getElementById('btn-promote-yes').onclick = () => {
   document.getElementById('promote-modal').style.display = 'none';
   if (pendingMove) {
     pendingMove.promote = true;
-    applyMove(pendingMove);
+    applyMove(pendingMove, { depth: 1, targetDepth: 1 });
     pendingMove = null;
   }
 };
@@ -3795,19 +3800,23 @@ document.getElementById('btn-promote-no').onclick = () => {
   document.getElementById('promote-modal').style.display = 'none';
   if (pendingMove) {
     pendingMove.promote = false;
-    applyMove(pendingMove);
+    applyMove(pendingMove, { depth: 1, targetDepth: 1 });
     pendingMove = null;
   }
 };
 
-function applyMove(moveObj) {
+/* 【重要修正】：AI思考メトリクス（深さ・目標深さ・消費時間）を引数で確実に受領 */
+function applyMove(moveObj, moveMetrics = {}) {
   const currentStep = moveObjectsHistory.length + 1;
-  const spentSec = recordTurnTime(moveObj.owner);
+  const spentSec = recordTurnTime(moveObj.owner, moveMetrics.timeSpentMs);
+
+  const appliedDepth = moveMetrics.depth || 1;
+  const appliedTargetDepth = moveMetrics.targetDepth || appliedDepth;
 
   lastSettledMoveInfo[moveObj.owner] = {
     timeSec: spentSec,
-    depth: 1,
-    targetDepth: 1
+    depth: appliedDepth,
+    targetDepth: appliedTargetDepth
   };
 
   const isPlayerMove = (moveObj.owner === 'PLAYER');
@@ -3823,7 +3832,7 @@ function applyMove(moveObj) {
   moveObjectsHistory.push(moveObj);
   lastMove = moveObj;
 
-  moveMetricsHistory.push({ timeSec: spentSec, depth: 1 });
+  moveMetricsHistory.push({ timeSec: spentSec, depth: appliedDepth, targetDepth: appliedTargetDepth });
 
   historyStates.push({
     board: cloneBoardState(board),
@@ -3858,7 +3867,10 @@ function applyMove(moveObj) {
 
   updateButtonStates();
 
-  if (!isExhibitionActive) {
+  /* 【重要修正】：御前試合（Exhibition）進行ループの一元化・完全同期 */
+  if (isExhibitionActive) {
+    scheduleNextExhibitionTurn();
+  } else {
     if (turn === 'AI') {
       const eName = WARLORDS_DATA[currentAiLevel].name;
       startTurnTimer('AI', eName);
@@ -3872,7 +3884,7 @@ function applyMove(moveObj) {
 
 function handleCheckmate(winnerOwner) {
   isGameOver = true;
-  stopTurnTimer(); stopAutoReplay();
+  stopTurnTimer(); stopAutoReplay(); stopExhibitionTimer();
   updateTurnFocus(null);
   updateButtonStates();
 
@@ -4150,9 +4162,9 @@ function onWorkerMessage(e) {
     if (isGameOver) return;
 
     if (data.bestMove) {
-      applyMove(data.bestMove);
+      applyMove(data.bestMove, { depth: data.depth, targetDepth: data.targetDepth, timeSpentMs: data.timeSpentMs });
     } else {
-      handleCheckmate('PLAYER');
+      handleCheckmate((turn === 'PLAYER') ? 'AI' : 'PLAYER');
     }
   } else if (data.type === 'hintDone') {
     isHintThinking = false;
@@ -4247,11 +4259,31 @@ function undoMove() {
   turn = 'PLAYER';
   lastMove = (moveObjectsHistory.length > 0) ? moveObjectsHistory[moveObjectsHistory.length - 1] : null;
 
+  /* 【重要修正】：待った後の直前指し手表示とタイマー札の完全復元 */
   lastSettledMoveInfo = { PLAYER: null, AI: null };
   const pLast = document.getElementById('player-last-move-disp');
   const aiLast = document.getElementById('ai-last-move-disp');
-  if (pLast) pLast.style.display = 'none';
-  if (aiLast) aiLast.style.display = 'none';
+  
+  if (moveObjectsHistory.length > 0) {
+    const prevMove = moveObjectsHistory[moveObjectsHistory.length - 1];
+    const prevMetric = moveMetricsHistory[moveMetricsHistory.length - 1] || { timeSec: '1.0', depth: 1 };
+    const prevSide = prevMove.owner;
+    lastSettledMoveInfo[prevSide] = {
+      timeSec: prevMetric.timeSec,
+      depth: prevMetric.depth,
+      targetDepth: prevMetric.targetDepth
+    };
+    if (prevSide === 'PLAYER') {
+      if (pLast) { pLast.innerHTML = formatOfficialKifuMove(prevMove, moveObjectsHistory.length - 1); pLast.style.display = 'inline-flex'; }
+      if (aiLast) aiLast.style.display = 'none';
+    } else {
+      if (aiLast) { aiLast.innerHTML = formatOfficialKifuMove(prevMove, moveObjectsHistory.length - 1); aiLast.style.display = 'inline-flex'; }
+      if (pLast) pLast.style.display = 'none';
+    }
+  } else {
+    if (pLast) pLast.style.display = 'none';
+    if (aiLast) aiLast.style.display = 'none';
+  }
 
   reviewingIndex = historyStates.length - 1;
   triggerCutin('待った！ 局面を巻き戻し候');
@@ -4270,7 +4302,7 @@ function surrenderGame() {
   playUiClickSound();
 
   isGameOver = true;
-  stopTurnTimer();
+  stopTurnTimer(); stopExhibitionTimer();
   updateTurnFocus(null);
   updateButtonStates();
 
@@ -4289,9 +4321,12 @@ function surrenderGame() {
 /* =========================================================
    合戦絵巻ステップ鑑賞 ＆ 自動再生
    ========================================================= */
-function stepReview(dir) {
-  playUiClickSound();
-  stopAutoReplay();
+/* 【重要修正】：fromAuto 引数を導入し、自動再生ループ自滅を根絶 */
+function stepReview(dir, fromAuto = false) {
+  if (!fromAuto) {
+    playUiClickSound();
+    stopAutoReplay();
+  }
   if (historyStates.length === 0) return;
 
   let targetIdx = (reviewingIndex >= 0 ? reviewingIndex : historyStates.length - 1) + dir;
@@ -4355,7 +4390,7 @@ function stopAutoReplay() {
 function runAutoReplayLoop() {
   if (!isAutoReplaying) return;
   if (reviewingIndex < historyStates.length - 1) {
-    stepReview(1);
+    stepReview(1, true); // fromAuto=true で停止処理を呼ばずに安全に進める
     autoReplayTimer = setTimeout(runAutoReplayLoop, REPLAY_SPEEDS[replaySpeedIndex]);
   } else {
     stopAutoReplay();
@@ -4370,7 +4405,7 @@ function cycleReplaySpeed() {
 }
 
 /* =========================================================
-   【重要復元】合戦絵巻モーダル制御 ＆ 陣地支配グラフ描画
+   合戦絵巻モーダル制御 ＆ 陣地支配グラフ描画
    ========================================================= */
 function updateKifuModalLive() {
   const isPlayerSente = (battleStartTurn === 'PLAYER');
@@ -4394,13 +4429,11 @@ function updateKifuModalLive() {
   const pCurrent = Math.round(pMax * (pPct / 100));
   const aiCurrent = Math.round(aiMax * (aiPct / 100));
 
-  // 武将肖像の描画
   const pAvatarBox = document.getElementById('kifu-player-avatar-box');
   const eAvatarBox = document.getElementById('kifu-enemy-avatar-box');
   if (pAvatarBox) pAvatarBox.innerHTML = getWarlordPortraitHtml(p, false);
   if (eAvatarBox) eAvatarBox.innerHTML = getWarlordPortraitHtml(e, false);
 
-  // 勝者・敗者銘板の判定と表示
   const pSideBox = document.getElementById('kifu-side-player-box');
   const eSideBox = document.getElementById('kifu-side-enemy-box');
   const pOutcomePlaque = document.getElementById('kifu-player-outcome-plaque');
@@ -4462,7 +4495,6 @@ function updateKifuModalLive() {
     }
   }
 
-  // 軍師評定の完全差別化テキストの反映
   const modalSit = document.getElementById('kifu-modal-situation-text');
   if (modalSit) modalSit.textContent = generateStrategistEvaluationText();
 
@@ -4581,6 +4613,7 @@ function openKifuModal() {
   }
 
   updateKifuModalLive();
+
 
   const modalEl = document.getElementById('kifu-modal');
   if (modalEl) modalEl.style.display = 'flex';
@@ -4840,6 +4873,7 @@ function startExhibitionMatch() {
 
 function scheduleNextExhibitionTurn() {
   if (isGameOver || !isExhibitionActive) return;
+  stopExhibitionTimer();
   const delay = EXHIBITION_DELAYS[exhibitionSpeed] || 1200;
   exhibitionTimer = setTimeout(executeExhibitionStep, delay);
 }
@@ -4895,8 +4929,7 @@ function handleExternalWorkerMessage(e) {
   isAiThinking = false;
 
   if (data.bestMove) {
-    applyMove(data.bestMove);
-    if (!isGameOver) scheduleNextExhibitionTurn();
+    applyMove(data.bestMove, { depth: data.depth, targetDepth: data.targetDepth, timeSpentMs: data.timeSpentMs });
   } else {
     handleCheckmate((turn === 'PLAYER') ? 'AI' : 'PLAYER');
   }
@@ -4906,6 +4939,7 @@ function stopExhibition() {
   playUiClickSound();
   stopExhibitionTimer();
   stopTurnTimer();
+  isAiThinking = false;
 
   isExhibitionActive = false;
   isGameOver = true;
@@ -4929,7 +4963,7 @@ function stopExhibitionTimer() {
 }
 
 /* =========================================================
-   【重要復元】指南書モーダル制御 ＆ 宿命秘話展開
+   指南書モーダル制御 ＆ 宿命秘話展開
    ========================================================= */
 function renderDynamicTactics() {
   const container = document.getElementById('dynamic-tactics-content');
@@ -5011,5 +5045,4 @@ loadProgress();
 loadSavedBoardTheme();
 setPlayerWarlord(currentMyWarlordId);
 initBoardState();
-
 

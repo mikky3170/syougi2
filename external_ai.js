@@ -1,3 +1,5 @@
+
+
 /* =========================================================
    将棋王 2026 〜 天下統一・戦国決戦 〜
    外部オープンソースAIエンジン統合モジュール
@@ -76,6 +78,7 @@
   let searchStartTime = 0;
   let searchTimeLimit = 8500;
   let isSearchTimeout = false;
+  let timeoutMask = 15; // 通常8.5秒は15(16ノード間隔)、早指し2.5秒は7(8ノード間隔)で監視
 
   const transpositionTable = new Map();
   const TT_EXACT = 0, TT_ALPHA = 1, TT_BETA = 2;
@@ -320,7 +323,7 @@
 
   function quiescenceNanban(alpha, beta, owner, qDepth, rootPerspective) {
     nodeCount++;
-    if ((nodeCount & 15) === 0 && checkTimeout()) return alpha;
+    if ((nodeCount & timeoutMask) === 0 && checkTimeout()) return alpha;
     const standPat = evalNanban(rootPerspective) * (owner === rootPerspective ? 1 : -1);
     if (qDepth >= 3) return standPat;
     if (standPat >= beta) return beta;
@@ -341,7 +344,7 @@
 
   function searchNanban(depth, alpha, beta, owner, rootPerspective) {
     nodeCount++;
-    if ((nodeCount & 15) === 0 && checkTimeout()) return alpha;
+    if ((nodeCount & timeoutMask) === 0 && checkTimeout()) return alpha;
     if (depth <= 0) return quiescenceNanban(alpha, beta, owner, 0, rootPerspective);
 
     const inCheck = isCheckState(owner);
@@ -388,7 +391,7 @@
 
   function quiescenceKenshi(alpha, beta, owner, qDepth, rootPerspective) {
     nodeCount++;
-    if ((nodeCount & 15) === 0 && checkTimeout()) return alpha;
+    if ((nodeCount & timeoutMask) === 0 && checkTimeout()) return alpha;
     const standPat = evalKenshi(rootPerspective) * (owner === rootPerspective ? 1 : -1);
     if (qDepth >= 3) return standPat;
     if (standPat >= beta) return beta;
@@ -409,7 +412,7 @@
 
   function searchKenshi(depth, alpha, beta, owner, rootPerspective) {
     nodeCount++;
-    if ((nodeCount & 15) === 0 && checkTimeout()) return alpha;
+    if ((nodeCount & timeoutMask) === 0 && checkTimeout()) return alpha;
     if (depth <= 0) return quiescenceKenshi(alpha, beta, owner, 0, rootPerspective);
 
     const inCheck = isCheckState(owner);
@@ -462,7 +465,7 @@
 
   function quiescenceInja(alpha, beta, owner, qDepth, rootPerspective) {
     nodeCount++;
-    if ((nodeCount & 15) === 0 && checkTimeout()) return alpha;
+    if ((nodeCount & timeoutMask) === 0 && checkTimeout()) return alpha;
     const standPat = evalInja(rootPerspective) * (owner === rootPerspective ? 1 : -1);
     if (qDepth >= 3) return standPat;
     if (standPat >= beta) return beta;
@@ -483,7 +486,7 @@
 
   function searchInja(depth, alpha, beta, owner, ply, rootPerspective) {
     nodeCount++;
-    if ((nodeCount & 15) === 0 && checkTimeout()) return alpha;
+    if ((nodeCount & timeoutMask) === 0 && checkTimeout()) return alpha;
     const hashKey = getZobristHash(board, hands, owner);
     const ttEntry = transpositionTable.get(hashKey);
     let ttMove = null;
@@ -616,7 +619,7 @@
 
   function quiescenceSokei(alpha, beta, owner, qDepth, rootPerspective) {
     nodeCount++;
-    if ((nodeCount & 15) === 0 && checkTimeout()) return alpha;
+    if ((nodeCount & timeoutMask) === 0 && checkTimeout()) return alpha;
     const standPat = evalSokei(rootPerspective) * (owner === rootPerspective ? 1 : -1);
     if (qDepth >= 4) return standPat;
     if (standPat >= beta) return beta;
@@ -637,7 +640,7 @@
 
   function searchSokeiPVS(depth, alpha, beta, owner, ply, rootPerspective) {
     nodeCount++;
-    if ((nodeCount & 15) === 0 && checkTimeout()) return alpha;
+    if ((nodeCount & timeoutMask) === 0 && checkTimeout()) return alpha;
 
     const inCheck = isCheckState(owner);
     if (depth <= 0) return quiescenceSokei(alpha, beta, owner, 0, rootPerspective);
@@ -743,6 +746,7 @@
     searchTimeLimit = (typeof timeLimit === 'number' && timeLimit > 0) ? timeLimit : 8500;
 
     const isFast = (speedMode === 'fast' || searchTimeLimit <= 3000);
+    timeoutMask = isFast ? 7 : 15; // 早指し戦時はタイムアウト検出頻度を倍増（8ノード間隔）
     let targetDepth = 3;
 
     if (engineType === 'nanban') {
@@ -856,4 +860,5 @@
   }
 
 })(typeof self !== 'undefined' ? self : this);
+
 
