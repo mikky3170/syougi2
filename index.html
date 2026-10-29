@@ -495,7 +495,7 @@
   </div>
 </div>
 
-<!-- 当局・合戦絵巻モーダル（武将肖像＆勝者／敗者銘板を完全統合・スマホはみ出し根絶設計） -->
+<!-- 当局・合戦絵巻モーダル（安土桃山・黄金冠カード刷新 ＆ 絶対重なり根絶設計） -->
 <div id="kifu-modal" class="modal-overlay" style="display: none;">
   <div class="modal-content modal-kifu-panorama">
     <div class="modal-gold-plaque" style="justify-content:space-between;">
@@ -510,20 +510,24 @@
       <span id="kifu-modal-status-badge" class="kifu-status-badge" style="z-index:3;">五分五分の総力戦</span>
     </div>
     
-    <!-- 兵力対峙バー：左右に武将肖像 ＆ 勝者／敗者バッジをレスポンシブ統合 -->
+    <!-- 兵力対峙バー：上段独立クラウン銘板 ＆ 左右完全独立カードレイアウト -->
     <div class="kifu-troops-confrontation-bar" id="kifu-confrontation-bar">
       <!-- 先手陣側（左） -->
       <div class="kifu-troops-side side-player" id="kifu-side-player-box">
-        <div class="kifu-side-avatar-slot">
-          <div class="kifu-side-avatar-box" id="kifu-player-avatar-box"></div>
-          <span class="kifu-outcome-plaque" id="kifu-player-outcome-plaque" style="display:none;"></span>
+        <div class="kifu-side-header-crown">
+          <span class="kifu-outcome-crown-plaque" id="kifu-player-outcome-plaque" style="display:none;"></span>
         </div>
-        <div class="kifu-side-meta-col">
-          <div class="side-turn-row">
-            <span class="side-turn-tag" id="kifu-player-turn-tag">先手陣</span>
-            <span class="side-warlord-tag" id="kifu-player-tag">我が軍</span>
+        <div class="kifu-side-body-row">
+          <div class="kifu-side-avatar-slot">
+            <div class="kifu-side-avatar-box" id="kifu-player-avatar-box"></div>
           </div>
-          <span class="side-troops-val" id="kifu-player-troops-val">3,000 兵</span>
+          <div class="kifu-side-meta-col">
+            <div class="side-turn-row">
+              <span class="side-turn-tag" id="kifu-player-turn-tag">先手陣</span>
+              <span class="side-warlord-tag" id="kifu-player-tag">我が軍</span>
+            </div>
+            <span class="side-troops-val" id="kifu-player-troops-val">3,000 兵</span>
+          </div>
         </div>
       </div>
 
@@ -535,16 +539,20 @@
 
       <!-- 後手陣側（右） -->
       <div class="kifu-troops-side side-enemy" id="kifu-side-enemy-box">
-        <div class="kifu-side-meta-col" style="align-items:flex-end; text-align:right;">
-          <div class="side-turn-row" style="justify-content:flex-end;">
-            <span class="side-warlord-tag" id="kifu-enemy-tag">敵軍</span>
-            <span class="side-turn-tag" id="kifu-enemy-turn-tag">後手陣</span>
-          </div>
-          <span class="side-troops-val" id="kifu-enemy-troops-val">3,000 兵</span>
+        <div class="kifu-side-header-crown crown-align-right">
+          <span class="kifu-outcome-crown-plaque" id="kifu-enemy-outcome-plaque" style="display:none;"></span>
         </div>
-        <div class="kifu-side-avatar-slot">
-          <div class="kifu-side-avatar-box" id="kifu-enemy-avatar-box"></div>
-          <span class="kifu-outcome-plaque" id="kifu-enemy-outcome-plaque" style="display:none;"></span>
+        <div class="kifu-side-body-row body-row-reverse">
+          <div class="kifu-side-avatar-slot">
+            <div class="kifu-side-avatar-box" id="kifu-enemy-avatar-box"></div>
+          </div>
+          <div class="kifu-side-meta-col" style="align-items:flex-end; text-align:right;">
+            <div class="side-turn-row" style="justify-content:flex-end;">
+              <span class="side-warlord-tag" id="kifu-enemy-tag">敵軍</span>
+              <span class="side-turn-tag" id="kifu-enemy-turn-tag">後手陣</span>
+            </div>
+            <span class="side-troops-val" id="kifu-enemy-troops-val">3,000 兵</span>
+          </div>
         </div>
       </div>
     </div>
@@ -672,8 +680,8 @@
           </div>
           過去の全合戦は、いつでも盤上にタイムスリップして鑑賞・研究できます。<br><br>
           1. <b class="kw-gold">勲功録を開く</b>：画面右上の「<span class="kw-gold">📜 勲功録</span>」を押します。<br>
-          2. <b class="kw-gold">盤上再現を押す</b>：振り返りたい合戦カードの「<span class="kw-gold">盤上再現</span>」を押すと、盤面が瞬時に当時の布陣へと復元されます。<br>
-          3. <b class="kw-crimson">自動再生を楽しむ</b>：盤の直下に出現した「<span class="kw-crimson">▶ 自動</span>」を押すと、まるで映画を眺めるように一手ずつ自動で局面が再現されます。<br>
+          2. <b class="kw-gold">盤上再現を押す</b>：振り返りたい合戦カードの「<span class="kw-gold">盤上再現</span>」を押すと、盤面が瞬時にその合戦の初期配置へと復元されます。<br>
+          3. <b class="kw-crimson">自動再生を楽しむ</b>：盤の直下の「<span class="kw-crimson">▶ 自動</span>」を1回押すだけで、流れるように一手ずつ自動で局面が再現されます。<br>
           4. <b class="kw-blue">変速切替（1x/2x/4x）</b>：「<span class="kw-blue">1x</span>」を押すごとに等速・二倍速・四倍速へ切り替わります。<br>
           5. <b class="kw-crimson">対局へ復帰</b>：再生バー右端の「<span class="kw-crimson">⚔ 対局へ戻る</span>」ボタンを押せば、いつでも元の合戦画面へ迷わず戻ることができます！
         </div>
@@ -847,8 +855,9 @@
   </div>
 </div>
 
-<!-- 分割ロード：客分英傑AI ＆ メインゲーム制御スクリプト -->
+<!-- 分割ロード：客分英傑AI ＆ 戦国武将データ ＆ メインゲーム制御スクリプト -->
 <script src="external_ai.js"></script>
+<script src="warlords_data.js"></script>
 <script src="main.js"></script>
 </body>
 </html>

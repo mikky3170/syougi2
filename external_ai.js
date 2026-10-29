@@ -1,5 +1,4 @@
 
-
 /* =========================================================
    将棋王 2026 〜 天下統一・戦国決戦 〜
    外部オープンソースAIエンジン統合モジュール
@@ -78,7 +77,7 @@
   let searchStartTime = 0;
   let searchTimeLimit = 8500;
   let isSearchTimeout = false;
-  let timeoutMask = 15; // 通常8.5秒は15(16ノード間隔)、早指し2.5秒は7(8ノード間隔)で監視
+  let timeoutMask = 15; // 通常8.5秒は15(16ノード間隔)、早指し2.5秒は7(8ノード間隔)で高感度監視
 
   const transpositionTable = new Map();
   const TT_EXACT = 0, TT_ALPHA = 1, TT_BETA = 2;
@@ -821,7 +820,6 @@
         if (s > alpha) alpha = s;
       }
 
-      // 深さ d を読み切った場合に確定結果として保存
       if (iterationCompleted && !isSearchTimeout) {
         achievedDepth = d;
         currentIteration.sort((a, b) => b.score - a.score);
@@ -860,5 +858,4 @@
   }
 
 })(typeof self !== 'undefined' ? self : this);
-
 
