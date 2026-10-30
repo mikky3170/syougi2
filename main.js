@@ -1,7 +1,8 @@
+
 /* =========================================================
    将棋王 2026 〜 天下統一・戦国決戦 〜
-   メインスクリプト（軍略・演出・思考エンジン・御前試合統合管理）
-   【状態管理一元化 ＆ 過去合戦完全互換再生エンジン搭載版】
+   メインスクリプト（前編）
+   【状態管理一元化 ＆ 動的指南称号 ＆ 高品位音声最適化】
    ========================================================= */
 
 // AI Web Workerコード（通常対局・軍師思考エンジン：深さ厳格維持＋早指し適正化＋気風ボーナス）
@@ -643,7 +644,7 @@ function cycleBoardTheme() {
 }
 
 /* =========================================================
-   立体五角形将棋駒アイコン 生成エンジン
+   立体五角形将棋駒インラインアイコン 生成エンジン
    ========================================================= */
 function getKomaMarkHtml(isSente, sizeType = 'normal') {
   let w = 12, h = 13, vAlign = '-1.5px', mRight = '3px';
@@ -687,7 +688,7 @@ function getKomaMarkHtml(isSente, sizeType = 'normal') {
 }
 
 /* =========================================================
-   音響エンジン
+   音響エンジン ＆ Web Speech API（高品質AI合成音声最適化）
    ========================================================= */
 let audioCtx = null, soundEnabled = true, isPageHidden = false;
 let realKomaAudioBuffer = null;
@@ -955,7 +956,7 @@ function launchFireworksCelebration() {
   loop();
 }
 
-/* Web Speech API 朗読管理 */
+/* Web Speech API 朗読管理（Natural / Neural 高品位音声優先選択） */
 let guideVoiceGender = 'male';
 let currentReadingCardId = null;
 
@@ -1019,14 +1020,18 @@ function toggleCardSpeech(cardId) {
   uttr.lang = 'ja-JP';
 
   const jaVoices = window.speechSynthesis.getVoices().filter(v => v.lang.startsWith('ja'));
+  
+  // 自然音声（Natural/Neural/Online/Siri等）を最優先で検索
   if (guideVoiceGender === 'female') {
-    const fVoice = jaVoices.find(v => /female|kyoko|haruka|ayumi|sayaka|nanami|hikari/i.test(v.name));
+    const fNaturalVoice = jaVoices.find(v => /natural|neural|online|premium/i.test(v.name) && /female|kyoko|haruka|ayumi|sayaka|nanami|hikari/i.test(v.name));
+    const fVoice = fNaturalVoice || jaVoices.find(v => /female|kyoko|haruka|ayumi|sayaka|nanami|hikari/i.test(v.name));
     if (fVoice) uttr.voice = fVoice;
-    uttr.pitch = 1.15; uttr.rate = 0.96;
+    uttr.pitch = 1.12; uttr.rate = 0.98;
   } else {
-    const mVoice = jaVoices.find(v => /male|otoya|keita|ichiro|hattori|kenji/i.test(v.name));
+    const mNaturalVoice = jaVoices.find(v => /natural|neural|online|premium/i.test(v.name) && /male|otoya|keita|ichiro|hattori|kenji/i.test(v.name));
+    const mVoice = mNaturalVoice || jaVoices.find(v => /male|otoya|keita|ichiro|hattori|kenji/i.test(v.name));
     if (mVoice) uttr.voice = mVoice;
-    uttr.pitch = 0.85; uttr.rate = 0.93;
+    uttr.pitch = 0.88; uttr.rate = 0.95;
   }
 
   const resetSpeechUI = () => {
@@ -1283,8 +1288,6 @@ function recordTurnTime(side, customElapsedMs = null) {
 
 /* =========================================================
    【状態管理一元化アーキテクチャ（Single Source of Truth）】
-   局面履歴（盤面・手駒・指し手・メトリクス・ハッシュ・王手）を
-   単一配列 historyStates に完全統合し、不整合を根本根絶する。
    ========================================================= */
 let currentMyWarlordId = 'sanada', currentAiLevel = 1, clearedProvinces = [];
 let board = [], hands = { PLAYER: {}, AI: {} }, turn = null, isGameOver = true;
@@ -1295,35 +1298,28 @@ let hintSourceCell = null, hintTargetCell = null, pendingMove = null, isAiThinki
 let historyStates = [];
 let reviewingIndex = -1;
 
-/* ヘルパー：現在の手数を取得 */
 function getMoveCount() {
   return Math.max(0, historyStates.length - 1);
 }
 
-/* ヘルパー：指し手オブジェクト一覧を取得 */
 function getMoveObjectsList() {
   return historyStates.slice(1).map(s => s.move).filter(Boolean);
 }
 
-/* ヘルパー：メトリクス一覧を取得 */
 function getMoveMetricsList() {
   return historyStates.slice(1).map(s => s.metrics || { timeSec: '1.0', depth: 1, targetDepth: 1 });
 }
 
-/* ヘルパー：評価値履歴配列を取得 */
 function getEvalScoresList() {
   return historyStates.map(s => s.evalScore || 0);
 }
 
-/* ヘルパー：過去ハッシュ配列を取得（AI Worker連携用） */
 function getHashHistoryList() {
   return historyStates.map(s => s.hash);
 }
 
 /* =========================================================
    【過去合戦棋譜・完全シミュレーション再構築エンジン】
-   旧データ（moveObjectsHistoryのみ）であっても、初期配置から
-   一手ずつシミュレートして historyStates を100%完全再現する。
    ========================================================= */
 function rebuildHistoryStatesFromMoves(moves = [], metrics = [], startTurn = 'PLAYER') {
   const rBoard = Array.from({length: 9}, () => Array(9).fill(null));
@@ -1354,7 +1350,6 @@ function rebuildHistoryStatesFromMoves(moves = [], metrics = [], startTurn = 'PL
   });
 
   moves.forEach((m, idx) => {
-    // 盤面反映
     if (m.type === 'drop') {
       rHands[m.owner][m.code]--;
       rBoard[m.to.r][m.to.c] = { code: m.code, owner: m.owner };
@@ -2225,6 +2220,12 @@ function updateReviewModeUI() {
 }
 
 /* =========================================================
+   将棋王 2026 〜 天下統一・戦国決戦 〜
+   メインスクリプト（後編）
+   【合戦絵巻一手再現 ＆ 持ち駒バッジ文字切れ根絶 ＆ 動的指南・覇者決戦】
+   ========================================================= */
+
+/* =========================================================
    【合戦鑑賞時：一手連動完全表示エンジン（臨場感再現）】
    ========================================================= */
 function updateReplayStepDisplay(stepIdx) {
@@ -2828,7 +2829,6 @@ function saveBattleRecord(resultType, resultLabel) {
 
   const effectiveResult = (resultType === 'exhibition' && resultLabel?.includes('千日手')) ? 'draw' : resultType;
 
-  // 新旧両形式の二重安全保存
   const record = {
     id: Date.now(),
     date: dateStr,
@@ -3121,7 +3121,7 @@ function deleteSingleHistoryRecord(recordId, storageKey) {
 }
 
 /* =========================================================
-   【過去合戦再現エントリー（新旧全データ完全対応）】
+   【過去合戦再現エントリー】
    ========================================================= */
 function replayFromHistory(recordId, storageKey) {
   let records = [];
@@ -3130,7 +3130,6 @@ function replayFromHistory(recordId, storageKey) {
   const rec = records.find(r => r.id === recordId);
   if (!rec) return;
 
-  // 進行中の合戦があれば退避
   if (!isGameOver && getMoveCount() > 0) {
     savedActiveBattle = {
       isExhibitionActive: !!isExhibitionActive,
@@ -3172,11 +3171,9 @@ function replayFromHistory(recordId, storageKey) {
     selectConquestProvince(currentAiLevel);
   }
 
-  // ★新旧データの自動判定・完全復元★
   if (rec.historyStates && rec.historyStates.length > 0) {
     historyStates = JSON.parse(JSON.stringify(rec.historyStates));
   } else {
-    // 過去の棋譜データから一手ずつ盤面・手駒・指し手を完全再シミュレート構築
     const moves = rec.moveObjectsHistory || [];
     const metrics = rec.moveMetricsHistory || [];
     historyStates = rebuildHistoryStatesFromMoves(moves, metrics, battleStartTurn);
@@ -3185,7 +3182,6 @@ function replayFromHistory(recordId, storageKey) {
   isGameOver = true;
   updateTurnLabels();
 
-  // 初期配置（第0手）でスタンバイ
   updateReplayStepDisplay(0);
   updateButtonStates();
   
@@ -3288,7 +3284,10 @@ function renderBoard() {
   renderHands(curHands);
 }
 
-/* 【重要改善】：持ち駒台の駒も盤上と同一の格調高い上下2文字表示へ完全統一 */
+/* =========================================================
+   【持ち駒レンダラー：五角形シェイプと枚数バッジを完全分離】
+   （clip-pathによる文字欠けを根本根絶する新工芸設計）
+   ========================================================= */
 function renderHands(curHands = hands) {
   const pHandBox = document.getElementById('player-hand');
   const aiHandBox = document.getElementById('ai-hand');
@@ -3300,33 +3299,38 @@ function renderHands(curHands = hands) {
     ? tacticsCandidates[currentTacticIndex].move.code : null;
 
   pieceOrder.forEach(code => {
+    // 自軍（下陣）持ち駒
     const pCount = curHands.PLAYER[code] || 0;
     if (pCount > 0 && pHandBox) {
       const pieceEl = document.createElement('div');
       const isHintPiece = (hintDropCode === code);
-      pieceEl.className = `hand-piece player ${selectedPos?.type === 'hand' && selectedPos.code === code ? 'selected' : ''} ${isHintPiece ? 'hint-hand-pulse' : ''}`;
-      pieceEl.innerHTML = getPieceDisplayName(code);
-      if (pCount > 1) {
-        const cSpan = document.createElement('span');
-        cSpan.className = 'hand-piece-count';
-        cSpan.textContent = pCount;
-        pieceEl.appendChild(cSpan);
-      }
+      const isSelected = (selectedPos?.type === 'hand' && selectedPos.code === code);
+      
+      pieceEl.className = `hand-piece player ${isSelected ? 'selected' : ''} ${isHintPiece ? 'hint-hand-pulse' : ''}`;
+      
+      // 内部に独立した五角形背景シェイプと枚数バッジを配置
+      let countHtml = (pCount > 1) ? `<span class="hand-piece-count">${pCount}</span>` : '';
+      pieceEl.innerHTML = `
+        <div class="hand-piece-shape">${getPieceDisplayName(code)}</div>
+        ${countHtml}
+      `;
+      
       pieceEl.onclick = (e) => { e.stopPropagation(); onHandPieceClick('PLAYER', code); };
       pHandBox.appendChild(pieceEl);
     }
 
+    // 敵軍（上陣）持ち駒
     const aiCount = curHands.AI[code] || 0;
     if (aiCount > 0 && aiHandBox) {
       const pieceEl = document.createElement('div');
       pieceEl.className = 'hand-piece ai';
-      pieceEl.innerHTML = getPieceDisplayName(code);
-      if (aiCount > 1) {
-        const cSpan = document.createElement('span');
-        cSpan.className = 'hand-piece-count';
-        cSpan.textContent = aiCount;
-        pieceEl.appendChild(cSpan);
-      }
+      
+      let countHtml = (aiCount > 1) ? `<span class="hand-piece-count">${aiCount}</span>` : '';
+      pieceEl.innerHTML = `
+        <div class="hand-piece-shape">${getPieceDisplayName(code)}</div>
+        ${countHtml}
+      `;
+      
       aiHandBox.appendChild(pieceEl);
     }
   });
@@ -3463,7 +3467,6 @@ function applyMove(moveObj, moveMetrics = {}) {
   const hash = getBoardHash(board, hands, nextTurn);
   const inCheck = isCheckState(nextTurn, board);
 
-  // 単一のスナップショットとして一元配列に完全格納
   const newSnapshot = {
     step: historyStates.length,
     board: cloneBoardState(board),
@@ -3771,7 +3774,7 @@ function startBattleAfterFurigoma(firstTurn) {
 }
 
 /* =========================================================
-   AI思考エンジン連携制御（最低思考溜め時間・人間味演出）
+   AI思考エンジン連携制御
    ========================================================= */
 let aiWorker = null;
 function initAiWorker() {
@@ -3975,7 +3978,7 @@ function surrenderGame() {
 }
 
 /* =========================================================
-   合戦絵巻ステップ鑑賞 ＆ 自動再生（一手連動エンジン直結）
+   合戦絵巻ステップ鑑賞 ＆ 自動再生
    ========================================================= */
 function stepReview(dir, fromAuto = false) {
   if (!fromAuto) {
@@ -4046,7 +4049,7 @@ function cycleReplaySpeed() {
 }
 
 /* =========================================================
-   合戦絵巻モーダル制御（安土桃山・黄金冠クラウン銘板対応）
+   合戦絵巻モーダル制御
    ========================================================= */
 function updateKifuModalLive() {
   const isPlayerSente = (battleStartTurn === 'PLAYER');
@@ -4595,22 +4598,38 @@ function stopExhibitionTimer() {
 }
 
 /* =========================================================
-   指南書モーダル制御 ＆ 宿命秘話展開
+   【指南書モーダル：敵将の格に応じた動的称号 ＆ リアルタイム兵法】
    ========================================================= */
 function renderDynamicTactics() {
   const container = document.getElementById('dynamic-tactics-content');
   if (!container) return;
-  const w = WARLORDS_DATA[currentAiLevel];
-  const p = PLAYER_WARLORDS[currentMyWarlordId];
+
+  const w = WARLORDS_DATA[currentAiLevel] || WARLORDS_DATA[1];
+  const p = PLAYER_WARLORDS[currentMyWarlordId] || PLAYER_WARLORDS['sanada'];
+
+  // 敵将の格（レベル）に応じた動的称号バッジと見出し
+  let tabTitleTxt = '🔰 初陣指南';
+  let sectionBadgeTxt = '🔰 入門軍略';
+  if (currentAiLevel >= 8) {
+    tabTitleTxt = '👑 覇者決戦';
+    sectionBadgeTxt = '👑 天下分水嶺の秘策';
+  } else if (currentAiLevel >= 4) {
+    tabTitleTxt = '⚔ 敵陣攻略';
+    sectionBadgeTxt = '⚔ 敵陣急所撃破';
+  }
+
+  // 指南書の第1タブのボタン表示をリアルタイム更新
+  const tab0Btn = document.getElementById('guide-tab-btn-0');
+  if (tab0Btn) tab0Btn.textContent = tabTitleTxt;
 
   container.innerHTML = `
     <div class="guide-card-box beginner-highlight-box" id="guide-card-dynamic-1">
       <div class="guide-card-header-row">
-        <h4>🔰 【Lv.${currentAiLevel} ${w.province}｜${w.name}】を討ち破る兵法</h4>
+        <h4>${sectionBadgeTxt} 【Lv.${currentAiLevel} ${w.province}｜${w.name}】を討ち破る兵法</h4>
         <button class="card-speech-btn btn-3d" onclick="toggleCardSpeech('guide-card-dynamic-1')">🔊 朗読</button>
       </div>
       専属軍師・<b>${p.strategistName}</b>による、対「${w.name}」専用の極意に候！<br><br>
-      <b class="kw-gold">一、敵将の癖と弱点を見抜け！</b><br>
+      <b class="kw-gold">一、敵将の気風と弱点を見抜け！</b><br>
       ・${w.tacticsHint}<br><br>
       <b class="kw-crimson">二、大駒（飛車・角行）を敵陣へ突入させて成れ！</b><br>
       ・飛車と角は自軍最強の矛。敵陣へ飛び込み、必ず<span class="kw-crimson">「成る」</span>べし！<br><br>
@@ -4635,7 +4654,8 @@ function renderDynamicTactics() {
 
 function openGuideModal() {
   playUiClickSound();
-  stopGuideSpeech(); stopAutoReplay(); renderDynamicTactics();
+  stopGuideSpeech(); stopAutoReplay();
+  renderDynamicTactics();
   document.getElementById('guide-modal').style.display = 'flex';
 }
 
@@ -4677,5 +4697,4 @@ loadProgress();
 loadSavedBoardTheme();
 setPlayerWarlord(currentMyWarlordId);
 initBoardState();
-
 

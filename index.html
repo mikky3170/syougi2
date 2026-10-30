@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -495,7 +496,7 @@
   </div>
 </div>
 
-<!-- 当局・合戦絵巻モーダル（安土桃山・黄金冠カード刷新 ＆ 絶対重なり根絶設計） -->
+<!-- 当局・合戦絵巻モーダル（武将絵柄大型化 ＆ 勝者銘板先陣直上配置） -->
 <div id="kifu-modal" class="modal-overlay" style="display: none;">
   <div class="modal-content modal-kifu-panorama">
     <div class="modal-gold-plaque" style="justify-content:space-between;">
@@ -510,24 +511,21 @@
       <span id="kifu-modal-status-badge" class="kifu-status-badge" style="z-index:3;">五分五分の総力戦</span>
     </div>
     
-    <!-- 兵力対峙バー：上段独立クラウン銘板 ＆ 左右完全独立カードレイアウト -->
+    <!-- 兵力対峙バー：上枠いっぱいに広げ、武将絵柄大型化＆勝敗銘板を武将名の真上へ配置 -->
     <div class="kifu-troops-confrontation-bar" id="kifu-confrontation-bar">
       <!-- 先手陣側（左） -->
       <div class="kifu-troops-side side-player" id="kifu-side-player-box">
-        <div class="kifu-side-header-crown">
-          <span class="kifu-outcome-crown-plaque" id="kifu-player-outcome-plaque" style="display:none;"></span>
+        <div class="kifu-side-avatar-slot">
+          <div class="kifu-side-avatar-box" id="kifu-player-avatar-box"></div>
         </div>
-        <div class="kifu-side-body-row">
-          <div class="kifu-side-avatar-slot">
-            <div class="kifu-side-avatar-box" id="kifu-player-avatar-box"></div>
+        <div class="kifu-side-meta-col">
+          <!-- 勝者・敗者銘板を先陣・武将名の真上に堂々と配置 -->
+          <span class="kifu-outcome-crown-plaque" id="kifu-player-outcome-plaque" style="display:none;"></span>
+          <div class="side-turn-row">
+            <span class="side-turn-tag" id="kifu-player-turn-tag">先手陣</span>
+            <span class="side-warlord-tag" id="kifu-player-tag">我が軍</span>
           </div>
-          <div class="kifu-side-meta-col">
-            <div class="side-turn-row">
-              <span class="side-turn-tag" id="kifu-player-turn-tag">先手陣</span>
-              <span class="side-warlord-tag" id="kifu-player-tag">我が軍</span>
-            </div>
-            <span class="side-troops-val" id="kifu-player-troops-val">3,000 兵</span>
-          </div>
+          <span class="side-troops-val" id="kifu-player-troops-val">3,000 兵</span>
         </div>
       </div>
 
@@ -539,20 +537,17 @@
 
       <!-- 後手陣側（右） -->
       <div class="kifu-troops-side side-enemy" id="kifu-side-enemy-box">
-        <div class="kifu-side-header-crown crown-align-right">
-          <span class="kifu-outcome-crown-plaque" id="kifu-enemy-outcome-plaque" style="display:none;"></span>
+        <div class="kifu-side-avatar-slot">
+          <div class="kifu-side-avatar-box" id="kifu-enemy-avatar-box"></div>
         </div>
-        <div class="kifu-side-body-row body-row-reverse">
-          <div class="kifu-side-avatar-slot">
-            <div class="kifu-side-avatar-box" id="kifu-enemy-avatar-box"></div>
+        <div class="kifu-side-meta-col meta-col-reverse">
+          <!-- 勝者・敗者銘板を後手陣・敵将名の真上に堂々と配置 -->
+          <span class="kifu-outcome-crown-plaque" id="kifu-enemy-outcome-plaque" style="display:none;"></span>
+          <div class="side-turn-row" style="justify-content:flex-end;">
+            <span class="side-warlord-tag" id="kifu-enemy-tag">敵軍</span>
+            <span class="side-turn-tag" id="kifu-enemy-turn-tag">後手陣</span>
           </div>
-          <div class="kifu-side-meta-col" style="align-items:flex-end; text-align:right;">
-            <div class="side-turn-row" style="justify-content:flex-end;">
-              <span class="side-warlord-tag" id="kifu-enemy-tag">敵軍</span>
-              <span class="side-turn-tag" id="kifu-enemy-turn-tag">後手陣</span>
-            </div>
-            <span class="side-troops-val" id="kifu-enemy-troops-val">3,000 兵</span>
-          </div>
+          <span class="side-troops-val" id="kifu-enemy-troops-val">3,000 兵</span>
         </div>
       </div>
     </div>
@@ -621,12 +616,13 @@
       </div>
     </div>
     
+    <!-- タブバー：敵将の格に応じた動的称号タブ配備 -->
     <div class="guide-tab-bar">
-      <button class="guide-tab-btn btn-3d active" onclick="switchGuideTab(0)">🔰 対陣極意</button>
-      <button class="guide-tab-btn btn-3d" onclick="switchGuideTab(1)">其の壱：手順</button>
-      <button class="guide-tab-btn btn-3d" onclick="switchGuideTab(2)">其の弐：兵法</button>
-      <button class="guide-tab-btn btn-3d" onclick="switchGuideTab(3)">其の参：英傑</button>
-      <button class="guide-tab-btn btn-3d" onclick="switchGuideTab(4)">其の四：宿命</button>
+      <button class="guide-tab-btn btn-3d active" id="guide-tab-btn-0" onclick="switchGuideTab(0)">🔰 初陣指南</button>
+      <button class="guide-tab-btn btn-3d" id="guide-tab-btn-1" onclick="switchGuideTab(1)">其の壱：手順</button>
+      <button class="guide-tab-btn btn-3d" id="guide-tab-btn-2" onclick="switchGuideTab(2)">其の弐：兵法</button>
+      <button class="guide-tab-btn btn-3d" id="guide-tab-btn-3" onclick="switchGuideTab(3)">其の参：英傑</button>
+      <button class="guide-tab-btn btn-3d" id="guide-tab-btn-4" onclick="switchGuideTab(4)">其の四：宿命</button>
     </div>
 
     <div class="guide-scroll-body" id="guide-scroll-container">
@@ -851,7 +847,10 @@
       </div>
     </div>
 
-    <div class="modal-buttons"><button class="btn-3d modal-action-btn" onclick="closeGuideModal()">兵法を胸に出陣</button></div>
+    <!-- 最下部：決定系アクション統一規格【純金箔立体プレート】ボタン -->
+    <div class="modal-buttons">
+      <button class="btn-3d modal-action-btn btn-start-hero" id="btn-guide-sortie-confirm" onclick="closeGuideModal()">兵法を胸に出陣</button>
+    </div>
   </div>
 </div>
 
