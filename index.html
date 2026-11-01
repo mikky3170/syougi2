@@ -1,863 +1,2090 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#070301">
-<title>将棋王 2026 〜 天下統一・戦国決戦 〜</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>AIペット クロちゃん🐾 v1.0.0</title>
+
+  <!-- キャッシュ完全無効化設定 -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
+  <!-- PWA・モバイル設定 -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="クロちゃん🐾">
+  <meta name="theme-color" content="#ffffff">
+
+  <style>
+    :root {
+      --primary-color: #f472b6;
+      --secondary-color: #38bdf8;
+      --bubble-bg: rgba(255, 255, 255, 0.98);
+      --text-color: #1f2937;
+      --shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-drag: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100dvh;
+      overflow: hidden;
+      background: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* トースト通知 */
+    #toast-notification {
+      position: fixed;
+      top: env(safe-area-inset-top, 14px);
+      left: 50%;
+      transform: translateX(-50%) translateY(-100px);
+      width: 90%;
+      max-width: 420px;
+      padding: 12px 16px;
+      border-radius: 18px;
+      font-size: 13px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      z-index: 1000;
+      transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s;
+      opacity: 0;
+      pointer-events: none;
+      cursor: pointer;
+    }
+    #toast-notification.is-show {
+      transform: translateX(-50%) translateY(10px);
+      opacity: 1;
+      pointer-events: auto;
+    }
+    #toast-notification.success { background: #0f172a; color: #4ade80; border: 1.5px solid #22c55e; }
+    #toast-notification.error { background: #450a0a; color: #fca5a5; border: 1.5px solid #ef4444; }
+    #toast-notification.info { background: #0f172a; color: #38bdf8; border: 1.5px solid #38bdf8; }
+
+    #pet-container {
+      position: absolute;
+      width: 100%;
+      max-width: 480px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: env(safe-area-inset-top, 8px) 14px env(safe-area-inset-bottom, 10px) 14px;
+      z-index: 50;
+      box-sizing: border-box;
+      background: #ffffff;
+    }
+
+    /* 1. 最上部ステータスバー */
+    .top-header {
+      width: 100%;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      padding: 6px 10px;
+      border-radius: 24px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(241, 245, 249, 0.8);
+      font-size: 11px;
+      font-weight: bold;
+      color: #4a5568;
+      z-index: 20;
+      margin-bottom: 6px;
+      gap: 6px;
+    }
+    .top-header-left, .top-header-right { display: flex; align-items: center; flex-shrink: 0; gap: 5px; }
+    #clock-display { font-size: 12px; font-weight: 800; color: #334155; padding-left: 2px; }
+
+    #status-badge-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 0 4px;
+      min-width: 0;
+    }
+    #status-text {
+      width: 100%;
+      max-width: 240px;
+      text-align: center;
+      background: #0f172a;
+      color: #38bdf8;
+      font-size: 12.5px;
+      font-weight: 900;
+      padding: 5px 12px;
+      border-radius: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.15) inset;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: clip;
+      transition: all 0.25s ease-out;
+      letter-spacing: 0.3px;
+    }
+    .is-hearing #status-text {
+      background: #881337;
+      color: #fecdd3;
+      box-shadow: 0 2px 10px rgba(225, 29, 72, 0.4), 0 0 0 1px rgba(244, 63, 94, 0.3) inset;
+    }
+    .is-paused-mode #status-text { background: #450a0a; color: #fca5a5; }
+
+    .btn-top-diary {
+      background: #fdf2f8;
+      color: #db2777;
+      border: 1.2px solid #f472b6;
+      border-radius: 12px;
+      padding: 4px 9px;
+      font-size: 11px;
+      font-weight: 900;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s;
+    }
+    .btn-top-diary:active { transform: scale(0.93); background: #fce7f3; }
+
+    .model-badge {
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 10.5px;
+      font-weight: 800;
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+    .model-badge.lite { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }
+
+    #timer-active-badge {
+      display: none;
+      align-items: center;
+      gap: 5px;
+      background: #fef08a;
+      border: 1.5px solid #eab308;
+      color: #854d0e;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 900;
+      animation: fadeIn 0.3s;
+    }
+
+    /* 2. 会話タイムライン */
+    #chat-timeline {
+      flex: 1;
+      width: 100%;
+      overflow-y: auto;
+      padding: 4px 6px 12px 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      z-index: 10;
+    }
+    #chat-timeline::-webkit-scrollbar { width: 4px; }
+    #chat-timeline::-webkit-scrollbar-thumb {
+      background: rgba(244, 114, 182, 0.35);
+      border-radius: 4px;
+    }
+
+    .chat-row { display: flex; flex-direction: column; width: 100%; animation: fadeIn 0.2s ease-out; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .chat-row.user { align-items: flex-end; }
+    .chat-row.model { align-items: flex-start; }
+
+    .timeline-photo-wrap {
+      max-width: 75%;
+      margin-bottom: 6px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 2px solid #bae6fd;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.15);
+    }
+    .timeline-shared-img {
+      width: 100%;
+      height: auto;
+      display: block;
+      object-fit: cover;
+    }
+
+    .chat-bubble {
+      max-width: 86%;
+      padding: 9px 14px;
+      border-radius: 18px;
+      font-size: 13.5px;
+      line-height: 1.5;
+      word-break: break-word;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+      transition: all 0.2s ease-out;
+    }
+    .chat-row.user .chat-bubble { background: #0284c7; color: #ffffff; border-bottom-right-radius: 4px; }
+    .chat-row.model .chat-bubble { background: #ffffff; color: #2d3748; border: 1.5px solid #fbcfe8; border-bottom-left-radius: 4px; }
+
+    .chat-bubble.thinking-bubble {
+      background: #ffffff !important;
+      border: 1.5px solid #fbcfe8 !important;
+      color: #64748b !important;
+      font-weight: 500;
+    }
+
+    /* ★ お話し中のリアルタイム仮吹き出し ＆ 音波アニメーション */
+    .chat-bubble.interim-bubble {
+      background: #f0f9ff !important;
+      color: #0369a1 !important;
+      border: 1.5px dashed #38bdf8 !important;
+      border-bottom-right-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-weight: 700;
+    }
+    .voice-wave-anim {
+      display: inline-flex;
+      align-items: center;
+      gap: 2.5px;
+      height: 14px;
+      flex-shrink: 0;
+    }
+    .voice-wave-anim span {
+      display: inline-block;
+      width: 2.5px;
+      height: 5px;
+      background: #0284c7;
+      border-radius: 2px;
+      animation: voiceWavePulse 0.75s ease-in-out infinite alternate;
+    }
+    .voice-wave-anim span:nth-child(1) { animation-delay: 0.1s; }
+    .voice-wave-anim span:nth-child(2) { animation-delay: 0.3s; }
+    .voice-wave-anim span:nth-child(3) { animation-delay: 0.5s; }
+    .voice-wave-anim span:nth-child(4) { animation-delay: 0.2s; }
+    @keyframes voiceWavePulse {
+      0% { height: 4px; transform: scaleY(0.7); }
+      100% { height: 14px; transform: scaleY(1.3); }
+    }
+
+    .timeline-diary-card {
+      width: 95%;
+      max-width: 420px;
+      background: linear-gradient(135deg, #fffdfa 0%, #fff7ed 100%);
+      border: 2px solid #fed7aa;
+      border-radius: 18px;
+      padding: 12px 14px;
+      box-shadow: 0 4px 14px rgba(234, 88, 12, 0.1);
+      margin-top: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      animation: fadeIn 0.3s ease-out;
+    }
+    .timeline-diary-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px dashed #fdba74;
+      padding-bottom: 6px;
+      font-size: 12px;
+      font-weight: 900;
+      color: #c2410c;
+    }
+    .timeline-diary-meta {
+      font-size: 11px;
+      font-weight: 700;
+      color: #ea580c;
+      display: flex;
+      gap: 8px;
+    }
+    .timeline-diary-photo img {
+      width: 100%;
+      max-height: 180px;
+      object-fit: cover;
+      border-radius: 12px;
+      border: 1px solid #fed7aa;
+      margin-top: 4px;
+    }
+    .timeline-diary-body {
+      font-size: 12.5px;
+      line-height: 1.6;
+      color: #431407;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+
+    .action-card-box { margin-top: 6px; display: flex; flex-direction: column; gap: 6px; max-width: 92%; }
+    .link-action-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-radius: 12px;
+      padding: 9px 12px;
+      text-decoration: none;
+      color: #1e293b;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+      transition: all 0.15s ease-out;
+      border: 1.5px solid #e2e8f0;
+      background: #ffffff;
+    }
+    .link-action-card:active { transform: scale(0.97); }
+    .link-action-card.map-primary-card { border-color: #86efac; background: #f0fdf4; font-weight: 800; }
+    .link-action-card.map-sub-card { border-color: #bbf7d0; background: #f7fee7; font-weight: 700; }
+    .link-action-card.map-all-card { border-color: #fed7aa; background: #fff7ed; }
+    .link-action-card.news-primary-card { border-color: #fecaca; background: #fef2f2; font-weight: 800; }
+    .link-action-card.news-sub-card { border-color: #bae6fd; background: #f0f9ff; }
+    .card-title-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 250px; }
+    .card-icon { font-size: 15px; flex-shrink: 0; }
+    .card-arrow { font-size: 11px; color: #64748b; font-weight: bold; flex-shrink: 0; }
+
+    /* 3. クロちゃん本体ステージ */
+    .pet-avatar-wrapper {
+      position: relative;
+      flex-shrink: 0;
+      width: 100%;
+      height: 335px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      cursor: pointer;
+      z-index: 20;
+      margin-bottom: -6px;
+      background: transparent;
+    }
+
+    #cat-stage-box {
+      position: relative;
+      width: 100%;
+      max-width: 400px;
+      height: 325px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      transform-origin: bottom center;
+      transition: transform 0.35s ease-out;
+      background: transparent;
+      pointer-events: none;
+    }
+
+    .pet-avatar-wrapper.is-idling #cat-stage-box { animation: catStageBreathe 4.8s ease-in-out infinite; }
+    @keyframes catStageBreathe {
+      0%, 100% { transform: scale(1, 1) translateY(0); }
+      50% { transform: scale(1.012, 0.99) translateY(-2px); }
+    }
+    .pet-avatar-wrapper.is-talking #cat-stage-box { animation: catStageTalk 0.8s ease-in-out infinite alternate; }
+    @keyframes catStageTalk { 0% { transform: translateY(0); } 100% { transform: translateY(-3px) scale(1.01); } }
+    .pet-avatar-wrapper.is-thinking #cat-stage-box { animation: catStageThink 2.4s ease-in-out infinite alternate; }
+    @keyframes catStageThink { 0% { transform: scale(1) rotate(-1.5deg); } 100% { transform: scale(1.01) rotate(2deg); } }
+    .pet-avatar-wrapper.is-happy #cat-stage-box { animation: catStageHappy 0.45s ease-in-out infinite alternate; }
+    @keyframes catStageHappy { 0% { transform: translateY(0) scale(1); } 100% { transform: translateY(-7px) scale(1.03); } }
+
+    #transform-smoke {
+      position: absolute;
+      bottom: 25px;
+      left: 50%;
+      transform: translateX(-50%) scale(0.2);
+      width: 340px;
+      height: 280px;
+      pointer-events: none;
+      z-index: 45;
+      opacity: 0;
+    }
+    #transform-smoke.is-poofing {
+      animation: smokeBurst 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes smokeBurst {
+      0% { opacity: 0; transform: translateX(-50%) scale(0.3) translateY(20px); }
+      25% { opacity: 0.95; transform: translateX(-50%) scale(1.15) translateY(-10px); }
+      60% { opacity: 0.85; transform: translateX(-50%) scale(1.0) translateY(-20px); }
+      100% { opacity: 0; transform: translateX(-50%) scale(1.25) translateY(-40px); }
+    }
+
+    .cat-frame {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease-in-out;
+    }
+    .cat-frame.active { opacity: 1; pointer-events: none; }
+
+    .cat-avatar-img {
+      position: absolute;
+      bottom: 0;
+      height: 100%;
+      max-height: 310px;
+      object-fit: contain;
+      object-position: bottom center;
+      background: transparent !important;
+      mix-blend-mode: multiply;
+      display: block;
+      pointer-events: none;
+    }
+
+    .accessory-layer {
+      position: absolute;
+      width: 140px;
+      height: 140px;
+      pointer-events: none;
+      z-index: 15;
+      display: none;
+      transform-origin: center center;
+      left: 50%;
+    }
+    .pet-avatar-wrapper.is-real-mode.is-assistant-mode .accessory-layer { display: block; }
+
+    .mortar-tassel {
+      transform-origin: 70px 32px;
+      animation: tasselSwing 3.2s ease-in-out infinite alternate;
+    }
+    @keyframes tasselSwing { 0% { transform: rotate(0deg); } 100% { transform: rotate(14deg); } }
+
+    #idea-bulb {
+      position: absolute;
+      top: 10px;
+      font-size: 38px;
+      opacity: 0;
+      transform: scale(0.3) translateY(20px);
+      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 40;
+      pointer-events: none;
+      filter: drop-shadow(0 0 12px #facc15);
+    }
+    #idea-bulb.active { opacity: 1; transform: scale(1.2) translateY(0); }
+
+    #cat-vector-avatar {
+      width: 270px;
+      height: 325px;
+      position: absolute;
+      bottom: 0;
+      display: none;
+      transform-origin: bottom center;
+      z-index: 10;
+      pointer-events: none;
+    }
+    #cat-vector-avatar.active-mode { display: block; }
+
+    .pose-group { display: none; }
+    .pose-idle-active #pose-idle { display: block; }
+    .pose-talking-active #pose-talking { display: block; }
+    .pose-thinking-active #pose-thinking { display: block; }
+    .pose-happy-active #pose-happy { display: block; }
+
+    .anim-idle-head {
+      transform-origin: 100px 125px;
+      animation: idleHeadTilt 5.6s ease-in-out infinite alternate;
+    }
+    @keyframes idleHeadTilt {
+      0% { transform: rotate(0deg) translateY(0); }
+      35% { transform: rotate(-2.5deg) translateY(-1px); }
+      75% { transform: rotate(2deg) translateY(-0.5px); }
+      100% { transform: rotate(0deg) translateY(0); }
+    }
+
+    .anim-idle-body {
+      transform-origin: 100px 220px;
+      animation: idleBreathe 4.5s ease-in-out infinite;
+    }
+    @keyframes idleBreathe {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.015, 0.985); }
+    }
+    .anim-idle-ruff {
+      transform-origin: 100px 145px;
+      animation: ruffFluff 4.5s ease-in-out infinite;
+    }
+    @keyframes ruffFluff {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.04, 1.02); }
+    }
+    .anim-idle-tail {
+      transform-origin: 140px 190px;
+      animation: idleTailWave 5.0s ease-in-out infinite;
+    }
+    @keyframes idleTailWave {
+      0%, 100% { transform: rotate(0deg); }
+      30% { transform: rotate(8deg) translateY(-2px); }
+      70% { transform: rotate(-5deg) translateY(1px); }
+    }
+
+    .anim-talking-head {
+      transform-origin: 100px 125px;
+      animation: talkHeadBob 0.35s ease-in-out infinite alternate;
+    }
+    @keyframes talkHeadBob {
+      0% { transform: rotate(-2deg) translateY(0); }
+      100% { transform: rotate(2deg) translateY(-3px); }
+    }
+    .anim-talking-tail {
+      transform-origin: 145px 160px;
+      animation: talkTailShake 0.6s ease-in-out infinite alternate;
+    }
+    @keyframes talkTailShake {
+      0% { transform: rotate(-6deg); }
+      100% { transform: rotate(10deg); }
+    }
+
+    .anim-thinking-head {
+      transform-origin: 100px 125px;
+      animation: thinkHeadTilt 3.0s ease-in-out infinite alternate;
+    }
+    @keyframes thinkHeadTilt {
+      0% { transform: rotate(-4deg); }
+      100% { transform: rotate(3deg); }
+    }
+    .anim-thinking-paw {
+      transform-origin: 85px 160px;
+      animation: thinkPawTap 2.0s ease-in-out infinite alternate;
+    }
+    @keyframes thinkPawTap {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-2px) rotate(-1deg); }
+    }
+
+    .anim-happy-arms {
+      transform-origin: 100px 160px;
+      animation: happyArmsWave 0.4s ease-in-out infinite alternate;
+    }
+    @keyframes happyArmsWave {
+      0% { transform: translateY(0) rotate(-2deg); }
+      100% { transform: translateY(-6px) rotate(2deg); }
+    }
+    .anim-happy-tail {
+      transform-origin: 140px 175px;
+      animation: happyTailHyper 0.28s ease-in-out infinite alternate;
+    }
+    @keyframes happyTailHyper {
+      0% { transform: rotate(12deg) scale(1.02); }
+      100% { transform: rotate(-16deg) scale(1); }
+    }
+
+    .anim-ear-l {
+      transform-origin: 66px 65px;
+      animation: earTwitchL 6.0s ease-in-out infinite;
+    }
+    @keyframes earTwitchL {
+      0%, 88%, 100% { transform: rotate(0deg); }
+      92% { transform: rotate(-6deg); }
+      96% { transform: rotate(3deg); }
+    }
+    .anim-ear-r {
+      transform-origin: 134px 65px;
+      animation: earTwitchR 7.2s ease-in-out infinite;
+    }
+    @keyframes earTwitchR {
+      0%, 82%, 100% { transform: rotate(0deg); }
+      86% { transform: rotate(6deg); }
+      90% { transform: rotate(-3deg); }
+    }
+
+    .cat-eye-blink {
+      transform-origin: center;
+      animation: eyeBlinkAnim 4.6s ease-in-out infinite;
+    }
+    @keyframes eyeBlinkAnim {
+      0%, 92%, 100% { transform: scaleY(1); }
+      95%, 97% { transform: scaleY(0.08); }
+    }
+
+    .mouth-talking {
+      transform-origin: 100px 114px;
+      animation: mouthSyncAnim 0.24s ease-in-out infinite alternate;
+    }
+    @keyframes mouthSyncAnim {
+      0% { transform: scale(0.9, 0.35); }
+      100% { transform: scale(1.15, 1.25); }
+    }
+
+    #cat-vector-accessories {
+      opacity: 0;
+      transform: translateY(-12px) scale(0.92);
+      transform-origin: 100px 75px;
+      transition: opacity 0.35s ease-out, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .pet-avatar-wrapper.is-assistant-mode #cat-vector-accessories { opacity: 1; transform: translateY(0) scale(1); }
+
+    .cat-ground-shadow {
+      position: absolute;
+      bottom: 8px;
+      width: 240px;
+      height: 22px;
+      background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0) 75%);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .btn-transform-floating {
+      position: absolute;
+      right: 12px;
+      bottom: 24px;
+      background: #1e293b;
+      color: #ffffff;
+      border: 1.5px solid rgba(255, 255, 255, 0.2);
+      padding: 9px 14px;
+      border-radius: 24px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+      z-index: 35;
+      pointer-events: auto;
+      transition: transform 0.15s;
+    }
+    .btn-transform-floating:active { transform: scale(0.92); }
+
+    .btn-snack-floating {
+      position: absolute;
+      left: 12px;
+      bottom: 24px;
+      background: #fdf2f8;
+      color: #be185d;
+      border: 1.5px solid #fbcfe8;
+      padding: 9px 14px;
+      border-radius: 24px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: 0 4px 14px rgba(244, 114, 182, 0.2);
+      z-index: 35;
+      pointer-events: auto;
+      transition: transform 0.15s;
+    }
+    .btn-snack-floating:active { transform: scale(0.92); }
+
+    /* ==========================================================================
+       ★ 4. 最下部操作バー ＆ バージョン刻印
+       ========================================================================== */
+    .bottom-controls { width: 100%; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; z-index: 30; }
+    
+    .action-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.2);
+      padding: 7px 9px;
+      border-radius: 36px;
+      gap: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-mode-toggle {
+      height: 44px;
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      border-radius: 24px;
+      border: 1px solid rgba(244, 114, 182, 0.35);
+      background: rgba(157, 23, 77, 0.4);
+      color: #fce7f3;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    .btn-mode-toggle.is-assistant {
+      border-color: rgba(56, 189, 248, 0.4);
+      background: rgba(12, 74, 110, 0.45);
+      color: #e0f2fe;
+    }
+    .btn-mode-toggle:active { transform: scale(0.95); }
+
+    .btn-photo {
+      height: 44px;
+      padding: 0 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      border-radius: 24px;
+      border: 1px solid rgba(14, 165, 233, 0.35);
+      background: rgba(3, 105, 161, 0.35);
+      color: #e0f2fe;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    .btn-photo:active { transform: scale(0.95); background: rgba(3, 105, 161, 0.55); }
+
+    .btn-stop {
+      height: 44px;
+      padding: 0 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      border-radius: 24px;
+      border: 1px solid rgba(248, 113, 113, 0.35);
+      background: rgba(153, 27, 27, 0.35);
+      color: #fee2e2;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    .btn-stop:active { transform: scale(0.95); background: rgba(153, 27, 27, 0.55); }
+
+    .btn-action {
+      flex: 1;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      background: rgba(30, 41, 59, 0.65);
+      color: #f1f5f9;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .btn-action.is-paused {
+      background: rgba(127, 29, 29, 0.45);
+      color: #fecaca;
+      border-color: rgba(239, 68, 68, 0.35);
+    }
+    .btn-action:active { transform: scale(0.96); }
+
+    .btn-circle {
+      width: 44px;
+      height: 44px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      background: rgba(30, 41, 59, 0.65);
+      color: #cbd5e1;
+      transition: all 0.2s;
+    }
+    .btn-circle:active { transform: scale(0.93); background: rgba(51, 65, 85, 0.8); }
+
+    /* ★ 画面最下部の控えめな極小バージョン表示 */
+    .app-version-tag {
+      font-size: 9.5px;
+      color: #94a3b8;
+      opacity: 0.65;
+      margin-top: 4px;
+      text-align: center;
+      letter-spacing: 0.5px;
+      font-weight: 700;
+      pointer-events: none;
+    }
+
+    /* ==========================================================================
+       ★ 5. モーダル共通スタイル ＆ 設定モーダル
+       ========================================================================== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(6px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 200;
+      padding: 14px;
+    }
+    .modal-card {
+      background: #ffffff;
+      width: 100%;
+      max-width: 450px;
+      max-height: 88vh;
+      overflow-y: auto;
+      border-radius: 26px;
+      padding: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+    }
+    .modal-card h3 {
+      margin-top: 0;
+      color: #0f172a;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 14px;
+      border-bottom: 1.5px solid #f1f5f9;
+      padding-bottom: 10px;
+    }
+
+    .setting-section-header {
+      font-size: 12.5px;
+      font-weight: 900;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 16px 0 8px 0;
+    }
+
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: flex; justify-content: space-between; font-size: 11.5px; font-weight: bold; color: #475569; margin-bottom: 5px; }
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      font-size: 12.5px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      background: #f8fafc;
+    }
+    .form-group input:focus, .form-group select:focus {
+      border-color: #38bdf8;
+      background: #ffffff;
+    }
+
+    .input-error-shake {
+      border-color: #ef4444 !important;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
+      animation: shakeInput 0.35s ease-in-out;
+    }
+    @keyframes shakeInput { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+
+    /* トリセツ折りたたみ */
+    .manual-details {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      margin-bottom: 12px;
+      overflow: hidden;
+      font-size: 11.5px;
+    }
+    .manual-summary {
+      padding: 10px 12px;
+      font-weight: 800;
+      color: #0369a1;
+      background: #f0f9ff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      outline: none;
+    }
+    .manual-content {
+      padding: 12px;
+      line-height: 1.6;
+      color: #334155;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .manual-sec-title { font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 4px; margin-top: 3px; }
+
+    /* 安全保護アコーディオン */
+    .secure-details {
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      border-radius: 14px;
+      margin-top: 10px;
+      margin-bottom: 8px;
+      overflow: hidden;
+      font-size: 12px;
+    }
+    .secure-summary {
+      padding: 9px 12px;
+      font-weight: 800;
+      color: #475569;
+      background: #f1f5f9;
+      cursor: pointer;
+      display: center;
+      align-items: center;
+      justify-content: space-between;
+      outline: none;
+      font-size: 11.5px;
+    }
+    .secure-content {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: #ffffff;
+    }
+
+    /* データファイルバックアップカード */
+    .pc-sync-card {
+      background: #f0fdf4;
+      border: 1.2px solid #bbf7d0;
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .pc-sync-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: #15803d;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 4px;
+    }
+    .pc-sync-desc {
+      font-size: 11px;
+      color: #166534;
+      line-height: 1.4;
+      margin-bottom: 8px;
+    }
+    .pc-sync-btn-row { display: flex; gap: 6px; }
+    .btn-pc-sync {
+      flex: 1;
+      padding: 8px;
+      background: #ffffff;
+      border: 1.2px solid #22c55e;
+      color: #15803d;
+      border-radius: 10px;
+      font-size: 11.5px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: background 0.15s;
+    }
+    .btn-pc-sync:active { background: #dcfce7; }
+
+    .home-coord-row { display: flex; gap: 6px; margin-top: 5px; }
+    .btn-coord-action {
+      padding: 6px 10px;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 800;
+      color: #334155;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .voice-control-row { display: flex; gap: 8px; align-items: center; }
+    .voice-select-box { flex: 1; padding: 8px 10px; border: 1.5px solid #fbcfe8; background: #fff5f8; border-radius: 12px; color: #831843; font-weight: bold; font-size: 12px; }
+    .btn-voice-test { padding: 8px 12px; background: #fdf2f8; border: 1.5px solid #f472b6; color: #db2777; border-radius: 12px; font-weight: 800; font-size: 11.5px; cursor: pointer; flex-shrink: 0; }
+
+    .btn-adjust-open {
+      width: 100%;
+      padding: 9px;
+      background: #fdf2f8;
+      border: 1.2px solid #f472b6;
+      color: #be185d;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .btn-clear-timeline {
+      width: 100%;
+      padding: 8px;
+      background: #f8fafc;
+      border: 1px dashed #94a3b8;
+      color: #475569;
+      border-radius: 10px;
+      font-size: 11.5px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      margin-top: 6px;
+      transition: background 0.15s;
+    }
+    .btn-clear-timeline:active { background: #e2e8f0; }
+
+    /* 記憶帳リスト */
+    .memory-list {
+      background: #f8fafc;
+      border-radius: 14px;
+      padding: 8px;
+      max-height: 140px;
+      overflow-y: auto;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 11.5px;
+    }
+    .memory-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #ffffff;
+      padding: 6px 10px;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+      gap: 6px;
+    }
+    .memory-text-view { flex: 1; word-break: break-all; color: #334155; line-height: 1.4; }
+    .memory-actions { display: flex; gap: 5px; flex-shrink: 0; }
+    .mem-btn { border: none; border-radius: 8px; padding: 4px 7px; font-size: 12px; cursor: pointer; }
+    .mem-btn-edit { background: #f0fdf4; border: 1px solid #bbf7d0; color: #15803d; }
+    .mem-btn-del { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; }
+    .memory-edit-box { display: flex; flex: 1; gap: 6px; align-items: center; width: 100%; }
+    .memory-edit-input { flex: 1; padding: 5px 8px; border: 1.5px solid var(--secondary-color); border-radius: 8px; font-size: 11.5px; outline: none; }
+    .mem-btn-save { background: #0284c7; color: white; font-weight: bold; border: none; padding: 5px 8px; border-radius: 8px; font-size: 11px; cursor: pointer; }
+    .mem-btn-cancel { background: #e2e8f0; color: #475569; border: none; padding: 5px 8px; border-radius: 8px; font-size: 11px; cursor: pointer; }
+    .memory-add-box { display: flex; gap: 6px; margin-top: 8px; }
+    .memory-add-box input { flex: 1; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 12px; }
+    .memory-add-box button { background: var(--primary-color); color: white; border: none; border-radius: 10px; padding: 0 14px; font-weight: bold; font-size: 12px; cursor: pointer; }
+
+    .btn-save {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #f472b6, #ec4899);
+      color: white;
+      border: none;
+      border-radius: 14px;
+      font-weight: bold;
+      font-size: 13.5px;
+      cursor: pointer;
+      margin-top: 12px;
+      box-shadow: 0 4px 12px rgba(236, 72, 153, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-save.is-saving { background: #475569; pointer-events: none; }
+    .btn-save.is-success { background: #16a34a; }
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2.5px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .btn-force-refresh {
+      width: 100%;
+      padding: 9px;
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px dashed #cbd5e1;
+      border-radius: 10px;
+      font-size: 11.5px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    /* ==========================================================================
+       ★ 6. 本型絵日記アルバム
+       ========================================================================== */
+    #book-studio-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(10px);
+      z-index: 380;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      padding: 14px;
+    }
+    #book-studio-modal.is-open { display: flex; }
+    .book-studio-window {
+      background: #fffdfa;
+      width: 100%;
+      max-width: 680px;
+      height: 90vh;
+      border-radius: 28px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+      border: 2px solid #fed7aa;
+      overflow: hidden;
+    }
+    .studio-top-bar {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      color: #f8fafc;
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #334155;
+    }
+    .studio-top-title {
+      font-size: 15px;
+      font-weight: 900;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .studio-main-body {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      background: #fdfaf5;
+    }
+    .studio-diary-book-pane {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 14px 18px;
+      background: #fffdfa;
+      overflow-y: auto;
+    }
+    .book-pager-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      background: #ffedd5;
+      padding: 6px 12px;
+      border-radius: 16px;
+      border: 1px solid #fed7aa;
+    }
+    .btn-pager {
+      background: #ffffff;
+      border: 1.5px solid #ea580c;
+      color: #c2410c;
+      border-radius: 10px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .btn-pager:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      border-color: #cbd5e1;
+      color: #94a3b8;
+    }
+    .pager-page-info {
+      font-size: 12.5px;
+      font-weight: 900;
+      color: #9a3412;
+    }
+
+    .book-page-sheet {
+      flex: 1;
+      background: #ffffff;
+      border: 2px solid #fed7aa;
+      border-radius: 20px;
+      padding: 14px 16px;
+      box-shadow: 0 4px 16px rgba(234, 88, 12, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      position: relative;
+    }
+    .book-page-ribbon {
+      position: absolute;
+      top: -2px;
+      right: 18px;
+      background: #f472b6;
+      color: #ffffff;
+      padding: 3px 10px;
+      border-bottom-left-radius: 8px;
+      border-bottom-right-radius: 8px;
+      font-size: 10.5px;
+      font-weight: 900;
+    }
+    .book-page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1.5px dashed #fed7aa;
+      padding-bottom: 8px;
+      margin-top: 2px;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .book-date-title {
+      font-size: 14.5px;
+      font-weight: 900;
+      color: #9a3412;
+    }
+    .book-meta-tags {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 800;
+      color: #ea580c;
+    }
+
+    .btn-read-aloud {
+      background: linear-gradient(135deg, #f472b6, #ec4899);
+      color: #ffffff;
+      border: none;
+      border-radius: 12px;
+      padding: 5px 12px;
+      font-size: 11.5px;
+      font-weight: 900;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      box-shadow: 0 2px 8px rgba(236, 72, 153, 0.25);
+      transition: all 0.2s;
+    }
+    .btn-read-aloud:active { transform: scale(0.95); }
+    .btn-read-aloud.is-reading {
+      background: linear-gradient(135deg, #f87171, #ef4444);
+      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.35);
+      animation: pulseReading 1.5s infinite;
+    }
+    @keyframes pulseReading {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.88; transform: scale(0.98); }
+    }
+
+    .book-btn-del-entry {
+      background: #fee2e2;
+      border: 1px solid #fca5a5;
+      color: #b91c1c;
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 11px;
+      cursor: pointer;
+      font-weight: 800;
+    }
+
+    .book-photo-frame {
+      width: 100%;
+      height: 150px;
+      border: 2px dashed #fed7aa;
+      border-radius: 14px;
+      background: #fffaf5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      position: relative;
+    }
+    .book-photo-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .book-photo-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      color: #ea580c;
+      font-size: 12.5px;
+      font-weight: 800;
+    }
+    .book-photo-remove-btn {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: rgba(0, 0, 0, 0.65);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .book-content-box {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .book-textarea-label {
+      font-size: 11.5px;
+      font-weight: 800;
+      color: #4b5563;
+    }
+    .book-diary-textarea {
+      flex: 1;
+      width: 100%;
+      padding: 10px;
+      border: 1.5px solid #fed7aa;
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #334155;
+      font-family: inherit;
+      resize: none;
+      outline: none;
+      background: #ffffff;
+    }
+    .book-diary-textarea:focus { border-color: #f97316; }
+
+    .studio-footer-bar {
+      background: #ffffff;
+      padding: 10px 18px;
+      border-top: 1.5px solid #fed7aa;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn-studio-save-exit {
+      padding: 9px 18px;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 12.5px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .btn-diary-close {
+      background: #7c2d12;
+      border: none;
+      color: #ffffff;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      font-size: 14px;
+      font-weight: 900;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 7. システム診断モニタ */
+    #diag-panel {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(6px);
+      z-index: 250;
+      display: none;
+      justify-content: center;
+      align-items: flex-end;
+    }
+    #diag-panel.expanded { display: flex; }
+    .diag-modal-content {
+      width: 100%;
+      max-width: 500px;
+      height: 68vh;
+      background: #0f172a;
+      border-top-left-radius: 24px;
+      border-top-right-radius: 24px;
+      display: flex;
+      flex-direction: column;
+      font-family: monospace;
+      font-size: 11.5px;
+    }
+    .diag-header { background: #1e293b; padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; color: #38bdf8; font-weight: bold; }
+    .diag-header-actions { display: flex; gap: 8px; }
+    .diag-act-btn { background: #334155; border: none; color: #e2e8f0; border-radius: 10px; padding: 5px 9px; font-size: 11px; cursor: pointer; font-weight: bold; }
+    .diag-act-btn:active { background: #475569; }
+    .diag-logs { padding: 12px 16px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 6px; color: #cbd5e1; }
+    .log-row { line-height: 1.45; word-break: break-all; }
+    .log-success { color: #4ade80; }
+    .log-warn { color: #facc15; }
+    .log-error { color: #f87171; font-weight: bold; }
+    .log-info { color: #94a3b8; }
+
+    /* 8. メガネ・帽子アジャスター */
+    #glasses-adjust-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.94);
+      backdrop-filter: blur(8px);
+      z-index: 300;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: env(safe-area-inset-top, 10px) 14px env(safe-area-inset-bottom, 14px) 14px;
+    }
+    #glasses-adjust-modal.is-open { display: flex; }
+    .adjust-header { width: 100%; max-width: 420px; display: flex; justify-content: space-between; align-items: center; color: white; font-weight: 800; font-size: 14px; padding: 6px 0; }
+    .adjust-tabs { display: flex; width: 100%; max-width: 420px; background: #1e293b; border-radius: 16px; padding: 4px; gap: 4px; }
+    .adjust-tab-btn { flex: 1; border: none; background: transparent; color: #94a3b8; padding: 8px 4px; font-size: 11.5px; font-weight: 800; border-radius: 12px; cursor: pointer; transition: all 0.2s; }
+    .adjust-tab-btn.active { background: #f472b6; color: white; box-shadow: 0 2px 8px rgba(244, 114, 182, 0.4); }
+    .adjust-preview-stage { position: relative; width: 100%; max-width: 380px; height: 300px; display: center; justify-content: center; align-items: flex-end; }
+    .adjust-cat-img { position: absolute; bottom: 0; height: 100%; max-height: 300px; object-fit: contain; object-position: bottom center; pointer-events: none; }
+    .adjust-controls-box { width: 100%; max-width: 420px; background: #1e293b; border-radius: 20px; padding: 12px 16px; color: #e2e8f0; display: flex; flex-direction: column; gap: 8px; }
+    .adjust-row { display: flex; align-items: center; gap: 10px; font-size: 12px; font-weight: bold; }
+    .adjust-row span:first-child { width: 68px; flex-shrink: 0; }
+    .adjust-row input[type="range"] { flex: 1; accent-color: #f472b6; }
+    .adjust-row .val-disp { width: 42px; text-align: right; color: #38bdf8; font-family: monospace; }
+    .adjust-actions { display: flex; gap: 8px; margin-top: 4px; }
+    .btn-adjust-reset { flex: 1; padding: 10px; background: #334155; color: #cbd5e1; border: none; border-radius: 12px; font-weight: 800; font-size: 12px; cursor: pointer; }
+    .btn-adjust-save { flex: 2; padding: 10px; background: linear-gradient(135deg, #f472b6, #ec4899); color: white; border: none; border-radius: 12px; font-weight: 800; font-size: 12.5px; cursor: pointer; }
+  </style>
 </head>
-<body data-board-theme="kaya">
+<body>
 
-<canvas id="celebration-canvas"></canvas>
-<audio id="bgm-audio" src="nobunaga_song.mp3" loop preload="auto"></audio>
-
-<!-- 最上部：本丸大扁額・鍛造純金立体プレート ＆ 左右完全対称小判札ヘッダー -->
-<div class="top-header">
-  <div class="header-actions-col header-left-col">
-    <button class="header-btn btn-3d btn-guide" onclick="openGuideModal()" title="天下布武・兵法指南絵巻">📜 指南書</button>
-    <button class="header-btn btn-3d btn-theme-switch" id="btn-theme-switch" onclick="cycleBoardTheme()" title="将棋盤の材質・模様を着せ替え">🏯 盤替</button>
-  </div>
-  
-  <div class="header-title-plaque">
-    <div class="plaque-corner plaque-tl"></div>
-    <div class="plaque-corner plaque-tr"></div>
-    <div class="plaque-corner plaque-bl"></div>
-    <div class="plaque-corner plaque-br"></div>
-    <h1 class="app-title-main">
-      <span class="title-main-txt">将棋王 2026</span>
-      <span class="title-sub-txt">〜 天下統一・戦国決戦 〜</span>
-    </h1>
+  <!-- トースト通知 -->
+  <div id="toast-notification">
+    <span id="toast-icon">ℹ️</span>
+    <span id="toast-message">メッセージ</span>
   </div>
 
-  <div class="header-actions-col header-right-col">
-    <button class="header-btn btn-3d btn-book" id="btn-header-conquest" onclick="openConquestMapModal()" title="全国地図・国盗り進軍先">🗺 天下絵巻</button>
-    <button class="header-btn btn-3d btn-snd" id="sound-toggle" onclick="toggleSound()" title="音響・奏楽の切替">♪ 奏楽入</button>
-  </div>
-</div>
-
-<div class="main-wrapper" id="main-wrapper">
-  <!-- ① 戦況評定スリムバー -->
-  <div class="situation-banner" id="situation-banner">
-    <div class="situation-label-group">
-      <span class="situation-tag-title">戦況</span>
-      <div class="situation-badge badge-gokaku" id="situation-badge">【互角】</div>
-    </div>
-    <div class="situation-text" id="situation-text">両軍ともに布陣堅牢、白兵戦の機を伺っております。</div>
-    <button class="btn-situation-kifu btn-3d" id="btn-situation-kifu" onclick="openKifuModal()" title="当局の全棋譜と前線進撃マップを展開">📖 合戦絵巻</button>
-  </div>
-
-  <!-- 戦闘主ステージ：battle-theatre-layout -->
-  <div class="battle-theatre-layout" id="battle-theatre-layout">
-    
-    <!-- 【上陣：敵軍／後手陣武将 ＆ 持ち駒台】 -->
-    <div class="battle-section-top">
-      <div class="board-hand-dock dock-enemy" id="dock-enemy-wrapper" title="上陣持ち駒台">
-        <div class="dock-label" id="ai-dock-label">敵駒</div>
-        <div class="warlord-hand-box hand-box-enemy" id="ai-hand"></div>
+  <div id="pet-container">
+    <!-- 1. 最上部ステータスバー -->
+    <div class="top-header">
+      <div class="top-header-left">
+        <span id="clock-display">00:00</span>
+        <!-- 本型絵日記アルバムを開くボタン -->
+        <button type="button" class="btn-top-diary" id="top-diary-btn" title="これまでのクロ絵日記をアルバムで開くニャ！">📖 日記帳</button>
+        <div id="timer-active-badge">⏱️ <span id="timer-count-disp">03:00</span></div>
       </div>
 
-      <div class="warlord-panel panel-enemy" id="ai-panel">
-        <div class="warlord-avatar" id="ai-avatar-container" onclick="toggleWarlordAvatarView('ai')" title="肖像／家紋切替"></div>
+      <div id="status-badge-container">
+        <span id="status-text">👂 聴いてるニャ♪</span>
+      </div>
 
-        <div class="warlord-info-col">
-          <div class="warlord-header-row">
-            <div class="warlord-identity-block">
-              <div class="warlord-name-group">
-                <span class="warlord-name" id="ai-name-disp">木下藤吉郎</span>
-                <span class="warlord-strategist-badge" id="ai-strategist-badge" style="display:none;"></span>
-                <span class="warlord-result-plaque" id="ai-result-plaque" style="display:none;"></span>
-              </div>
-              <div class="warlord-desc-line">
-                <span class="warlord-desc" id="ai-clan-disp">尾張国｜織田足軽隊</span>
-              </div>
-            </div>
-
-            <!-- 【位置固定コンテナ】上段：棋譜の打手 / 下段：思案中・決断時間（右寄せ・幅固定） -->
-            <div class="warlord-move-time-stack" id="ai-move-time-stack">
-              <div class="stack-slot-top">
-                <span class="warlord-last-move-pill" id="ai-last-move-disp" style="display:none;"></span>
-              </div>
-              <div class="stack-slot-bottom">
-                <span class="warlord-thinking-inline timer-gold-box" id="ai-thinking-disp" style="display:none;"></span>
-                <button class="panel-select-btn btn-3d btn-select-enemy" onclick="openConquestMapModal()" id="btn-enemy-change" title="対戦する敵将を選定">⚔ 敵将変更</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="gauge-group">
-            <div class="gauge-label-row">
-              <span class="gauge-label-txt">兵力残存</span>
-              <span id="ai-troops-disp" class="troops-num-txt">3,000 / 3,000 兵</span>
-            </div>
-            <div class="troops-bar-frame">
-              <div id="ai-troops-bar" class="troops-bar-fill troops-enemy" style="width: 100%;"></div>
-            </div>
-          </div>
-
-          <div class="warlord-quote-row">
-            <div class="warlord-quote" id="ai-quote-disp">「草履取りとて天下を夢見候！ 足軽の意地、見せてくれよう！」</div>
-          </div>
-        </div>
+      <div class="top-header-right">
+        <span id="model-badge" class="model-badge lite">🐾 Flash Lite</span>
       </div>
     </div>
 
-    <!-- 【中陣：本丸対局場（将棋盤・タブレット用再生バー）】 -->
-    <div class="battle-section-middle">
-      <div class="board-wrapper">
-        <div class="shogi-board-frame">
-          <div class="board-top-row">
-            <div class="rank-index-container">
-              <div class="rank-cell">9</div><div class="rank-cell">8</div><div class="rank-cell">7</div>
-              <div class="rank-cell">6</div><div class="rank-cell">5</div><div class="rank-cell">4</div>
-              <div class="rank-cell">3</div><div class="rank-cell">2</div><div class="rank-cell">1</div>
-            </div>
-            <div class="rank-corner-spacer"></div>
-          </div>
+    <!-- 2. 会話タイムライン -->
+    <div id="chat-timeline"></div>
 
-          <div class="board-main-row">
-            <div id="board">
-              <div class="board-star" id="star-1"></div>
-              <div class="board-star" id="star-2"></div>
-              <div class="board-star" id="star-3"></div>
-              <div class="board-star" id="star-4"></div>
-            </div>
-            <div class="file-index-col">
-              <div class="file-cell">一</div><div class="file-cell">二</div><div class="file-cell">三</div>
-              <div class="file-cell">四</div><div class="file-cell">五</div><div class="file-cell">六</div>
-              <div class="file-cell">七</div><div class="file-cell">八</div><div class="file-cell">九</div>
-            </div>
-          </div>
-        </div>
+    <!-- 3. クロちゃん本体ステージ -->
+    <div class="pet-avatar-wrapper is-idling pose-idle-active" id="avatar-wrapper" title="なでなでで喜ぶニャ！">
+      <div class="cat-ground-shadow"></div>
+      <div id="idea-bulb">💡</div>
 
-        <div class="cutin-slot" id="cutin-slot">
-          <div class="cutin-banner" id="cutin-banner">
-            <div id="cutin-text" class="cutin-text">合戦開始！ いざ推して参る！</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- タブレット・PC専用：盤直下横長再生バースロット -->
-      <div class="replay-bar-slot desktop-tablet-only" id="replay-bar-slot-tablet">
-        <div class="replay-full-controls" id="replay-controls-tablet" style="display:none;">
-          <div class="replay-ctrl-left-group">
-            <button class="replay-step-btn btn-3d" onclick="stepReviewToStart()" title="最初（初期配置）へ">⏮</button>
-            <button class="replay-step-btn btn-3d" onclick="stepReview(-1)" title="一手戻る">◀</button>
-            <button class="kifu-auto-btn btn-3d btn-auto-replay" onclick="toggleAutoReplay()" title="自動再生">▶ 自動</button>
-            <button class="replay-step-btn btn-3d" onclick="stepReview(1)" title="一手進む">▶</button>
-            <button class="replay-step-btn btn-3d" onclick="stepReviewToEnd()" title="最新（終局）へ">⏭</button>
-            <button class="kifu-speed-btn btn-3d btn-replay-speed" onclick="cycleReplaySpeed()" title="速度切替">1x</button>
-          </div>
-          <button class="btn-finish-replay btn-3d" onclick="exitReplayMode()" title="対局へ復帰">⚔ 対局へ戻る</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 【下陣：自軍駒台＆スマホ用左下再生バー ＆ 自軍武将パネル】 -->
-    <div class="battle-section-bottom">
-      <div class="player-dock-row" id="player-dock-row">
-        <!-- スマートフォン専用：盤の左下スロット（自軍駒台の左隣にドッキング） -->
-        <div class="replay-bar-slot mobile-only" id="replay-bar-slot-mobile">
-          <div class="replay-full-controls" id="replay-controls-mobile" style="display:none;">
-            <div class="replay-ctrl-left-group">
-              <button class="replay-step-btn btn-3d" onclick="stepReviewToStart()" title="最初へ">⏮</button>
-              <button class="replay-step-btn btn-3d" onclick="stepReview(-1)" title="戻る">◀</button>
-              <button class="kifu-auto-btn btn-3d btn-auto-replay" onclick="toggleAutoReplay()" title="自動">▶ 自動</button>
-              <button class="replay-step-btn btn-3d" onclick="stepReview(1)" title="進む">▶</button>
-              <button class="replay-step-btn btn-3d" onclick="stepReviewToEnd()" title="最新へ">⏭</button>
-              <button class="kifu-speed-btn btn-3d btn-replay-speed" onclick="cycleReplaySpeed()" title="速度">1x</button>
-            </div>
-            <button class="btn-finish-replay btn-3d" onclick="exitReplayMode()" title="対局へ復帰">⚔ 対局へ戻る</button>
-          </div>
-        </div>
-
-        <!-- 自軍持ち駒台 -->
-        <div class="board-hand-dock dock-player" id="dock-player-wrapper" title="下陣持ち駒台">
-          <div class="warlord-hand-box hand-box-player" id="player-hand"></div>
-          <div class="dock-label" id="player-dock-label">自駒</div>
-        </div>
-      </div>
-
-      <div class="warlord-panel panel-player" id="player-panel">
-        <div class="warlord-avatar" id="player-avatar-container" onclick="toggleWarlordAvatarView('player')" title="肖像／家紋切替"></div>
-
-        <div class="warlord-info-col">
-          <div class="warlord-header-row">
-            <div class="warlord-identity-block">
-              <div class="warlord-name-group">
-                <span class="warlord-name" id="player-name-disp">真田幸村</span>
-                <span class="warlord-strategist-badge" id="player-strategist-badge">軍師:昌幸</span>
-                <span class="warlord-result-plaque" id="player-result-plaque" style="display:none;"></span>
-              </div>
-              <div class="warlord-desc-line">
-                <span class="warlord-desc" id="player-clan-disp">信濃国 ｜ 真田赤備隊</span>
-              </div>
-            </div>
-
-            <!-- 【位置固定コンテナ】上段：棋譜の打手 / 下段：思案中・決断時間（右寄せ・幅固定） -->
-            <div class="warlord-move-time-stack" id="player-move-time-stack">
-              <div class="stack-slot-top">
-                <span class="warlord-last-move-pill" id="player-last-move-disp" style="display:none;"></span>
-              </div>
-              <div class="stack-slot-bottom">
-                <span class="warlord-thinking-inline timer-gold-box" id="player-thinking-disp" style="display:none;"></span>
-                <button class="panel-select-btn btn-3d btn-select-player" onclick="openPlayerWarlordModal()" id="btn-player-change" title="自将を変更">🪭 自将変更</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="gauge-group">
-            <div class="gauge-label-row">
-              <span class="gauge-label-txt">兵力残存</span>
-              <span id="player-troops-disp" class="troops-num-txt">3,000 / 3,000 兵</span>
-            </div>
-            <div class="troops-bar-frame">
-              <div id="player-troops-bar" class="troops-bar-fill troops-player" style="width: 100%;"></div>
-            </div>
-          </div>
-
-          <div class="warlord-quote-row">
-            <div class="warlord-quote" id="player-quote-disp">「不惜身命！ この一手に命を懸ける！」</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- ④ 盤下：大判軍令高札 -->
-  <div class="order-message-banner" id="order-message-banner">
-    <div class="order-tag-badge badge-tag-player" id="order-tag-badge" title="伝令種別">
-      <span class="tag-badge-row" id="tag-badge-row1">自軍</span>
-      <span class="tag-badge-row" id="tag-badge-row2">手番</span>
-    </div>
-
-    <div class="order-strategist-face" id="order-strategist-face" style="display:none;" title="伝令・軍監">
-      <div class="strategist-face-img-box" id="strategist-face-img-box"></div>
-      <div class="strategist-name-tag" id="strategist-face-name-tag">昌幸</div>
-    </div>
-
-    <div class="order-message-center" id="order-message-center">
-      <div class="order-row-primary">
-        <div class="order-line-primary" id="order-line-primary">「自将」と「敵将」を選び、「対局開始」を押されよ。</div>
-        <div class="order-actions-slot" id="order-actions-slot">
-          <button class="alt-tactic-btn btn-3d" id="btn-alt-tactic" onclick="cycleNextTacticsHint()" style="display:none;" title="別の策を問う">🪭 別の策</button>
-          <button class="btn-exhibition-quit-inline btn-3d" id="btn-exhibition-quit" onclick="stopExhibition()" style="display:none;" title="御前試合終了">⚔ 観戦終了</button>
-        </div>
-      </div>
-      <div class="order-row-sub">
-        <div class="order-line-sub" id="order-line-sub">陣容が定まり次第、「対局開始」にて振り駒を執り行われよ！</div>
-        <div class="order-sub-actions-slot">
-          <button class="rivalry-story-btn btn-3d" id="btn-rivalry-story" onclick="openRivalryInGuide()" style="display:none;">📜 宿命秘話</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-</div>
-
-<!-- 最下部コマンドバー（初期状態連動設定） -->
-<div class="bottom-command-bar" id="bottom-command-bar">
-  <button class="cmd-btn btn-3d btn-hint" id="btn-master-hint" onclick="showMasterHint()" title="専属軍師に次の一手を問う" disabled>💡 軍師進言</button>
-  <button class="cmd-btn btn-3d btn-undo" id="btn-cmd-undo" onclick="undoMove()" title="局面を二手前まで巻き戻す" disabled>🪭 待った</button>
-  <button class="cmd-btn btn-3d btn-start-hero" id="furigoma-btn" onclick="openFurigomaModal()" title="振り駒の儀を執り行い合戦を開始">⚜ 対局開始</button>
-  <button class="cmd-btn btn-3d btn-exhibition-cmd" id="btn-cmd-exhibition" onclick="openExhibitionModal()" title="武芸観戦">⚔ 御前試合</button>
-  <button class="cmd-btn btn-3d btn-history" onclick="openHistoryModal()" title="天下合戦勲功録（対戦戦歴絵巻）">📜 勲功録</button>
-  <button class="cmd-btn btn-3d btn-surrender" id="btn-cmd-surrender" onclick="surrenderGame()" title="潔く負けを認める" disabled>🏳 投了</button>
-</div>
-
-<!-- 振り駒モーダル -->
-<div id="furigoma-modal" class="furigoma-modal">
-  <div class="furigoma-board">
-    <div style="font-size:20px; color:#ffd700; font-weight:900; letter-spacing:1px;">【振り駒の儀】</div>
-    <div style="font-size:11px; color:#ebdcb9; margin:6px 0 14px;">歩を五枚振り、先手・後手を定めます</div>
-    <div class="furigoma-pieces-row" id="furigoma-pieces-row"></div>
-    <div id="furigoma-result-text" style="font-size:15px; font-weight:900; color:#ffe699; min-height:24px;">天運を見届けております…</div>
-  </div>
-</div>
-
-<!-- 御前試合モーダル -->
-<div id="exhibition-modal" class="modal-overlay" style="display: none;">
-  <div class="modal-content exhibition-modal-box">
-    <div class="modal-gold-plaque">
-      <div class="plaque-corner plaque-tl"></div>
-      <div class="plaque-corner plaque-tr"></div>
-      <div class="plaque-corner plaque-bl"></div>
-      <div class="plaque-corner plaque-br"></div>
-      <h3 class="modal-title-shikkoku">⚔ 御前試合・武芸観戦（先手陣・後手陣 選定）</h3>
-    </div>
-    
-    <div class="exhibition-guide-plaque">
-      <span>💡</span>
-      <span>戦国武将・オープンソース思考エンジンをWebブラウザへ独自移植した客分英傑・一世名人より【先手・後手】を選定し、天下分け目の御前試合を鑑賞できます。</span>
-    </div>
-
-    <div class="exhibition-mobile-tab-bar" id="exhibition-mobile-tabs">
-      <button class="exhibition-mobile-tab-btn btn-3d active" id="btn-exh-tab-sente" onclick="switchExhibitionMobileTab('sente')"></button>
-      <button class="exhibition-mobile-tab-btn btn-3d" id="btn-exh-tab-gote" onclick="switchExhibitionMobileTab('gote')"></button>
-    </div>
-
-    <!-- 左右2列 -->
-    <div class="exhibition-vs-container" id="exhibition-vs-container">
-      <div class="exhibition-side-col mobile-active-col" id="exhibition-col-sente">
-        <div class="exhibition-side-title" id="exhibition-side-title-sente">【先手陣】</div>
-        <div class="exhibition-list-header-fixed">📜 控え武将一覧（全十九傑）</div>
-        <div class="exhibition-avatar-pick-list" id="exhibition-sente-pick-list"></div>
-      </div>
-
-      <div class="exhibition-side-col" id="exhibition-col-gote">
-        <div class="exhibition-side-title" id="exhibition-side-title-gote">【後手陣】</div>
-        <div class="exhibition-list-header-fixed">📜 控え武将一覧（全十九傑）</div>
-        <div class="exhibition-avatar-pick-list" id="exhibition-gote-pick-list"></div>
-      </div>
-    </div>
-
-    <div class="exhibition-config-row">
-      <div class="config-group">
-        <span class="config-label">対局方式（思考時間とテンポ）:</span>
-        <div style="display:flex; gap:6px;">
-          <button class="btn-speed-choice active" id="btn-speed-normal" onclick="setExhibitionModalSpeed('normal')">通常本将棋（じっくり・深慮）</button>
-          <button class="btn-speed-choice" id="btn-speed-fast" onclick="setExhibitionModalSpeed('fast')">早指し戦（即断・切れ味）</button>
-        </div>
-      </div>
-      <div class="exhibition-mode-desc-plaque" id="exhibition-mode-desc-plaque">
-        ※<b>通常本将棋</b>＝最大8.5秒考慮。高段位・軍師AI・将棋名人が本来の神算鬼謀と最強棋力を発揮します。<br>
-        ※<b>早指し戦</b>＝思考時間が<b>2.5秒に制限</b>されるため、最強AIでも見落としが生じて即断即決の乱戦・波乱が起きやすくなります。
-      </div>
-    </div>
-
-    <div class="modal-buttons exhibition-bottom-buttons">
-      <div class="exh-btn-spacer"></div>
-      <button class="btn-3d modal-action-btn btn-start-exhibition is-ready-pulse" id="btn-start-exhibition-main" onclick="startExhibitionFromModal()">⚔ 御前試合 開始</button>
-      <button class="btn-3d modal-close-btn" onclick="closeExhibitionModal()">閉じる</button>
-    </div>
-  </div>
-</div>
-
-<!-- 天下統一・国盗り絵巻マップ（閉じる導線配備） -->
-<div id="conquest-modal" class="modal-overlay" style="display: none;">
-  <div class="modal-content conquest-modal-box">
-    <div class="modal-gold-plaque" style="justify-content:space-between;">
-      <div class="plaque-corner plaque-tl"></div>
-      <div class="plaque-corner plaque-tr"></div>
-      <div class="plaque-corner plaque-bl"></div>
-      <div class="plaque-corner plaque-br"></div>
-      <h3 class="modal-title-shikkoku" style="margin-left:auto; margin-right:auto;">🗺 天下統一・国盗り絵巻</h3>
-      <button class="conquest-player-link-btn btn-3d" id="btn-conquest-player-link" onclick="openPlayerWarlordModal()" style="z-index:3;">🪭 自将変更</button>
-    </div>
-    
-    <div class="conquest-header-stat">
-      <span>天下布武：<b id="conquest-pct-disp" style="color:#ffd700;">0%</b></span>
-      <div class="conquest-progress-fill">
-        <div class="conquest-progress-bar" id="conquest-pct-bar"></div>
-      </div>
-      <span id="conquest-cleared-count" style="color:#ffb74d;">0 / 10 将平定</span>
-    </div>
-
-    <div class="conquest-troops-growth-banner">
-      <span class="growth-label">🏯 我が軍勢の総動員力：</span>
-      <span class="growth-val" id="conquest-total-troops-disp">3,000 兵</span>
-      <span class="growth-sub" id="conquest-troops-bonus-disp">（平定ボーナス：+0 兵）</span>
-    </div>
-
-    <div class="conquest-map-stage">
-      <svg id="japan-conquest-svg" viewBox="0 0 480 180">
-        <defs>
-          <linearGradient id="map-sea-grad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#0e1a2c"/><stop offset="100%" stop-color="#030710"/>
-          </linearGradient>
-          <linearGradient id="map-land-grad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#e0b84c"/><stop offset="45%" stop-color="#99701e"/><stop offset="100%" stop-color="#4d3202"/>
-          </linearGradient>
-        </defs>
-        <rect width="480" height="180" fill="url(#map-sea-grad)"/>
-        <path d="M 0,25 Q 70,8 140,25 T 280,20 Q 360,8 440,25 L 480,0 L 0,0 Z" fill="#ffd700" opacity="0.18"/>
-        <path d="M 0,150 Q 90,168 200,146 T 380,158 L 480,180 L 0,180 Z" fill="#ffd700" opacity="0.15"/>
-        <g fill="url(#map-land-grad)" stroke="#ffd700" stroke-width="0.9" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.9))">
-          <path d="M 50,132 Q 40,146 46,162 Q 65,166 74,148 Q 72,132 60,126 Z"/>
-          <path d="M 100,136 Q 130,130 148,142 Q 136,154 112,150 Z"/>
-          <path d="M 74,124 Q 100,116 136,122 Q 168,126 190,112 Q 220,114 256,102 Q 288,86 320,96 Q 346,86 366,62 Q 386,42 392,18 Q 376,26 365,46 Q 344,66 314,72 Q 282,74 246,84 Q 200,96 158,102 Q 112,110 74,124 Z"/>
-          <path d="M 392,18 Q 412,12 432,8 Q 442,18 426,24 Z"/>
+      <!-- 変身の煙（モクモクパフ）SVG -->
+      <svg id="transform-smoke" viewBox="0 0 200 160">
+        <g fill="#ffffff" stroke="#cbd5e1" stroke-width="2.5" opacity="0.95">
+          <circle cx="100" cy="80" r="38" />
+          <circle cx="65" cy="88" r="30" />
+          <circle cx="135" cy="88" r="30" />
+          <circle cx="82" cy="52" r="28" />
+          <circle cx="120" cy="54" r="26" />
+          <circle cx="44" cy="98" r="18" fill="#f8fafc" />
+          <circle cx="156" cy="98" r="18" fill="#f8fafc" />
         </g>
-        <path d="M 68,142 L 120,122 L 175,112 L 230,102 L 290,92 L 325,92" fill="none" stroke="#ffe57f" stroke-width="1.3" stroke-dasharray="3,3"/>
-        <g class="map-province-node" id="map-node-1" onclick="selectConquestProvince(1)"><circle cx="215" cy="108" r="9" fill="#30170a" stroke="#ffd700" stroke-width="1.8"/><text x="215" y="125" font-size="8" fill="#ffe57f" text-anchor="middle" font-weight="900">尾張</text></g>
-        <g class="map-province-node" id="map-node-2" onclick="selectConquestProvince(2)"><circle cx="235" cy="98" r="9" fill="#30170a" stroke="#ffd700" stroke-width="1.8"/><text x="235" y="90" font-size="8" fill="#ffe57f" text-anchor="middle" font-weight="900">加賀</text></g>
-        <g class="map-province-node" id="map-node-3" onclick="selectConquestProvince(3)"><circle cx="195" cy="96" r="9" fill="#30170a" stroke="#ffd700" stroke-width="1.8"/><text x="195" y="86" font-size="8" fill="#ffe57f" text-anchor="middle" font-weight="900">越前</text></g>
-        <g class="map-province-node" id="map-node-4" onclick="selectConquestProvince(4)"><circle cx="180" cy="112" r="9" fill="#30170a" stroke="#ffd700" stroke-width="1.8"/><text x="180" y="127" font-size="8" fill="#ffe57f" text-anchor="middle" font-weight="900">近江</text></g>
-        <g class="map-province-node" id="map-node-5" onclick="selectConquestProvince(5)"><circle cx="230" cy="106" r="9" fill="#30170a" stroke="#ffd700" stroke-width="1.8"/><text x="230" y="122" font-size="8" fill="#ffe57f" text-anchor="middle" font-weight="900">美濃</text></g>
-        <g class="map-province-node" id="map-node-6" onclick="selectConquestProvince(6)"><circle cx="295" cy="70" r="10" fill="#30170a" stroke="#ffd700" stroke-width="1.8"/><text x="295" y="58" font-size="8" fill="#ffe57f" text-anchor="middle" font-weight="900">越後</text></g>
-        <g class="map-province-node" id="map-node-7" onclick="selectConquestProvince(7)"><circle cx="275" cy="96" r="10" fill="#30170a" stroke="#ffd700" stroke-width="1.8"/><text x="275" y="112" font-size="8" fill="#ffe57f" text-anchor="middle" font-weight="900">甲斐</text></g>
-        <g class="map-province-node" id="map-node-8" onclick="selectConquestProvince(8)"><circle cx="168" cy="104" r="11" fill="#30170a" stroke="#ffd700" stroke-width="2.2"/><text x="168" y="92" font-size="8.5" fill="#ffd700" text-anchor="middle" font-weight="900">安土</text></g>
-        <g class="map-province-node" id="map-node-9" onclick="selectConquestProvince(9)"><circle cx="148" cy="118" r="12" fill="#30170a" stroke="#ffd700" stroke-width="2.2"/><text x="148" y="136" font-size="9" fill="#ffd700" text-anchor="middle" font-weight="900">大坂</text></g>
-        <g class="map-province-node" id="map-node-10" onclick="selectConquestProvince(10)"><circle cx="325" cy="92" r="13" fill="#30170a" stroke="#ffd700" stroke-width="2.5"/><text x="325" y="112" font-size="9.5" fill="#ffd700" text-anchor="middle" font-weight="900">江戸</text></g>
+        <g fill="#f472b6">
+          <polygon points="100,20 103,28 111,31 103,34 100,42 97,34 89,31 97,28" />
+          <polygon points="50,45 52,50 57,52 52,54 50,59 48,54 43,52 48,50" />
+          <polygon points="150,45 152,50 157,52 152,54 150,59 148,54 143,52 148,50" />
+        </g>
       </svg>
+
+      <div id="cat-stage-box">
+        <!-- リアル写真モード用フレーム -->
+        <div class="cat-frame active" id="frame-idle">
+          <img src="idle.jpg" alt="待機中" class="cat-avatar-img" id="img-idle">
+          <div class="accessory-layer" id="acc-idle"></div>
+        </div>
+        <div class="cat-frame" id="frame-talking">
+          <img src="talking.jpg" alt="お話し中" class="cat-avatar-img" id="img-talking">
+          <div class="accessory-layer" id="acc-talking"></div>
+        </div>
+        <div class="cat-frame" id="frame-thinking">
+          <img src="thinking.jpg" alt="考え中" class="cat-avatar-img" id="img-thinking">
+          <div class="accessory-layer" id="acc-thinking"></div>
+        </div>
+        <div class="cat-frame" id="frame-happy">
+          <img src="happy.jpg" alt="大喜び" class="cat-avatar-img" id="img-happy">
+          <div class="accessory-layer" id="acc-happy"></div>
+        </div>
+
+        <!-- ノルウェージャン「クロちゃん」ベクターアニメーション -->
+        <svg viewBox="0 0 200 240" id="cat-vector-avatar" class="active-mode">
+          <defs>
+            <radialGradient id="grad-fur-black" cx="50%" cy="40%" r="60%">
+              <stop offset="0%" stop-color="#262933"/>
+              <stop offset="60%" stop-color="#14161f"/>
+              <stop offset="100%" stop-color="#0a0c12"/>
+            </radialGradient>
+
+            <linearGradient id="grad-silver-ruff" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#f1f5f9"/>
+              <stop offset="35%" stop-color="#cbd5e1"/>
+              <stop offset="70%" stop-color="#94a3b8"/>
+              <stop offset="100%" stop-color="#475569"/>
+            </linearGradient>
+
+            <linearGradient id="grad-tail-smoke" x1="0%" y1="100%" x2="50%" y2="0%">
+              <stop offset="0%" stop-color="#0f1118"/>
+              <stop offset="65%" stop-color="#334155"/>
+              <stop offset="100%" stop-color="#94a3b8"/>
+            </linearGradient>
+
+            <radialGradient id="grad-emerald-eye" cx="45%" cy="40%" r="55%">
+              <stop offset="0%" stop-color="#a7f3d0"/>
+              <stop offset="45%" stop-color="#10b981"/>
+              <stop offset="85%" stop-color="#047857"/>
+              <stop offset="100%" stop-color="#064e3b"/>
+            </radialGradient>
+
+            <pattern id="stripe-bw-vector" width="8" height="8" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+              <rect width="4" height="8" fill="#111827"/>
+              <rect x="4" width="4" height="8" fill="#ffffff"/>
+            </pattern>
+          </defs>
+
+          <!-- POSE 1: 待機中 -->
+          <g id="pose-idle" class="pose-group">
+            <g class="anim-idle-tail">
+              <path d="M125 195 C165 185 195 150 188 115 C182 85 195 72 196 68 C188 76 172 98 162 125 C152 152 144 178 128 194 Z" fill="url(#grad-tail-smoke)"/>
+              <path d="M136 190 C168 180 182 148 178 120 C174 100 184 88 188 82 C180 92 166 114 156 138 C148 160 140 182 136 190 Z" fill="#cbd5e1" opacity="0.45"/>
+            </g>
+            <g class="anim-idle-body">
+              <path d="M52 226 C42 185 50 145 54 130 C48 120 48 100 56 85 C68 45 82 50 100 50 C118 50 132 45 144 85 C152 100 152 120 146 130 C150 145 158 185 148 226 Z" fill="url(#grad-fur-black)"/>
+              <ellipse cx="80" cy="225" rx="14" ry="9" fill="#14161f"/>
+              <ellipse cx="120" cy="225" rx="14" ry="9" fill="#14161f"/>
+              <g class="anim-idle-ruff">
+                <path d="M66 128 C55 145 60 178 80 198 C92 210 108 210 120 198 C140 178 145 145 134 128 Z" fill="url(#grad-silver-ruff)"/>
+                <path d="M76 134 Q90 120 100 135 Q110 120 124 134 Q132 165 118 190 Q100 204 82 190 Q68 165 76 134 Z" fill="#f8fafc" opacity="0.9"/>
+                <path d="M85 140 Q100 128 115 140 Q122 168 108 185 Q100 192 92 185 Q78 168 85 140 Z" fill="#ffffff"/>
+                <path d="M100 138 L100 188 M90 148 L94 176 M110 148 L106 176 M80 158 L86 174 M120 158 L114 174" stroke="#94a3b8" stroke-width="1.3" stroke-linecap="round" opacity="0.5"/>
+              </g>
+            </g>
+          </g>
+
+          <!-- POSE 2: お話し中 -->
+          <g id="pose-talking" class="pose-group">
+            <g class="anim-talking-tail">
+              <path d="M136 175 C160 160 188 120 182 85 C178 60 192 42 196 35 C186 46 172 70 164 96 C155 125 148 155 136 175 Z" fill="url(#grad-tail-smoke)"/>
+              <path d="M142 170 C165 155 178 122 174 95 C170 76 182 60 186 52 C178 64 165 88 156 114 C148 140 142 160 142 170 Z" fill="#cbd5e1" opacity="0.45"/>
+            </g>
+            <path d="M56 226 C48 180 52 145 56 130 C48 120 50 100 58 85 C68 45 82 50 100 50 C118 50 132 45 142 85 C150 100 152 120 144 130 C148 145 152 180 144 226 Z" fill="url(#grad-fur-black)"/>
+            <rect x="68" y="180" width="18" height="48" rx="9" fill="#14161f"/>
+            <rect x="114" y="180" width="18" height="48" rx="9" fill="#14161f"/>
+            <path d="M68 126 C56 142 62 175 80 192 C92 204 108 204 120 192 C138 175 144 142 132 126 Z" fill="url(#grad-silver-ruff)"/>
+            <path d="M78 132 Q100 118 122 132 Q130 160 118 184 Q100 198 82 184 Q70 160 78 132 Z" fill="#ffffff" opacity="0.95"/>
+          </g>
+
+          <!-- POSE 3: 考え中 -->
+          <g id="pose-thinking" class="pose-group">
+            <path d="M125 195 C165 185 195 150 188 115 C182 85 195 72 196 68 C188 76 172 98 162 125 Z" fill="url(#grad-tail-smoke)"/>
+            <path d="M52 226 C42 185 50 145 54 130 C48 120 48 100 56 85 C68 45 82 50 100 50 C118 50 132 45 144 85 C152 100 152 120 146 130 C150 145 158 185 148 226 Z" fill="url(#grad-fur-black)"/>
+            <ellipse cx="125" cy="225" rx="14" ry="9" fill="#14161f"/>
+            <path d="M66 128 C55 145 60 178 80 198 C92 210 108 210 120 198 C140 178 145 145 134 128 Z" fill="url(#grad-silver-ruff)"/>
+            <path d="M78 132 Q100 118 122 132 Q130 160 118 184 Q100 198 82 184 Q70 160 78 132 Z" fill="#ffffff" opacity="0.95"/>
+            <g class="anim-thinking-paw">
+              <path d="M60 210 C55 180 72 145 84 126 C88 120 94 122 92 128 C84 145 74 180 74 210 Z" fill="#181a24"/>
+              <ellipse cx="86" cy="122" rx="9" ry="8" fill="#262933"/>
+              <ellipse cx="86" cy="122" rx="4.5" ry="4" fill="#fda4af" opacity="0.8"/>
+            </g>
+          </g>
+
+          <!-- POSE 4: 大喜び -->
+          <g id="pose-happy" class="pose-group">
+            <g class="anim-happy-tail">
+              <path d="M136 175 C165 150 195 110 188 75 C184 50 196 36 200 30 C190 40 175 65 166 92 C156 122 148 152 136 175 Z" fill="url(#grad-tail-smoke)"/>
+            </g>
+            <path d="M54 226 C46 175 52 145 56 130 C48 120 50 100 58 85 C68 45 82 50 100 50 C118 50 132 45 142 85 C150 100 152 120 144 130 C148 145 154 175 146 226 Z" fill="url(#grad-fur-black)"/>
+            <ellipse cx="78" cy="228" rx="13" ry="8" fill="#14161f"/>
+            <ellipse cx="122" cy="228" rx="13" ry="8" fill="#14161f"/>
+            <path d="M68 126 C56 142 62 175 80 192 C92 204 108 204 120 192 C138 175 144 142 132 126 Z" fill="url(#grad-silver-ruff)"/>
+            <path d="M78 132 Q100 118 122 132 Q130 160 118 184 Q100 198 82 184 Q70 160 78 132 Z" fill="#ffffff" opacity="0.95"/>
+            <g class="anim-happy-arms">
+              <path d="M62 145 C50 125 38 95 44 76 C46 70 54 74 56 80 C54 95 65 125 72 140 Z" fill="#181a24"/>
+              <ellipse cx="44" cy="74" rx="11" ry="10" fill="#262933"/>
+              <ellipse cx="44" cy="74" rx="5.5" ry="4.5" fill="#fda4af"/>
+              <circle cx="38" cy="67" r="2.2" fill="#fda4af"/>
+              <circle cx="43" cy="64" r="2.2" fill="#fda4af"/>
+              <circle cx="49" cy="65" r="2.2" fill="#fda4af"/>
+              <circle cx="53" cy="70" r="2.0" fill="#fda4af"/>
+
+              <path d="M138 145 C150 125 162 95 156 76 C154 70 146 74 144 80 C146 95 135 125 128 140 Z" fill="#181a24"/>
+              <ellipse cx="156" cy="74" rx="11" ry="10" fill="#262933"/>
+              <ellipse cx="156" cy="74" rx="5.5" ry="4.5" fill="#fda4af"/>
+              <circle cx="162" cy="67" r="2.2" fill="#fda4af"/>
+              <circle cx="157" cy="64" r="2.2" fill="#fda4af"/>
+              <circle cx="151" cy="65" r="2.2" fill="#fda4af"/>
+              <circle cx="147" cy="70" r="2.0" fill="#fda4af"/>
+            </g>
+          </g>
+
+          <!-- お顔ユニット -->
+          <g id="head-unit" class="anim-idle-head">
+            <g class="anim-ear-l">
+              <path d="M50 75 C48 58 62 26 74 18 C77 16 80 18 81 22 C86 36 90 54 88 70 Z" fill="url(#grad-fur-black)"/>
+              <path d="M55 70 C54 56 63 32 74 24 C76 26 83 48 82 66 Z" fill="#fbcfe8" opacity="0.9"/>
+              <path d="M52 68 Q68 54 72 65 Q66 45 76 54 Q70 38 76 34" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+              <path d="M58 66 Q70 52 78 62" stroke="#f1f5f9" stroke-width="2.0" stroke-linecap="round" fill="none"/>
+              <path d="M74 18 Q72 10 67 8" stroke="#181a24" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+            </g>
+
+            <g class="anim-ear-r">
+              <path d="M150 75 C152 58 138 26 126 18 C123 16 120 18 119 22 C114 36 110 54 112 70 Z" fill="url(#grad-fur-black)"/>
+              <path d="M145 70 C146 56 137 32 126 24 C124 26 117 48 118 66 Z" fill="#fbcfe8" opacity="0.9"/>
+              <path d="M148 68 Q132 54 128 65 Q134 45 124 54 Q130 38 124 34" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+              <path d="M142 66 Q130 52 122 62" stroke="#f1f5f9" stroke-width="2.0" stroke-linecap="round" fill="none"/>
+              <path d="M126 18 Q128 10 133 8" stroke="#181a24" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+            </g>
+
+            <path d="M62 74 C46 86 48 100 58 108 C50 112 54 122 70 124 C82 126 92 129 100 129 C108 129 118 126 130 124 C146 122 150 112 142 108 C152 100 154 86 138 74 C124 64 76 64 62 74 Z" fill="url(#grad-fur-black)"/>
+            <path d="M66 105 C60 111 66 117 76 119 C70 115 68 109 66 105 Z" fill="#94a3b8" opacity="0.5"/>
+            <path d="M134 105 C140 111 134 117 124 119 C130 115 132 109 134 105 Z" fill="#94a3b8" opacity="0.5"/>
+
+            <g id="eyes-normal" class="cat-eye-blink" style="transform-origin: 100px 96px;">
+              <ellipse cx="77" cy="96" rx="11" ry="14" fill="url(#grad-emerald-eye)"/>
+              <ellipse cx="77" cy="96" rx="4.5" ry="11.5" fill="#090d16"/>
+              <circle cx="74" cy="92" r="3.6" fill="#ffffff"/>
+              <circle cx="79" cy="100" r="1.6" fill="#ffffff" opacity="0.85"/>
+
+              <ellipse cx="123" cy="96" rx="11" ry="14" fill="url(#grad-emerald-eye)"/>
+              <ellipse cx="123" cy="96" rx="4.5" ry="11.5" fill="#090d16"/>
+              <circle cx="120" cy="92" r="3.6" fill="#ffffff"/>
+              <circle cx="125" cy="100" r="1.6" fill="#ffffff" opacity="0.85"/>
+            </g>
+
+            <g id="eyes-happy" style="display:none;">
+              <path d="M66 98 Q77 84 88 98" stroke="#10b981" stroke-width="4.8" stroke-linecap="round" fill="none"/>
+              <path d="M66 98 Q77 84 88 98" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+              <path d="M112 98 Q123 84 134 98" stroke="#10b981" stroke-width="4.8" stroke-linecap="round" fill="none"/>
+              <path d="M112 98 Q123 84 134 98" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+            </g>
+
+            <polygon points="100,107 94,101 106,101" fill="#f472b6"/>
+
+            <g id="mouth-closed">
+              <path d="M94 109 Q100 114 100 109 Q100 114 106 109" stroke="#64748b" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+            </g>
+
+            <g id="mouth-talking" style="display:none;" class="mouth-talking">
+              <path d="M93 108 Q100 124 107 108 Z" fill="#be123c"/>
+              <ellipse cx="100" cy="116" rx="4.5" ry="3.5" fill="#fb7185"/>
+              <polygon points="95,108 96,111 97,108" fill="#ffffff"/>
+              <polygon points="103,108 104,111 105,108" fill="#ffffff"/>
+            </g>
+
+            <g id="mouth-happy" style="display:none;">
+              <path d="M91 108 Q100 127 109 108 Z" fill="#9f1239" stroke="#be123c" stroke-width="1.5"/>
+              <ellipse cx="100" cy="119" rx="6" ry="4.5" fill="#f43f5e"/>
+              <polygon points="94,108 95,112 97,108" fill="#ffffff"/>
+              <polygon points="103,108 105,112 106,108" fill="#ffffff"/>
+            </g>
+
+            <path d="M64 106 Q44 104 28 108" stroke="#e2e8f0" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.9"/>
+            <path d="M63 112 Q44 114 30 120" stroke="#e2e8f0" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.9"/>
+            <path d="M136 106 Q156 104 172 108" stroke="#e2e8f0" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.9"/>
+            <path d="M137 112 Q156 114 170 120" stroke="#e2e8f0" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.9"/>
+
+            <!-- おてつだい装備 -->
+            <g id="cat-vector-accessories">
+              <g id="vec-acc-hat">
+                <path d="M72 50 Q100 42 128 50 L124 58 Q100 50 76 58 Z" fill="#1e293b"/>
+                <polygon points="100,22 148,36 100,50 52,36" fill="#0f172a" stroke="#334155" stroke-width="1.3"/>
+                <circle cx="100" cy="36" r="3" fill="#eab308"/>
+                <g class="mortar-tassel">
+                  <path d="M100 36 Q124 38 130 56" stroke="#ca8a04" stroke-width="2.2" fill="none"/>
+                  <polygon points="128,56 133,56 135,70 126,70" fill="#eab308"/>
+                </g>
+              </g>
+              <g id="vec-acc-glasses">
+                <circle cx="77" cy="96" r="17.5" fill="rgba(255, 255, 255, 0.16)" stroke="#090d16" stroke-width="3.8"/>
+                <circle cx="77" cy="96" r="17.5" fill="none" stroke="url(#stripe-bw-vector)" stroke-width="2.6"/>
+                <circle cx="123" cy="96" r="17.5" fill="rgba(255, 255, 255, 0.16)" stroke="#090d16" stroke-width="3.8"/>
+                <circle cx="123" cy="96" r="17.5" fill="none" stroke="url(#stripe-bw-vector)" stroke-width="2.6"/>
+                <path d="M94.5 95 Q100 90 105.5 95" stroke="#090d16" stroke-width="3.8" fill="none"/>
+              </g>
+            </g>
+          </g>
+        </svg>
+      </div>
+
+      <button class="btn-snack-floating" id="snack-btn" title="おやつ（ちゅ〜る）をあげるニャ！">
+        <span>🐟</span><span>おやつ</span>
+      </button>
+
+      <button class="btn-transform-floating" id="transform-btn" title="リアルとイラストを変身するニャ！">
+        <span>✨</span><span>変身</span>
+      </button>
     </div>
 
-    <div class="conquest-warlord-list" id="conquest-warlord-list"></div>
-    <div class="modal-buttons" style="justify-content:space-between;">
-      <button class="btn-3d modal-action-btn" id="btn-conquest-confirm" onclick="confirmConquestTarget()">この敵将へ進軍</button>
-      <button class="btn-3d modal-close-btn" onclick="closeConquestMapModal()">閉じる</button>
+    <!-- 4. 最下部操作バー ＆ バージョン刻印 -->
+    <div class="bottom-controls">
+      <div class="action-bar" id="action-bar">
+        <button class="btn-mode-toggle" id="mode-toggle-btn" title="なかよし雑談とおてつだいを切り替えるニャ！">
+          <span id="mode-icon">🐾</span>
+          <span id="mode-text">なかよし</span>
+        </button>
+
+        <button class="btn-photo" id="photo-action-btn" title="写真を撮ってクロちゃんに見せるニャ！">
+          <span>📷</span><span>写真</span>
+        </button>
+        <input type="file" id="camera-photo-input" accept="image/*" capture="environment" style="display:none;">
+
+        <button class="btn-stop" id="stop-action-btn" title="考え中・お話しを途中で取り消すニャ！">
+          <span>🛑</span><span>ストップ</span>
+        </button>
+
+        <button class="btn-action" id="pause-btn">
+          <span id="pause-icon" style="font-size:15px;">🟢</span>
+          <span id="pause-text">会話中</span>
+        </button>
+
+        <button class="btn-circle" id="settings-btn" title="設定・記憶・トリセツ">⚙️</button>
+      </div>
+
+      <!-- ★ 画面最下部の控えめな極小バージョン表示 -->
+      <div class="app-version-tag">🐾 クロちゃん v1.0.0</div>
     </div>
   </div>
-</div>
 
-<!-- 自将選択モーダル（閉じる導線配備） -->
-<div id="player-warlord-modal" class="modal-overlay" style="display: none;">
-  <div class="modal-content my-warlord-modal-box">
-    <div class="modal-gold-plaque">
-      <div class="plaque-corner plaque-tl"></div>
-      <div class="plaque-corner plaque-tr"></div>
-      <div class="plaque-corner plaque-bl"></div>
-      <div class="plaque-corner plaque-br"></div>
-      <h3 class="modal-title-shikkoku">🪭 我が武将を選択せよ（主役五傑 ＆ 専属軍師）</h3>
-    </div>
-    <div class="warlord-card-list" id="player-warlord-list"></div>
-    <div class="modal-buttons" style="justify-content:space-between;">
-      <button class="btn-3d modal-action-btn" id="btn-player-warlord-confirm" onclick="confirmPlayerWarlord()">この武将で出陣</button>
-      <button class="btn-3d modal-close-btn" onclick="closePlayerWarlordModal()">閉じる</button>
+  <!-- 本型絵日記アルバム -->
+  <div id="book-studio-modal">
+    <div class="book-studio-window">
+      <div class="studio-top-bar">
+        <div class="studio-top-title">
+          <span>📖</span>
+          <span>クロの思い出絵日記アルバム</span>
+        </div>
+        <button type="button" class="btn-diary-close" id="btn-close-studio" title="閉じる">✕</button>
+      </div>
+
+      <div class="studio-main-body">
+        <div class="studio-diary-book-pane">
+          <div class="book-pager-bar">
+            <button type="button" class="btn-pager" id="btn-studio-prev-page">◀ 前の日</button>
+            <span class="pager-page-info" id="studio-page-indicator">1 / 1 日目</span>
+            <button type="button" class="btn-pager" id="btn-studio-next-page">次の日 ▶</button>
+          </div>
+
+          <div id="studio-diary-single-page" style="flex:1;display:flex;flex-direction:column;"></div>
+        </div>
+      </div>
+
+      <div class="studio-footer-bar">
+        <button type="button" class="btn-studio-save-exit" id="btn-studio-save-exit">💾 保存して閉じる</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- 合戦戦歴帳モーダル -->
-<div id="battle-history-modal" class="modal-overlay" style="display: none;">
-  <div class="modal-content battle-history-modal-box">
-    <div class="history-header-box">
-      <div class="modal-gold-plaque">
-        <div class="plaque-corner plaque-tl"></div>
-        <div class="plaque-corner plaque-tr"></div>
-        <div class="plaque-corner plaque-bl"></div>
-        <div class="plaque-corner plaque-br"></div>
-        <h3 class="modal-title-shikkoku">📜 天下合戦勲功録（対戦戦歴絵巻）</h3>
+  <!-- システム診断モニタ -->
+  <div id="diag-panel">
+    <div class="diag-modal-content">
+      <div class="diag-header">
+        <span>🩺 システム診断モニタ (v1.0.0)</span>
+        <div class="diag-header-actions">
+          <button type="button" class="diag-act-btn" id="diag-test-models-btn" title="全モデルの導通を今すぐテスト">⚡ モデル検証</button>
+          <button type="button" class="diag-act-btn" id="diag-copy-evidence-btn" title="ログをクリップボードにコピー">📋 ログコピー</button>
+          <button type="button" class="diag-act-btn" id="diag-force-reload-btn" title="キャッシュを消去して再読み込み">🔄 強制更新</button>
+          <button type="button" class="diag-act-btn" id="diag-close-btn">✕</button>
+        </div>
       </div>
-
-      <div class="history-tab-bar">
-        <button class="history-tab-btn btn-3d active" id="tab-btn-history-player" onclick="switchHistoryTab('player')">🪭 我が合戦録（天下統一）</button>
-        <button class="history-tab-btn btn-3d" id="tab-btn-history-exhibition" onclick="switchHistoryTab('exhibition')">⚔ 御前試合録（武芸観戦）</button>
+      <div class="diag-logs" id="diag-logs">
+        <div class="log-row log-info">[System] AIペット クロちゃん対話エンジン v1.0.0 稼働中</div>
       </div>
-
-      <div class="history-summary-strip" id="history-summary-strip">
-        <span class="summary-rank-tag">🏆 天下無双</span>
-        <span class="summary-stats-txt">通算 <b>0</b>戦 <b>0</b>勝 <b>0</b>敗 <b>0</b>分（勝率 <b>0%</b>）</span>
-      </div>
-    </div>
-
-    <div class="history-filter-grid" id="history-filter-grid">
-      <div class="filter-item-group">
-        <span class="filter-label">勝敗:</span>
-        <select id="filter-result" class="history-select-input" onchange="renderBattleHistoryList()">
-          <option value="all">すべて</option>
-          <option value="win">大勝利</option>
-          <option value="lose">敗戦/投了</option>
-          <option value="draw">千日手</option>
-        </select>
-      </div>
-      <div class="filter-item-group">
-        <span class="filter-label" id="filter-warlord-label">自将:</span>
-        <select id="filter-warlord" class="history-select-input" onchange="renderBattleHistoryList()">
-          <option value="all">すべて</option>
-          <option value="sanada">真田幸村</option>
-          <option value="keiji">前田慶次</option>
-          <option value="masamune">伊達政宗</option>
-          <option value="kanetsugu">直江兼続</option>
-          <option value="tadakatsu">本多忠勝</option>
-        </select>
-      </div>
-      <div class="filter-item-group">
-        <span class="filter-label" id="filter-enemy-label">敵将:</span>
-        <select id="filter-level" class="history-select-input" onchange="renderBattleHistoryList()">
-          <option value="all">すべての敵将</option>
-          <option value="1">Lv.1 木下藤吉郎</option>
-          <option value="2">Lv.2 前田利家</option>
-          <option value="3">Lv.3 柴田勝家</option>
-          <option value="4">Lv.4 浅井長政</option>
-          <option value="5">Lv.5 明智光秀</option>
-          <option value="6">Lv.6 上杉謙信</option>
-          <option value="7">Lv.7 武田信玄</option>
-          <option value="8">Lv.8 織田信長</option>
-          <option value="9">Lv.9 豊臣秀吉</option>
-          <option value="10">Lv.10 徳川家康</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="history-records-scroll" id="history-records-list">
-      <div style="text-align:center; padding:20px; color:#d6be89;">合戦の記録はまだござらぬ。</div>
-    </div>
-
-    <div class="modal-buttons" style="justify-content:space-between;">
-      <button class="btn-3d btn-history-clear" onclick="clearBattleHistory()">絵巻全消去</button>
-      <button class="btn-3d modal-close-btn" onclick="closeHistoryModal()">閉じる</button>
     </div>
   </div>
-</div>
 
-<!-- 当局・合戦絵巻モーダル（武将絵柄大型化 ＆ 勝者銘板先陣直上配置） -->
-<div id="kifu-modal" class="modal-overlay" style="display: none;">
-  <div class="modal-content modal-kifu-panorama">
-    <div class="modal-gold-plaque" style="justify-content:space-between;">
-      <div class="plaque-corner plaque-tl"></div>
-      <div class="plaque-corner plaque-tr"></div>
-      <div class="plaque-corner plaque-bl"></div>
-      <div class="plaque-corner plaque-br"></div>
-      <h3 class="modal-title-shikkoku">
-        📖 当局・合戦絵巻<br>
-        <span class="kifu-title-sub">（全棋譜 ＆ 前線進撃マップ）</span>
+  <!-- メガネ・帽子位置アジャスターモーダル -->
+  <div id="glasses-adjust-modal">
+    <div class="adjust-header">
+      <span>👓 各写真ごとのメガネ・帽子位置を微調整</span>
+      <button type="button" class="diag-act-btn" id="close-adjust-btn">✕ 完了</button>
+    </div>
+
+    <div class="adjust-tabs">
+      <button class="adjust-tab-btn active" data-tab="idle">🐾 待機</button>
+      <button class="adjust-tab-btn" data-tab="talking">🗣️ お話し</button>
+      <button class="adjust-tab-btn" data-tab="thinking">💭 考え中</button>
+      <button class="adjust-tab-btn" data-tab="happy">💖 喜び</button>
+    </div>
+
+    <div class="adjust-preview-stage" id="adjust-preview-stage">
+      <img src="idle.jpg" class="adjust-cat-img" id="adjust-cat-img" alt="調整対象">
+      <div class="accessory-layer" id="adjust-glasses-overlay" style="display:block; bottom:120px; left:50%; transform:translateX(-50%);"></div>
+    </div>
+
+    <div class="adjust-controls-box">
+      <div class="adjust-row">
+        <span>左右 (X):</span>
+        <input type="range" id="adj-x" min="-120" max="120" step="1" value="0">
+        <span class="val-disp" id="adj-x-val">0</span>
+      </div>
+      <div class="adjust-row">
+        <span>上下 (Y):</span>
+        <input type="range" id="adj-y" min="20" max="250" step="1" value="120">
+        <span class="val-disp" id="adj-y-val">120</span>
+      </div>
+      <div class="adjust-row">
+        <span>サイズ:</span>
+        <input type="range" id="adj-scale" min="0.5" max="1.8" step="0.02" value="1.0">
+        <span class="val-disp" id="adj-scale-val">1.0</span>
+      </div>
+      <div class="adjust-row">
+        <span>傾き (度):</span>
+        <input type="range" id="adj-rotate" min="-45" max="45" step="1" value="0">
+        <span class="val-disp" id="adj-rotate-val">0°</span>
+      </div>
+
+      <div class="adjust-actions">
+        <button class="btn-adjust-reset" id="btn-adjust-reset">リセット</button>
+        <button class="btn-adjust-save" id="btn-adjust-save">この写真の位置を保存するニャ！</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ★ 設定モーダル -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal-card">
+      <h3>
+        <span>⚙️ 設定・記憶帳</span>
+        <span style="font-size:11px;font-weight:normal;color:#94a3b8;margin-left:auto;">v1.0.0</span>
       </h3>
-      <span id="kifu-modal-status-badge" class="kifu-status-badge" style="z-index:3;">五分五分の総力戦</span>
-    </div>
-    
-    <!-- 兵力対峙バー：上枠いっぱいに広げ、武将絵柄大型化＆勝敗銘板を武将名の真上へ配置 -->
-    <div class="kifu-troops-confrontation-bar" id="kifu-confrontation-bar">
-      <!-- 先手陣側（左） -->
-      <div class="kifu-troops-side side-player" id="kifu-side-player-box">
-        <div class="kifu-side-avatar-slot">
-          <div class="kifu-side-avatar-box" id="kifu-player-avatar-box"></div>
-        </div>
-        <div class="kifu-side-meta-col">
-          <!-- 勝者・敗者銘板を先陣・武将名の真上に堂々と配置 -->
-          <span class="kifu-outcome-crown-plaque" id="kifu-player-outcome-plaque" style="display:none;"></span>
-          <div class="side-turn-row">
-            <span class="side-turn-tag" id="kifu-player-turn-tag">先手陣</span>
-            <span class="side-warlord-tag" id="kifu-player-tag">我が軍</span>
+
+      <!-- 1. トリセツ -->
+      <details class="manual-details">
+        <summary class="manual-summary">
+          <span>📖 クロちゃんの取り扱い説明書（トリセツ）</span>
+          <span>▼</span>
+        </summary>
+        <div class="manual-content">
+          <div class="manual-sec-title">🐾 基本のお話し方</div>
+          <div>マイクに向かって「おはよう」「今何時？」「今日何日？」と気軽に話しかけてニャ！名前を呼ぶだけでも喜んでお返事するニャン♪</div>
+
+          <div class="manual-sec-title">👓 なかよしモード と おてつだいモード</div>
+          <div>左下のボタンでサッと切り替えできるニャ！<br>
+          ・<b>🐾 なかよし</b>：のんびり雑談やお遊びをする通常モードニャ（日記の思い出の中心になります♪）。<br>
+          ・<b>👓 おてつだい</b>：博士帽とメガネを装着！ネット検索して「近くのラーメン屋」や「最新ニュース」をGoogleマップ付きで案内するニャ！（※機械的なニュース一覧や店舗リストは日記から自動除外され、おやびんの気分や会話の思い出として優しく記録されます）。</div>
+
+          <div class="manual-sec-title">📍 散歩中の場所特定 ＆ 至近距離スポット検索</div>
+          <div>「いまどこ？」と聞くと、市だけでなく「〇〇市〇〇町〇丁目付近」までピンポイントで答えるニャ！さらに「近くの川何？」「公園ある？」と聞くと、目と鼻の先にある川や公園を近い順に教えてくれるニャン🐾</div>
+
+          <div class="manual-sec-title">📷 写真を見せる ＆ 散歩写真</div>
+          <div>下の「📷 写真」ボタンを押すと、スマホのカメラで撮った写真やアルバムの写真をクロちゃんに見せられるニャ！写真について楽しくおしゃべりできて、その日の絵日記に自動で写真が飾られるニャン♪</div>
+
+          <div class="manual-sec-title">📖 絵日記の仕様と生活リズム（午前4時切り替え・自動補完）</div>
+          <div>
+            ・<b>夕方作成後の夜の自動追記</b>：18時頃に「今日の日記書いて」と日記を作った後、夜や深夜にお話しした内容もその日の日記にしっかり追加・反映されますニャ！<br>
+            ・<b>生活日の境界線（午前4:00）</b>：<br>
+            　- <b>深夜1:00〜3:59（朝3時など）</b>：まだ「昨日の夜の延長」と判定され、会話内容は昨日の絵日記に追記されます。クロちゃんも夜更かしに寄り添った静かなトーンでお返事するニャ💤<br>
+            　- <b>朝4:00以降（朝6時など）</b>：「新しい今日の始まり」と判定され、「おはようニャ！」とお出迎えします。<br>
+            ・<b>【新機能】会話差分の確実な自動補完</b>：前日の日記作成後に夜のおしゃべりがあった場合や、日記を書き忘れて眠ってしまった場合、翌朝アプリを起動した瞬間に昨日の会話差分を自動検知して「完全版の昨日の絵日記」へと自動更新・確定保存されますニャン♪<br>
+            ・<b>おやすみの挨拶連動</b>：夜寝る前に「おやすみ」と言うと、夜の分をまとめて日記を自動更新してくれるニャ！<br>
+            ・<b>シームレスな朗読</b>：上の「📖 日記帳」を開いて「🔊 クロちゃんが読むニャ♪」を押すと、本文の中身だけをスラスラ滑らかに朗読してくれるニャン！
           </div>
-          <span class="side-troops-val" id="kifu-player-troops-val">3,000 兵</span>
-        </div>
-      </div>
 
-      <!-- 中央：激突マーク ＆ 兵力差 -->
-      <div class="kifu-vs-core">
-        <span class="kifu-clash-icon">⚔</span>
-        <span class="kifu-troops-diff-badge" id="kifu-troops-diff-disp">兵力差 ±0</span>
-      </div>
-
-      <!-- 後手陣側（右） -->
-      <div class="kifu-troops-side side-enemy" id="kifu-side-enemy-box">
-        <div class="kifu-side-avatar-slot">
-          <div class="kifu-side-avatar-box" id="kifu-enemy-avatar-box"></div>
-        </div>
-        <div class="kifu-side-meta-col meta-col-reverse">
-          <!-- 勝者・敗者銘板を後手陣・敵将名の真上に堂々と配置 -->
-          <span class="kifu-outcome-crown-plaque" id="kifu-enemy-outcome-plaque" style="display:none;"></span>
-          <div class="side-turn-row" style="justify-content:flex-end;">
-            <span class="side-warlord-tag" id="kifu-enemy-tag">敵軍</span>
-            <span class="side-turn-tag" id="kifu-enemy-turn-tag">後手陣</span>
+          <div class="manual-sec-title">✨ 変身・🐟 おやつ・なでなで・⏱️ タイマー・🛑 ストップ</div>
+          <div>
+            ・<b>✨ 変身</b>：右下の「変身」ボタンを押すと、リアル写真と手描きイラストの姿が煙と共に瞬時に入れ替わるニャ！<br>
+            ・<b>🐟 おやつ と なでなで</b>：左下の「おやつ」でちゅ〜るを食べるニャ（3回連続で極楽ゴロゴロ♪）。画面のクロをタップすると「なでなで」されて喉を鳴らして喜ぶニャ！<br>
+            ・<b>⏱️ タイマー</b>：「3分測って」と言うとキッチンタイマーが作動するニャ！<br>
+            ・<b>🛑 ストップ・🟢 一時停止</b>：お話しを途中で止めたい時は「ストップ」ボタン、会話をお休みしたい時は「会話中（緑）」ボタンを押してニャ。
           </div>
-          <span class="side-troops-val" id="kifu-enemy-troops-val">3,000 兵</span>
-        </div>
-      </div>
-    </div>
 
-    <!-- 軍師評定：戦況バーと完全に差別化した当局の本格総括評定 -->
-    <div class="kifu-situation-summary">
-      <span class="badge" id="kifu-strategist-badge-tag">軍師評定</span>
-      <span id="kifu-modal-situation-text">互角の白兵戦。両軍陣容を整え機を伺っております。</span>
-    </div>
-
-    <div class="chart-container territory-chart-box">
-      <div class="chart-legend-top">
-        <span class="chart-tag-enemy" id="chart-enemy-name-tag">後手陣領地（上陣）</span>
-        <span id="chart-eval-num-top" class="chart-eval-troops-txt">領地支配 50%</span>
-      </div>
-      <div class="chart-tag-mid">── 中央決戦ライン（天下分水嶺） ──</div>
-      <div class="chart-legend-bottom">
-        <span class="chart-tag-player" id="chart-player-name-tag">先手陣領地（下陣・優勢で上へ進撃拡大）</span>
-        <span id="chart-eval-num-bottom" class="chart-eval-troops-txt">領地支配 50%</span>
-      </div>
-      <canvas id="chart-canvas"></canvas>
-    </div>
-
-    <div id="kifu-list" class="modal-kifu-content"></div>
-    <div class="modal-buttons" style="justify-content:space-between;">
-      <button class="btn-3d btn-kif-save" onclick="downloadKifu()">KIF保存</button>
-      <button class="btn-3d modal-close-btn" onclick="closeKifuModal()">閉じる</button>
-    </div>
-  </div>
-</div>
-
-<!-- 成りモーダル -->
-<div id="promote-modal" class="modal-overlay" style="display: none;">
-  <div class="modal-content promote-modal-box" style="text-align: center; width: auto;">
-    <div class="modal-gold-plaque" style="margin-bottom:12px;">
-      <div class="plaque-corner plaque-tl"></div>
-      <div class="plaque-corner plaque-tr"></div>
-      <div class="plaque-corner plaque-bl"></div>
-      <div class="plaque-corner plaque-br"></div>
-      <p class="modal-title-shikkoku" style="margin: 0; font-size: 15px;">敵陣突破！ 駒を成りますか？</p>
-    </div>
-    <div class="modal-buttons">
-      <button class="btn-3d btn-promote-act" id="btn-promote-yes">成る</button>
-      <button class="btn-3d modal-close-btn" id="btn-promote-no">成らない</button>
-    </div>
-  </div>
-</div>
-
-<!-- 指南モーダル -->
-<div id="guide-modal" class="modal-overlay" style="display: none;">
-  <div class="modal-content guide-modal-box">
-    <div class="guide-modal-header">
-      <div class="modal-gold-plaque">
-        <div class="plaque-corner plaque-tl"></div>
-        <div class="plaque-corner plaque-tr"></div>
-        <div class="plaque-corner plaque-bl"></div>
-        <div class="plaque-corner plaque-br"></div>
-        <h3 class="modal-title-shikkoku">📜 天下布武・兵法指南絵巻</h3>
-      </div>
-      <div class="guide-narrator-panel">
-        <span class="narrator-label">🗣 語り手:</span>
-        <div class="narrator-btn-group">
-          <button class="narrator-toggle-btn btn-3d active" id="btn-voice-male" onclick="setGuideVoiceGender('male')">軍師 (男声)</button>
-          <button class="narrator-toggle-btn btn-3d" id="btn-voice-female" onclick="setGuideVoiceGender('female')">姫侍 (女声)</button>
-        </div>
-      </div>
-    </div>
-    
-    <!-- タブバー：敵将の格に応じた動的称号タブ配備 -->
-    <div class="guide-tab-bar">
-      <button class="guide-tab-btn btn-3d active" id="guide-tab-btn-0" onclick="switchGuideTab(0)">🔰 初陣指南</button>
-      <button class="guide-tab-btn btn-3d" id="guide-tab-btn-1" onclick="switchGuideTab(1)">其の壱：手順</button>
-      <button class="guide-tab-btn btn-3d" id="guide-tab-btn-2" onclick="switchGuideTab(2)">其の弐：兵法</button>
-      <button class="guide-tab-btn btn-3d" id="guide-tab-btn-3" onclick="switchGuideTab(3)">其の参：英傑</button>
-      <button class="guide-tab-btn btn-3d" id="guide-tab-btn-4" onclick="switchGuideTab(4)">其の四：宿命</button>
-    </div>
-
-    <div class="guide-scroll-body" id="guide-scroll-container">
-      <div class="guide-pane active" id="guide-pane-0">
-        <div id="dynamic-tactics-content"></div>
-      </div>
-
-      <div class="guide-pane" id="guide-pane-1">
-        <div class="guide-card-box" id="guide-card-step-1">
-          <div class="guide-card-header-row">
-            <h4>⚜ 一、合戦の手順（天下統一の道）</h4>
-            <button class="card-speech-btn btn-3d" onclick="toggleCardSpeech('guide-card-step-1')">🔊 朗読</button>
+          <div class="manual-sec-title">📁 データの自動保存・バックアップと安全削除方法</div>
+          <div>
+            ・<b>日常の会話と日記</b>：アプリ内部で常に自動保存（上書き更新）されているため、普段はファイル保存を押さなくても安心ですニャ！<br>
+            ・<b>手動ファイル保存（日時付き）</b>：「📁 ファイル保存」を押すと、<code>クロちゃんデータ_YYYYMMDD_HHmm.json</code> という日時付きの名前で端末に保存されます。<br>
+            ・<b>手動ファイルの削除手順</b>：端末の空き容量を整理したい時は、スマホやPCのファイル管理アプリから直接削除できますニャ。<br>
+            　- <b>iPhone / iPad</b>：「ファイル」アプリ ➔「ダウンロード」➔ 不要なファイルを長押しして「削除」<br>
+            　- <b>Android</b>：「Files」アプリ ➔「ダウンロード」➔ 不要なファイルを「ゴミ箱（削除）」<br>
+            　- <b>PC</b>：「エクスプローラー」の「ダウンロード」フォルダから削除
           </div>
-          1. <b class="kw-gold">陣容の選定</b>：上下のパネルより「自将」と進軍先の「敵国」を決定します。敵将を討ち取るごとに兵力を吸収し、最大動員力が増強されます！<br>
-          2. <b class="kw-gold">振り駒の儀</b>：「⚜ 対局開始」を押すと、五枚の歩が一斉に舞い散り天運により<span class="kw-green">先手・後手</span>を定めます。<br>
-          3. <b class="kw-gold">布陣と進撃</b>：盤上または手駒をタップすると、進めるマスが鮮やかな<span class="kw-green">若草色</span>、敵駒を取れるマスが<span class="kw-crimson">真金色</span>に輝きます。<br>
-          4. <b class="kw-gold">成り（昇格）</b>：敵陣へ突入、敵陣内での移動、または敵陣から出る際、駒がひっくり返り流麗な<span class="kw-crimson">行書体の成駒（龍王・龍馬など）</span>へと覚醒します。<br>
-          5. <b class="kw-gold">敵玉撃破（兵力壊滅）</b>：敵将の玉将を討ち取る（詰ます）ことで敵兵力を壊滅させ、天下平定へ一歩前進します！
-        </div>
 
-        <div class="guide-card-box" id="guide-card-step-exhibition">
-          <div class="guide-card-header-row">
-            <h4>⚔ 四、御前試合の対局規定（通常本将棋と早指し戦の妙味）</h4>
-            <button class="card-speech-btn btn-3d" onclick="toggleCardSpeech('guide-card-step-exhibition')">🔊 朗読</button>
+          <div class="manual-sec-title">🗑️ 日記・写真・会話の削除と安全仕様</div>
+          <div>
+            ・<b>日記の削除</b>：「🗑️ 削除」を押すと、必ず「〇〇日の日記を削除してよろしいですかニャ？」と確認警告が出ます。「OK」を押した後、右下の「💾 保存して閉じる」を押して初めて確定します（キャンセルすれば消えません）。<br>
+            ・<b>写真の解除</b>：写真枠右上の「✕」を押すと、誤操作防止の確認ダイアログが出ますニャ！<br>
+            ・<b>画面の会話クリア</b>：下の「🧹 画面の会話表示をクリア」を押すと、画面上の吹き出しだけをお掃除してスッキリ初期化できます（内部の記憶や日記用データは消えずに安全キープされます）。
           </div>
-          客分英傑や戦国武将たちの武芸観戦「御前試合」では、二つの対局方式を選べます：<br><br>
-          ・<b class="kw-gold">通常本将棋（じっくり・深慮）</b>：思考時間の上限は<span class="kw-gold">8.5秒</span>。織田信長・徳川家康・初代名人・大橋宗桂らが本来の神算鬼謀と最高峰の妙技を遺憾なく発揮します。<br>
-          ・<b class="kw-crimson">早指し戦（即断・切れ味）</b>：思考時間の上限は<span class="kw-crimson">2.5秒に短縮</span>されます。探索深度が浅くなり、最強AIでも即断即決による思わぬ波乱や下克上が起きやすくなります。
-        </div>
 
-        <div class="guide-card-box" id="guide-card-step-2">
-          <div class="guide-card-header-row">
-            <h4>🪭 二、采配ボタンの解説</h4>
-            <button class="card-speech-btn btn-3d" onclick="toggleCardSpeech('guide-card-step-2')">🔊 朗読</button>
-          </div>
-          ・<b class="kw-gold">💡 軍師進言 / 🔥 覚醒進言</b>：自将専属の軍師が次の一手を指南。「🪭 別の策」ボタンで王道・強襲・堅陣の策を切り替えられます。<br>
-          ・<b class="kw-gold">🪭 待った</b>：局面を二手前まで巻き戻す秘技。<br>
-          ・<b class="kw-gold">⚜ 対局開始</b>：振り駒を行い、合戦の火蓋を切って落とします。<br>
-          ・<b class="kw-blue">⚔ 御前試合</b>：先手・後手それぞれに客分英傑・戦国武将・初代名人を自由に選定し、特等席で観戦できます。<br>
-          ・<b class="kw-gold">🏳 投了</b>：形勢覆し難きとき、潔く負けを認めて陣を引きます。<br>
-          ・<b class="kw-gold">📜 勲功録</b>：これまでの全対戦記録を確認・盤上再現できます。「我が合戦録」と「御前試合録」の二大タブで整理可能。<br>
-          ・<b class="kw-gold">🗺 天下絵巻</b>：全国平定状況と城郭地図を確認・進軍先を選定。<br>
-          ・<b class="kw-gold">📖 合戦絵巻</b>：戦況バー右端より開き、陣地争奪グラフと全棋譜（思考時間・確定深さ）を確認・KIF保存可能。<br>
-          ・<b class="kw-gold">🏯 盤替</b>：最上部左ボタンより、本榧（ほんがや）・黒漆塗（くろうるし）・神代杉（じんだいすぎ）の三大名盤を自由に着せ替え可能です。
+          <div class="manual-sec-title">🧠 賢くサクサク動く頭脳（Flash Lite）</div>
+          <div>クロの頭脳は制限が緩く1日に何度でもおしゃべりできる「Flash Lite」と連動！何日経っても初日と同じ爆速スピードでお話しできるニャン！</div>
         </div>
+      </details>
 
-        <div class="guide-card-box beginner-highlight-box" id="guide-card-step-replay">
-          <div class="guide-card-header-row">
-            <h4>🎞 五、過去の合戦の振り返り方（自動再生絵巻の術）</h4>
-            <button class="card-speech-btn btn-3d" onclick="toggleCardSpeech('guide-card-step-replay')">🔊 朗読</button>
-          </div>
-          過去の全合戦は、いつでも盤上にタイムスリップして鑑賞・研究できます。<br><br>
-          1. <b class="kw-gold">勲功録を開く</b>：画面右上の「<span class="kw-gold">📜 勲功録</span>」を押します。<br>
-          2. <b class="kw-gold">盤上再現を押す</b>：振り返りたい合戦カードの「<span class="kw-gold">盤上再現</span>」を押すと、盤面が瞬時にその合戦の初期配置へと復元されます。<br>
-          3. <b class="kw-crimson">自動再生を楽しむ</b>：盤の直下の「<span class="kw-crimson">▶ 自動</span>」を1回押すだけで、流れるように一手ずつ自動で局面が再現されます。<br>
-          4. <b class="kw-blue">変速切替（1x/2x/4x）</b>：「<span class="kw-blue">1x</span>」を押すごとに等速・二倍速・四倍速へ切り替わります。<br>
-          5. <b class="kw-crimson">対局へ復帰</b>：再生バー右端の「<span class="kw-crimson">⚔ 対局へ戻る</span>」ボタンを押せば、いつでも元の合戦画面へ迷わず戻ることができます！
-        </div>
+      <!-- ▼ 第1ブロック：クロちゃんの個性・声・見た目 -->
+      <div class="setting-section-header">🐾 クロちゃんの声と見た目</div>
 
-        <div class="guide-card-box" id="guide-card-step-3">
-          <div class="guide-card-header-row">
-            <h4>⚖ 三、戦国特別規約（千日手・反則）</h4>
-            <button class="card-speech-btn btn-3d" onclick="toggleCardSpeech('guide-card-step-3')">🔊 朗読</button>
-          </div>
-          ・<b class="kw-gold">千日手</b>：同一局面が四回生じた場合、原則として引き分け（痛み分け）となります。<br>
-          ・<b class="kw-crimson">連続王手の千日手</b>：一方が王手をかけ続けて同一局面四回となった場合、<span class="kw-crimson">王手をかけ続けた側の武士道違反（反則負け）</span>となります。
+      <div class="form-group">
+        <label>クロの肉声ボイス（VOICEVOX）:</label>
+        <div class="voice-control-row">
+          <select id="voice-speaker-select" class="voice-select-box">
+            <option value="10" selected>🌟 雨晴はう（ノーマル）【推奨・子猫声】</option>
+            <option value="0">🌸 四国めたん（あまあま）</option>
+            <option value="2">🌸 四国めたん（ノーマル）</option>
+            <option value="6">🌸 四国めたん（ツンツン）</option>
+            <option value="1">🌱 ずんだもん（あまあま）</option>
+            <option value="3">🌱 ずんだもん（ノーマル）</option>
+            <option value="7">🌱 ずんだもん（ツンツン）</option>
+            <option value="55">🐱 猫使アル（ノーマル）</option>
+            <option value="56">🐱 猫使アル（おちつき）</option>
+            <option value="58">🐱 猫使ビィ（ノーマル）</option>
+            <option value="8">🌻 春日部つむぎ（ノーマル）</option>
+            <option value="9">⚡ 波音リツ（ノーマル）</option>
+          </select>
+          <button type="button" class="btn-voice-test" id="test-voice-btn">🔊 テスト</button>
         </div>
       </div>
 
-      <div class="guide-pane" id="guide-pane-2">
-        <div class="guide-card-box" id="guide-card-tactics-1">
-          <div class="guide-card-header-row">
-            <h4>🛡 一、序盤の心得「玉飛接近すべからず」</h4>
-            <button class="card-speech-btn btn-3d" onclick="toggleCardSpeech('guide-card-tactics-1')">🔊 朗読</button>
-          </div>
-          ・戦火の起こる場所へ玉を置くことなかれ。まずは玉を<span class="kw-blue">「美濃囲い」</span>や<span class="kw-blue">「矢倉囲い」</span>などの堅牢な陣形へと囲うべし。<br>
-          ・<span class="kw-gold">飛車・角行</span>の大駒の射程を確保するため、歩を突いて道を開き、盤上を制圧するべし。
-        </div>
-        <div class="guide-card-box" id="guide-card-tactics-2">
-          <div class="guide-card-header-row">
-            <h4>⚔ 二、中盤の心得「拠点を制し、連携を重んず」</h4>
-            <button class="card-speech-btn btn-3d" onclick="toggleCardSpeech('guide-card-tactics-2')">🔊 朗読</button>
-          </div>
-          ・「銀は千鳥に歩け」。歩の頭を銀で叩き、敵陣の急所へ<span class="kw-green">拠点の歩</span>を打ち込め。<br>
-          ・守りのない<span class="kw-crimson">「浮き駒」</span>は格好の標的。駒同士の守りの利き（紐付き）を保ち、敵の守りの要である金銀を狙い撃て。
-        </div>
-        <div class="guide-card-box" id="guide-card-tactics-3">
-          <div class="guide-card-header-row">
-            <h4>👑 三、終盤の心得「一手勝ちの美学・玉を包む寄せ」</h4>
-            <button class="card-speech-btn btn-3d" onclick="toggleCardSpeech('guide-card-tactics-3')">🔊 朗読</button>
-          </div>
-          ・終盤は「駒の損得より速度」。自玉が詰まないか見極め、一手早く敵玉に<span class="kw-crimson">詰めろ・王手</span>をかけよ。<br>
-          ・敵玉は一方向から追うと逃げ延びる。<span class="kw-gold">「玉は包むように寄せよ」</span>。両脇と退路を桂馬・香車・持ち駒で塞ぎ、退路を断つべし。
+      <div class="form-group">
+        <label>話すスピード: <span id="rate-val">1.05</span></label>
+        <input type="range" id="voice-rate" min="0.8" max="1.3" step="0.05" value="1.05">
+      </div>
+
+      <div class="form-group">
+        <label>ボタン操作時のクロの一声ボイス:</label>
+        <select id="button-feedback-select">
+          <option value="voice" selected>🔊 ひとこと喋る（「おまかせニャ！」「あそぶニャ♪」）</option>
+          <option value="mute">🔇 消音（効果音のみ・静かモード）</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>おてつだいモードの装備スタイル:</label>
+        <select id="accessory-style-select">
+          <option value="both" selected>🎓👓 博士帽 ＋ 丸メガネ（天才フル装備！）</option>
+          <option value="hat">🎓 博士帽のみ</option>
+          <option value="glasses">👓 白黒ストライプ丸メガネのみ</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <button type="button" class="btn-adjust-open" id="open-glasses-adjust-btn">👓 写真ごとのメガネ位置を微調整する</button>
+      </div>
+
+      <!-- ▼ 第2ブロック：クロちゃんの記憶 ＆ データの安全管理 -->
+      <div class="setting-section-header">📔 記憶帳 ＆ バックアップ</div>
+
+      <div class="form-group">
+        <label>クロの基本記憶帳（一生忘れない設定）:</label>
+        <div class="memory-list" id="memory-list-container"></div>
+        <div class="memory-add-box">
+          <input type="text" id="new-memory-input" placeholder="新しい記憶（例: 趣味はドライブ）">
+          <button id="add-memory-btn">追加</button>
         </div>
       </div>
 
-      <div class="guide-pane" id="guide-pane-3">
-        <div class="guide-card-box" id="guide-card-warlords-1">
-          <div class="guide-card-header-row">
-            <h4>🪭 一、主役五傑と専属軍師録</h4>
-            <button class="card-speech-btn btn-3d" onclick="toggleCardSpeech('guide-card-warlords-1')">🔊 朗読</button>
-          </div>
-          合戦において自将を支える、戦国屈指の知恵袋・懐刀たちです：<br>
-          ・<b class="kw-crimson">真田幸村</b> ＆ 軍師：<b class="kw-gold">真田昌幸</b>（表裏比興の天才謀将）<br>
-          ・<b class="kw-gold">前田慶次</b> ＆ 懐刀：<b class="kw-gold">奥村助右衛門</b>（末森城を死守した前田家の名将）<br>
-          ・<b class="kw-blue">伊達政宗</b> ＆ 軍師：<b class="kw-gold">片倉小十郎</b>（天下二大軍師と称された右腕）<br>
-          ・<b class="kw-gold">直江兼続</b> ＆ 主君：<b class="kw-gold">上杉景勝</b>（義を貫き通す寡黙なる越後総帥）<br>
-          ・<b class="kw-gold">本多忠勝</b> ＆ 参謀：<b class="kw-gold">本多正信</b>（徳川幕府の最高頭脳）
+      <div class="pc-sync-card">
+        <div class="pc-sync-title">
+          <span>📁</span>
+          <span>データ安心バックアップ（ファイル管理）</span>
         </div>
-        <div class="guide-card-box" id="guide-card-warlords-2">
-          <div class="guide-card-header-row">
-            <h4>🏯 二、対戦武将十将と気風・動員録</h4>
-            <button class="card-speech-btn btn-3d" onclick="toggleCardSpeech('guide-card-warlords-2')">🔊 朗読</button>
-          </div>
-          <div class="enemy-line-item"><span class="enemy-line-left">Lv.1 尾張｜木下藤吉郎</span><span class="enemy-line-right">足軽乱戦（動員 3,000兵・アマ10級相当）</span></div>
-          <div class="enemy-line-item"><span class="enemy-line-left">Lv.2 加賀｜前田利家</span><span class="enemy-line-right">中央突破の槍（動員 8,000兵・アマ8級相当）</span></div>
-          <div class="enemy-line-item"><span class="enemy-line-left">Lv.3 越前｜柴田勝家</span><span class="enemy-line-right">剛腕の突進（動員 15,000兵・アマ6級相当）</span></div>
-          <div class="enemy-line-item"><span class="enemy-line-left">Lv.4 近江｜浅井長政</span><span class="enemy-line-right">堅守の三間飛車（動員 25,000兵・アマ4級相当）</span></div>
-          <div class="enemy-line-item"><span class="enemy-line-left">Lv.5 美濃｜明智光秀</span><span class="enemy-line-right">隙を突く知謀（動員 40,000兵・アマ2級相当）</span></div>
-          <div class="enemy-line-item"><span class="enemy-line-left">Lv.6 越後｜上杉謙信</span><span class="enemy-line-right">軍神の遠距離射線（動員 60,000兵・アマ初段相当）</span></div>
-          <div class="enemy-line-item"><span class="enemy-line-left">Lv.7 甲斐｜武田信玄</span><span class="enemy-line-right">風林火山の要塞（動員 80,000兵・アマ二段相当）</span></div>
-          <div class="enemy-line-item"><span class="enemy-line-left">Lv.8 安土｜織田信長</span><span class="enemy-line-right">成駒電撃戦（動員 110,000兵・アマ三段相当）</span></div>
-          <div class="enemy-line-item"><span class="enemy-line-left">Lv.9 大坂｜豊臣秀吉</span><span class="enemy-line-right">持ち駒包囲戦（動員 150,000兵・アマ四段相当）</span></div>
-          <div class="enemy-line-item"><span class="enemy-line-left">Lv.10 江戸｜徳川家康</span><span class="enemy-line-right">最深探索の鉄壁（動員 200,000兵・アマ五段〜六段相当）</span></div>
+        <div class="pc-sync-desc">
+          日記や記憶データをいつでもファイルに保存・復元できますニャ！
         </div>
-        <div class="guide-card-box" id="guide-card-warlords-instructors">
-          <div class="guide-card-header-row">
-            <h4>⚔ 三、客分四英傑（御前試合・オープンソース思考エンジンWeb移植録）</h4>
-            <button class="card-speech-btn btn-3d" onclick="toggleCardSpeech('guide-card-warlords-instructors')">🔊 朗読</button>
-          </div>
-          ※御前試合に参戦する客分四英傑は、世界のオープンソース将棋・チェスエンジンをベースに、Webブラウザ（JavaScript）環境へ独自移植・再構築した専用思考ルーチンです：<br><br>
-          ・<b class="kw-blue">蒲生氏郷</b>［MicroMax系］（アマ初段相当 ｜ 南蛮兵法・西洋古典αβ探索＋静止探索・深さ3）<br>
-          ・<b class="kw-gold">柳生石舟斎</b>［Sunfish系］（アマ二段相当 ｜ 新陰流剣聖・PST配置評価駆動・深さ4）<br>
-          ・<b class="kw-green">黒田如水</b>［Bonanza系］（アマ五段相当 ｜ 神算鬼謀の隠者・置換表＋キラー探索・深さ4）<br>
-          ・<b class="kw-crimson">初代名人・大橋宗桂</b>［Apery/やねうら王系］（アマ八段〜九段相当 ｜ 一世名人・安全PVS探索＋玉囲い完全評価・深さ5）
+        <div class="pc-sync-btn-row">
+          <button type="button" class="btn-pc-sync" id="btn-download-backup">📁 ファイル保存</button>
+          <button type="button" class="btn-trigger-restore" id="btn-trigger-restore">📁 ファイル読込</button>
+          <input type="file" id="file-input-restore" accept=".json" style="display:none;">
         </div>
       </div>
 
-      <div class="guide-pane" id="guide-pane-4">
-        <div class="guide-card-box" id="guide-card-rivalry-intro">
-          <div class="guide-card-header-row">
-            <h4>🔥 宿命の対決録（史実が紡ぐ五大因縁秘話）</h4>
-            <button class="card-speech-btn btn-3d" onclick="toggleCardSpeech('guide-card-rivalry-intro')">🔊 朗読</button>
-          </div>
-          特定の自将と敵将が激突したとき、特別な<span class="kw-crimson">開幕因縁カットイン</span>と<span class="kw-gold">専用の舌戦・掛け合い</span>が盤上で勃発します。
-        </div>
-
-        <div class="guide-card-box rivalry-story-card" id="rivalry-card-sanada_10">
-          <div class="guide-card-header-row">
-            <div class="rivalry-card-header"><span class="rivalry-badge-tag">大坂の陣</span><h4>真田幸村 vs 徳川家康</h4></div>
-            <button class="card-speech-btn btn-3d" onclick="toggleCardSpeech('rivalry-card-sanada_10')">🔊 朗読</button>
-          </div>
-          <div class="rivalry-story-sub">死線を越えた真田赤備えの最終決戦</div>
-          <p class="rivalry-story-p">
-            慶長二十年の大坂夏の陣。真田幸村はわずか数千の赤備え部隊を率いて家康の本陣目がけて怒涛の突撃を敢行。敵味方から「真田日本一の兵」と称賛された英雄劇です。
-          </p>
-          <div class="rivalry-dialogue-box">
-            ・幸村「<span class="kw-crimson">不惜身命！ 徳川の天下、この幸村が盤上で覆して見せようぞ！</span>」<br>
-            ・家康「<span class="kw-blue">真田か…！ 目の上の瘤め、大坂の雪辱はさせぬぞ！</span>」
-          </div>
-        </div>
-
-        <div class="guide-card-box rivalry-story-card" id="rivalry-card-keiji_2">
-          <div class="guide-card-header-row">
-            <div class="rivalry-card-header"><span class="rivalry-badge-tag">前田の血脈</span><h4>前田慶次 vs 前田利家</h4></div>
-            <button class="card-speech-btn btn-3d" onclick="toggleCardSpeech('rivalry-card-keiji_2')">🔊 朗読</button>
-          </div>
-          <div class="rivalry-story-sub">掟に生きる当主と、自由を愛した傾奇者</div>
-          <p class="rivalry-story-p">
-            謹厳実直な加賀藩主・利家と、天衣無縫な傾奇者・慶次。水風呂に利家を入れて出奔した痛快な伝説は盤上でも熱く蘇ります。
-          </p>
-          <div class="rivalry-dialogue-box">
-            ・慶次「<span class="kw-gold">叔父貴、ぬるい水風呂の礼をせねばな！ ど派手に傾くぜ！</span>」<br>
-            ・利家「<span class="kw-blue">慶次！ その放蕩、前田の当主として盤上で成敗いたす！</span>」
-          </div>
-        </div>
-
-        <div class="guide-card-box rivalry-story-card" id="rivalry-card-kanetsugu_10">
-          <div class="guide-card-header-row">
-            <div class="rivalry-card-header"><span class="rivalry-badge-tag">直江状の義戦</span><h4>直江兼続 vs 徳川家康</h4></div>
-            <button class="card-speech-btn btn-3d" onclick="toggleCardSpeech('rivalry-card-kanetsugu_10')">🔊 朗読</button>
-          </div>
-          <div class="rivalry-story-sub">天下を震撼させた弾劾状「直江状」</div>
-          <p class="rivalry-story-p">
-            家康の詰問に対し、理路整然と不義を糾弾した直江状。盤上でも「愛と義の陣形」が家康の覇道と激突します。
-          </p>
-          <div class="rivalry-dialogue-box">
-            ・兼続「<span class="kw-green">不義の天下に道はなし！ 義の刃、盤上にて受けてみよ！</span>」<br>
-            ・家康「<span class="kw-blue">直江兼続… 筆鋒鋭き小僧め、盤上で捻り潰してくれる！</span>」
-          </div>
-        </div>
-
-        <div class="guide-card-box rivalry-story-card" id="rivalry-card-masamune_9">
-          <div class="guide-card-header-row">
-            <div class="rivalry-card-header"><span class="rivalry-badge-tag">天下への野望</span><h4>伊達政宗 vs 豊臣秀吉</h4></div>
-            <button class="card-speech-btn btn-3d" onclick="toggleCardSpeech('rivalry-card-masamune_9')">🔊 朗読</button>
-          </div>
-          <div class="rivalry-story-sub">白装束で挑んだ天下人との命懸けの駆け引き</div>
-          <p class="rivalry-story-p">
-            小田原攻め遅参に対し白装束で乗り込み度胸を見せた政宗。太閤15万の大軍団に竜の牙が挑みます。
-          </p>
-          <div class="rivalry-dialogue-box">
-            ・政宗「<span class="kw-blue">太閤殿下！ 白装束の礼は済んだ、盤上は容赦しねえ！</span>」<br>
-            ・秀吉「<span class="kw-gold">伊達の若造、その野心ごとのみ込んで見せようぞ！</span>」
-          </div>
-        </div>
-
-        <div class="guide-card-box rivalry-story-card" id="rivalry-card-tadakatsu_7">
-          <div class="guide-card-header-row">
-            <div class="rivalry-card-header"><span class="rivalry-badge-tag">三方ヶ原の死線</span><h4>本多忠勝 vs 武田信玄</h4></div>
-            <button class="card-speech-btn btn-3d" onclick="toggleCardSpeech('rivalry-card-tadakatsu_7')">🔊 朗読</button>
-          </div>
-          <div class="rivalry-story-sub">家康生涯最大の惨敗と、単騎防戦の伝説</div>
-          <p class="rivalry-story-p">
-            三方ヶ原の惨敗の中、名槍「蜻蛉切」で単騎殿を務め主君を救った忠勝。甲斐の虎の喉首を貫く戦いです。
-          </p>
-          <div class="rivalry-dialogue-box">
-            ・忠勝「<span class="kw-gold">信玄公！ 我が蜻蛉切、家康公の盾となり砕かん！</span>」<br>
-            ・信玄「<span class="kw-crimson">忠勝、家康に過ぎたるものよ。虎の牙を凌げるか！</span>」
-          </div>
+      <div class="form-group">
+        <label>🏠 拠点・自宅のGPS座標 / 住所（PC用予備）:</label>
+        <input type="text" id="home-coords-input" placeholder="例: 35.7582, 139.4678 または 東京都東村山市本町1丁目">
+        <div class="home-coord-row">
+          <button type="button" class="btn-coord-action" id="btn-get-current-home">📍 現在地をセット</button>
+          <button type="button" class="btn-copy-home-coords">📋 座標をコピー</button>
         </div>
       </div>
-    </div>
 
-    <!-- 最下部：決定系アクション統一規格【純金箔立体プレート】ボタン -->
-    <div class="modal-buttons">
-      <button class="btn-3d modal-action-btn btn-start-hero" id="btn-guide-sortie-confirm" onclick="closeGuideModal()">兵法を胸に出陣</button>
+      <div class="form-group">
+        <label>ニュース・お店の紹介件数:</label>
+        <div style="display:flex; gap:8px;">
+          <select id="news-count-select" style="flex:1;">
+            <option value="1">ニュース: 1件</option>
+            <option value="2" selected>ニュース: 2件【標準】</option>
+            <option value="3">ニュース: 3件</option>
+          </select>
+          <select id="spot-count-select" style="flex:1;">
+            <option value="1">お店: 1件</option>
+            <option value="2" selected>お店: 2件【標準】</option>
+            <option value="3">お店: 3件</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>画面表示の整理:</label>
+        <button type="button" class="btn-clear-timeline" id="btn-clear-chat-display">🧹 画面の会話表示をクリア（お掃除）</button>
+      </div>
+
+      <!-- ▼ 第3ブロック：高度な接続・システム管理 -->
+      <details class="secure-details">
+        <summary class="secure-summary">
+          <span>🔒 外部連携APIキー設定（Google AI / VoiceVox）</span>
+          <span>▼</span>
+        </summary>
+        <div class="secure-content">
+          <div class="form-group" style="margin-bottom:6px;">
+            <label>Google AI Studio API Key:</label>
+            <input type="password" id="api-key-input" placeholder="AIzaSy...">
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label>VoiceVox API Key（任意・共有枠あり）:</label>
+            <input type="password" id="voicevox-key-input" placeholder="空欄でも無料枠で動作します">
+          </div>
+        </div>
+      </details>
+
+      <details class="secure-details">
+        <summary class="secure-summary">
+          <span>🛠️ システム保守・トラブルシューティング</span>
+          <span>▼</span>
+        </summary>
+        <div class="secure-content">
+          <button type="button" class="btn-adjust-open" style="background:#0f172a;color:#38bdf8;border-color:#334155;" id="open-diag-modal-btn">🩺 システム診断モニタを開く</button>
+          <button type="button" class="btn-force-refresh" id="force-refresh-btn">🔄 アプリプログラムを強制更新（最新版取得）</button>
+        </div>
+      </details>
+
+      <!-- 保存ボタン -->
+      <button class="btn-save" id="save-settings-btn">
+        <span id="save-btn-icon">💾</span>
+        <span id="save-btn-text">設定と記憶を保存するニャン♪</span>
+      </button>
     </div>
   </div>
-</div>
 
-<!-- 分割ロード：客分英傑AI ＆ 戦国武将データ ＆ メインゲーム制御スクリプト -->
-<script src="external_ai.js"></script>
-<script src="warlords_data.js"></script>
-<script src="main.js"></script>
+  <!-- 最新版 app.js (v1.0.0) -->
+  <script src="app.js?v=1.0.0"></script>
 </body>
 </html>
+
 
